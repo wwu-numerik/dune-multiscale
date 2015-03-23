@@ -73,11 +73,11 @@ public:
   /// \param log2Seg  log2 of number of segments on [0,1] per dimension
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
-  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1) {
+  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8) {
     _fft = NULL;
     _ifft = NULL;
-    init(comm, corr, log2Seg, seed, overlap);
-  }
+    init(comm, corr, log2Seg, seed, overlap, minimal);
+  };
 
   /// Construct basis from parameters.
   /// \param comm     communicator
@@ -87,7 +87,8 @@ public:
   /// \param log2Seg  log2 of number of segments on [0,1] per dimension
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
-  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1) {
+  /// \param minimal  minimal permeability
+  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8) {
 
     // Initialize
     _comm = comm;
@@ -96,6 +97,7 @@ public:
     _rand = std::default_random_engine(seed);
     _normal = std::normal_distribution<double>(0, 1);
     _overlap = overlap;
+    _minimal = minimal;
     _part = 1;
     if (_fft != NULL) {
       fftw_destroy_plan(_fft);
@@ -307,6 +309,7 @@ public:
   R operator()(const X& x) const {
     int cell = 0;
     double t[DIM];
+    double k;
     for (int i = 0; i < DIM; ++i) {
       double p = x[i] * _N;
       if (p < _iMin[i] || p > _iMax[i])
@@ -321,8 +324,8 @@ public:
       int c01 = c00 + 1;
       int c10 = c00 + _size[1];
       int c11 = c10 + 1;
-      return ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0]) +
-             ((1 - t[1]) * _perm[c10][_part] + t[1] * _perm[c11][_part]) * t[0];
+      k = ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0]) +
+          ((1 - t[1]) * _perm[c10][_part] + t[1] * _perm[c11][_part]) * t[0];
     } else if (DIM == 3) {
       int c000 = cell;
       int c001 = c000 + 1;
@@ -332,16 +335,17 @@ public:
       int c101 = c100 + 1;
       int c110 = c100 + _size[2];
       int c111 = c110 + 1;
-      return (((1 - t[2]) * _perm[c000][_part] + t[2] * _perm[c001][_part]) * (1 - t[1]) +
-              ((1 - t[2]) * _perm[c010][_part] + t[2] * _perm[c011][_part]) * t[1]) *
-                 (1 - t[0]) +
-             (((1 - t[2]) * _perm[c100][_part] + t[2] * _perm[c101][_part]) * (1 - t[1]) +
-              ((1 - t[2]) * _perm[c110][_part] + t[2] * _perm[c111][_part]) * t[1]) *
-                 t[0];
+      k = (((1 - t[2]) * _perm[c000][_part] + t[2] * _perm[c001][_part]) * (1 - t[1]) +
+           ((1 - t[2]) * _perm[c010][_part] + t[2] * _perm[c011][_part]) * t[1]) *
+              (1 - t[0]) +
+          (((1 - t[2]) * _perm[c100][_part] + t[2] * _perm[c101][_part]) * (1 - t[1]) +
+           ((1 - t[2]) * _perm[c110][_part] + t[2] * _perm[c111][_part]) * t[1]) *
+              t[0];
     } else {
       std::cerr << "Not implemented, yet.\n";
       exit(1);
     }
+    return std::max(k, _minimal);
   }
 
   //--- Members ------------------------------------------------------------
@@ -350,6 +354,7 @@ private:
   int _nProc;                               ///< total number of processors
   int _overlap;                             ///< overlap of subgrids
   int _N;                                   ///< number of segments on [0,1]
+  double _minimal;                          ///< minimal permeability
   ptrdiff_t _n0;                            ///< local num. of segments along 1st dim
   ptrdiff_t _start;                         ///< 1st local index along 1st dim.
   COR _corr;                                ///< correlation as function of x-y
