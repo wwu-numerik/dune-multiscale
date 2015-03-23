@@ -6,7 +6,7 @@ vtk_output = 1
 skip_error = 1
 
 [grids]
-macro_cells_per_dim = 16
+macro_cells_per_dim = 8
 micro_cells_per_macrocell_dim = 32
 overlap = 1
 
@@ -23,7 +23,7 @@ fem_comparison = 0
 localproblemsolver_verbose = 1
 
 [problem]
-name = "Synthetic"
+name = "Random"
 
 [logging]
 # LOG_NONE = 1, LOG_ERR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
