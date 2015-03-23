@@ -101,10 +101,10 @@ set( FEM_SOURCES
         src/elliptic_fem.cc
     )
 
-dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS})
+dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
 dune_add_library(multiscale_problem ${PROBLEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
 dune_add_library(multiscale_msfem ${MSFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${DUNE_UMFPACK_LIBRARIES} ${TBB_LIBRARIES} )
+set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${COMMON_LIBS} ${DUNE_UMFPACK_LIBRARIES} ${TBB_LIBRARIES} )
 
 ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
@@ -123,6 +123,7 @@ foreach(target multiscale_common multiscale_problem multiscale_msfem elliptic_ms
   add_dune_parmetis_flags(${target})
   add_dune_superlu_flags(${target})
   add_dune_umfpack_flags(${target})
+  add_dune_tbb_flags(${target})
   add_dune_alugrid_flags(${target})
   add_dune_mpi_flags(${target})
 endforeach()
