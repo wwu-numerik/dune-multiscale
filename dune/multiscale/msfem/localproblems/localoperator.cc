@@ -35,7 +35,9 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, 
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(Problem::getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
-                          localSpace_.mapper().maxNumDofs()) {
+                          localSpace_.mapper().maxNumDofs())
+  , use_umfpack_(DSC_CONFIG_GET("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
+{
   system_assembler_.add(elliptic_operator_);
 }
 
@@ -118,8 +120,9 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
-  local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
-      system_matrix_.backend(), DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
+  if(use_umfpack_)
+    local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
+        system_matrix_.backend(), DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
 }
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
@@ -131,11 +134,15 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
   auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type", "umfpack"));
+  options["precision"] =
   options["verbose"] = DSC_CONFIG_GET("msfem.localproblemsolver_verbose", "0");
   {
     InverseOperatorResult stat;
     auto writable_rhs = current_rhs.vector().copy();
-    local_direct_inverse_->apply(current_solution.vector().backend(), writable_rhs.backend(), stat);
+    if(use_umfpack_)
+      local_direct_inverse_->apply(current_solution.vector().backend(), writable_rhs.backend(), stat);
+    else
+      local_inverse.apply(current_solution.vector(), writable_rhs, options);
   }
   if (!current_solution.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Current solution of the local msfem problem invalid!");
