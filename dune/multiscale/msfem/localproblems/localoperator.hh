@@ -68,6 +68,7 @@ private:
   BoundaryInfoType boundaryInfo_;
   DirichletConstraintsType dirichletConstraints_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
+  const bool use_umfpack_;
   std::unique_ptr<LocalDirectInverseType> local_direct_inverse_;
 };
 
