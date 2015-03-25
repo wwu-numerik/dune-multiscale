@@ -32,12 +32,6 @@ endif()
 #Check whether to search static or dynamic libs
 set( CMAKE_FIND_LIBRARY_SUFFIXES_SAV ${CMAKE_FIND_LIBRARY_SUFFIXES} )
 
-if( ${FFTW_USE_STATIC_LIBS} )
-  set( CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX} )
-else()
-  set( CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX} )
-endif()
-
 if( FFTW_ROOT )
 
   #find libs
