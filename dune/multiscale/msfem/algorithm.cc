@@ -49,7 +49,7 @@ std::map<std::string, double> msfem_algorithm() {
 
   DSC::ScopedTiming algo("msfem.algorithm");
   auto grid = make_coarse_grid();
-  const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
+  const MPIHelper::MPICommunicator& comm = grid->comm();
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
   const CommonTraits::SpaceType coarseSpace(
