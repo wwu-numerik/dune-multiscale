@@ -10,6 +10,8 @@
 #include <mpi.h>
 #include <fftw3-mpi.h>
 
+#include <dune/stuff/common/exceptions.hh>
+
 /// \brief Class for generating random scalar permeability fields on
 /// d-dimensional unit cubes with given correlation function.
 ///
@@ -313,7 +315,7 @@ public:
     for (int i = 0; i < DIM; ++i) {
       double p = x[i] * _N;
       if (p < _iMin[i] || p > _iMax[i])
-        throw Error("outside");
+        DUNE_THROW(Dune::RangeError, "Coordinate p " << p << " OOB: min " << _iMin[i] << " max " << _iMax[i] << "\n");
       p -= _iMin[i];
       int j = floor(p);
       t[i] = p - j;
