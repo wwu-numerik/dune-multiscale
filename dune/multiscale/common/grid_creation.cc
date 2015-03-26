@@ -40,8 +40,9 @@ public:
   static std::shared_ptr<GridType> createCubeGrid(const Dune::FieldVector<ctype, dimworld>& lowerLeft,
                                                   const Dune::FieldVector<ctype, dimworld>& upperRight,
                                                   const Dune::array<unsigned int, dim>& elements,
-                                                  const Dune::array<unsigned int, dim>& overlap) {
-    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap);
+                                                  const Dune::array<unsigned int, dim>& overlap,
+                                                  Dune::MPIHelper::MPICommunicator communicator ) {
+    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap, communicator);
   }
 };
 }
@@ -76,12 +77,12 @@ SetupReturnType setup() {
   return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
 }
 
-std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid() {
+std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(Dune::MPIHelper::MPICommunicator communicator  ) {
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
   std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup();
   auto coarse_gridptr =
-      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse);
+      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse, communicator);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0) - coarse_gridptr->overlapSize(0);
   if (int(expected_elements) != coarse_gridptr->comm().sum(actual_elements))
@@ -90,14 +91,14 @@ std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid() {
 }
 
 pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>>
-Dune::Multiscale::make_grids(const bool check_partitioning) {
-  auto coarse_grid = make_coarse_grid();
+Dune::Multiscale::make_grids(const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
+  auto coarse_grid = make_coarse_grid(communicator);
   return {coarse_grid, make_fine_grid(coarse_grid, check_partitioning)};
 }
 
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
 Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
-                                 const bool check_partitioning) {
+                                 const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
   const auto world_dim = CommonTraits::world_dim;
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, world_dim> elements, overFine;
@@ -111,15 +112,20 @@ Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits:
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
   auto fine_gridptr =
-      StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine);
+      StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine, communicator);
 
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     // check whether grids match (may not match after load balancing if different refinements in different
     // spatial directions are used)
     DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
                          coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
-    const auto coarse_dimensions = DSG::dimensions(coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>());
-    const auto fine_dimensions = DSG::dimensions(fine_gridptr->leafGridView<CommonTraits::InteriorPartition>());
+    const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
+    const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
+//    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim))
+//      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
+//          << " | " << coarse_view.size(0) << '\n');
+    const auto coarse_dimensions = DSG::dimensions(coarse_view);
+    const auto fine_dimensions = DSG::dimensions(fine_view);
     for (const auto i : DSC::valueRange(world_dim)) {
       const bool match =
           DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
