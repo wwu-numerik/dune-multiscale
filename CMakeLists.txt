@@ -63,6 +63,7 @@ set( COMMON_SOURCES
         dune/multiscale/fem/print_info.cc
         # error_calc
         dune/multiscale/common/error_calc.cc
+        dune/multiscale/common/heterogenous.cc
         dune/multiscale/msfem/localsolution_proxy.cc
         dune/multiscale/msfem/localproblems/localgridsearch.cc
         # 
