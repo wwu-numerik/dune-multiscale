@@ -75,11 +75,10 @@ private:
   NeumannFunctional neumann_functional;
   GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional;
   DirichletCorrectorFunctionalType dirichlet_corrector;
-
 };
 
 
-LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const  MsFEMTraits::LocalSpaceType& space)
+LocalProblemOperator::LocalProblemOperator(const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
   : localSpace_(space)
   , local_diffusion_operator_(DMP::getDiffusion())
   , coarse_space_(coarse_space)
@@ -93,20 +92,14 @@ LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, 
   system_assembler_.add(elliptic_operator_);
 }
 
-void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarseEntity,
+void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntityType& coarseEntity,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalRHS) {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
-  //! @todo correct the error message below (+1 for simplicial, +2 for arbitrary), as there's no finespace any longer
-  //  BOOST_ASSERT_MSG(
-  //      (DSG::is_simplex_grid(coarse_space_) && allLocalRHS.size() == GridType::dimension + 1) ||
-  //          (!(DSG::is_simplex_grid(coarse_space_)) &&
-  //           static_cast<long long>(allLocalRHS.size()) ==
-  //               static_cast<long long>(specifier.fineSpace().mapper().maxNumDofs() + 2)),
-  //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
-  //      " and the dirichlet- and neuman corrector");
-
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
+  if (is_simplex_grid)
+    DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
+
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
@@ -115,9 +108,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     bv_helper = DSC::make_unique<BoundaryValueHelper>(localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
-
-  if (is_simplex_grid)
-    DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
 
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
@@ -135,12 +125,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
-  // coarseBaseFunc == numInnerCorrectors
-  if(bv_helper) {
+  if(coarseEntity.hasBoundaryIntersections())
     bv_helper->add_to(system_assembler_);
-  }
-
   system_assembler_.assemble();
+
   // dirichlet-0 for all rhs
   typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
   system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());

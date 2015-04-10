@@ -53,7 +53,7 @@ operator()(const PointContainerType& points) {
   return ret_entities;
 }
 
-bool Dune::Multiscale::LocalGridSearch::covers_strict(const CoarseGridSpaceType::EntityType& coarse_entity,
+bool Dune::Multiscale::LocalGridSearch::covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity,
                                                       const Dune::Multiscale::LocalGridSearch::PointIterator first,
                                                       const Dune::Multiscale::LocalGridSearch::PointIterator last) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
@@ -65,7 +65,7 @@ bool Dune::Multiscale::LocalGridSearch::covers_strict(const CoarseGridSpaceType:
   return true;
 }
 
-Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CoarseGridSpaceType& coarse_space,
+Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType& coarse_space,
                                                    const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)

@@ -25,8 +25,8 @@ if(FFTW_FOUND)
 	set(HAVE_RANDOM_PROBLEM 1)
 	set(COMMON_LIBS ${COMMON_LIBS} fftw3_mpi ${FFTW_LIBRARIES})
 endif(FFTW_FOUND)
-set(COMMON_LIBS ${COMMON_LIBS} ${TBB_LIBRARIES})
-set( MULTISCALE_LIBS multiscale_common multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${COMMON_LIBS} ${DUNE_UMFPACK_LIBRARIES} ${TBB_LIBRARIES})
+
+set( MULTISCALE_LIBS multiscale_common multiscale_msfem multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${COMMON_LIBS} ${DUNE_UMFPACK_LIBRARIES} ${TBB_LIBRARIES})
 
 set(GRIDDIM 3 CACHE STRING "")
 set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
