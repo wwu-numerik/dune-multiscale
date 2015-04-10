@@ -15,26 +15,22 @@
 
 namespace Dune {
 namespace Multiscale {
-
 class LocalProblemOperator {
   typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef Problem::DiffusionBase DiffusionOperatorType;
   typedef Problem::NeumannBCType NeumannBoundaryType;
 
-  static const int faceCodim = 1;
-
-  typedef typename MsFEMTraits::LocalSpaceType LocalSpaceType;
-  typedef typename LocalSpaceType::BaseFunctionSetType BaseFunctionSetType;
-  typedef typename LocalSpaceType::EntityType EntityType;
-  typedef typename LocalSpaceType::EntityType LocalEntityType;
-  typedef typename BackendChooser<LocalSpaceType>::LinearOperatorType LocalLinearOperatorType;
+  typedef MsFEMTraits::LocalSpaceType::BaseFunctionSetType BaseFunctionSetType;
+  typedef MsFEMTraits::LocalSpaceType::EntityType EntityType;
+  typedef MsFEMTraits::LocalSpaceType::EntityType LocalEntityType;
+  typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::LinearOperatorType LocalLinearOperatorType;
 
   typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
   typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
   typedef CommonTraits::SpaceType CoarseSpaceType;
   typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
 
-  typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, LocalSpaceType>
+  typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, MsFEMTraits::LocalSpaceType>
       EllipticOperatorType;
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
                                               CommonTraits::RangeFieldType> DirichletConstraintsType;
@@ -43,7 +39,7 @@ class LocalProblemOperator {
   typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
 
 public:
-  LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& subDiscreteFunctionSpace);
+  LocalProblemOperator(const CoarseSpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -59,11 +55,11 @@ public:
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
 
 private:
-  const LocalSpaceType localSpace_;
+  const MsFEMTraits::LocalSpaceType localSpace_;
   const Problem::LocalDiffusionType local_diffusion_operator_;
   const CoarseSpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
-  GDT::SystemAssembler<LocalSpaceType> system_assembler_;
+  GDT::SystemAssembler<MsFEMTraits::LocalSpaceType> system_assembler_;
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   DirichletConstraintsType dirichletConstraints_;
