@@ -27,7 +27,59 @@
 namespace Dune {
 namespace Multiscale {
 
-LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const LocalSpaceType& space)
+//! holds functionals,etc for boundary correctors to make conditional usage simpler
+class BoundaryValueHelper {
+  typedef decltype(DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>()) LocalNeumann;
+  typedef GDT::Functionals::L2Face<LocalNeumann, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType> NeumannFunctional;
+  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
+                                     MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
+                                     DirichletProduct> DirichletCorrectorFunctionalType;
+
+public:
+  BoundaryValueHelper(const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
+                      std::size_t coarseBaseFunc)
+    : localSpace_(localSpace)
+    , dirichletExtensionLocal(localSpace_, "dirichletExtension")
+    , local_neumann(DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
+    , neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
+    , dl_corrector_functional(dirichletExtensionLocal,
+                              local_diffusion_operator)
+    , dirichlet_corrector(local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_,
+                          dl_corrector_functional)
+  {}
+
+  void dirichlet_projection(const CommonTraits::SpaceType& coarse_space) {
+    GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space);
+    const auto& dirichlet_data = DMP::getDirichletData();
+    CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space, "Dirichlet Extension Coarse");
+    GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
+                                                   CommonTraits::DiscreteFunctionType>
+        coarse_dirichlet_projection_operator(coarse_space.grid_view(), DMP::getModelData().boundaryInfo(),
+                                             dirichlet_data, dirichletExtensionCoarse);
+    coarse_system_assembler.add(coarse_dirichlet_projection_operator,
+                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+    coarse_system_assembler.assemble();
+    GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
+    projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
+  }
+
+  void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler)  {
+    system_assembler.add(neumann_functional);
+    system_assembler.add(dirichlet_corrector);
+  }
+
+private:
+  const MsFEMTraits::LocalSpaceType& localSpace_;
+  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtensionLocal;
+  LocalNeumann local_neumann;
+  NeumannFunctional neumann_functional;
+  GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional;
+  DirichletCorrectorFunctionalType dirichlet_corrector;
+
+};
+
+
+LocalProblemOperator::LocalProblemOperator(const CoarseSpaceType& coarse_space, const  MsFEMTraits::LocalSpaceType& space)
   : localSpace_(space)
   , local_diffusion_operator_(DMP::getDiffusion())
   , coarse_space_(coarse_space)
@@ -54,25 +106,15 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   //      "You need to allocate storage space for the correctors for all unit vector/all coarse basis functions"
   //      " and the dirichlet- and neuman corrector");
 
-  GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space_);
-  LocalGridDiscreteFunctionType dirichletExtensionLocal(localSpace_, "dirichletExtension");
-  {
-    const auto& dirichlet_data = DMP::getDirichletData();
-    CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space_, "Dirichlet Extension Coarse");
-    GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
-                                                   CommonTraits::DiscreteFunctionType>
-        coarse_dirichlet_projection_operator(coarse_space_.grid_view(), DMP::getModelData().boundaryInfo(),
-                                             dirichlet_data, dirichletExtensionCoarse);
-    coarse_system_assembler.add(coarse_dirichlet_projection_operator,
-                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
-    coarse_system_assembler.assemble();
-    GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
-    projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
-  }
-
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
+
+  std::unique_ptr<BoundaryValueHelper> bv_helper(nullptr);
+  if (coarseEntity.hasBoundaryIntersections()){
+    bv_helper = DSC::make_unique<BoundaryValueHelper>(localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
+    bv_helper->dirichlet_projection(coarse_space_);
+  }
 
   if (is_simplex_grid)
     DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
@@ -94,24 +136,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const CoarseEntityType& coarse
   }
 
   // coarseBaseFunc == numInnerCorrectors
-  // neumann corrector
-  const auto local_neumann = DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>();
-  GDT::Functionals::L2Face<decltype(local_neumann), CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType>
-      neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_);
-  system_assembler_.add(neumann_functional);
+  if(bv_helper) {
+    bv_helper->add_to(system_assembler_);
+  }
 
-  coarseBaseFunc++; // coarseBaseFunc == 1 + numInnerCorrectors
-  assert(coarseBaseFunc == 1 + numInnerCorrectors);
-  // dirichlet corrector
-  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
-                                     MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
-                                     DirichletProduct> DirichletCorrectorFunctionalType;
-  GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional(dirichletExtensionLocal,
-                                                                                 local_diffusion_operator_);
-  auto& dl_vector = allLocalRHS[coarseBaseFunc]->vector();
-  DirichletCorrectorFunctionalType dirichlet_corrector(local_diffusion_operator_, dl_vector, localSpace_,
-                                                       dl_corrector_functional);
-  system_assembler_.add(dirichlet_corrector);
   system_assembler_.assemble();
   // dirichlet-0 for all rhs
   typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
@@ -130,7 +158,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   if (!current_rhs.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
-  typedef BackendChooser<LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
+  typedef BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
   auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type", "umfpack"));
