@@ -5,12 +5,8 @@
 #ifndef Elliptic_MSEM_Solver_HH
 #define Elliptic_MSEM_Solver_HH
 
-#include <dune/common/fmatrix.hh>
-#include <dune/common/typetraits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-
-#include <dune/multiscale/common/la_backend.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -21,15 +17,9 @@ class LocalsolutionProxy;
 //! \TODO needs a better name
 class Elliptic_MsFEM_Solver {
 private:
-  typedef CommonTraits::DiscreteFunctionType DiscreteFunctionType;
-
-  static const int faceCodim = 1;
-
-  typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(LocalGridList& localgrid_list, const DiscreteFunctionType& coarse_msfem_solution,
+  void identify_fine_scale_part(LocalGridList& localgrid_list, const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                 const CommonTraits::SpaceType& coarse_space,
                                 std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 

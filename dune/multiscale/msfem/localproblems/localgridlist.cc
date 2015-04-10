@@ -27,14 +27,14 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   DSC::ScopedTiming st("msfem.LocalGridList.ctor");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
-  constexpr auto dim_world = LocalGridType::dimensionworld;
+  constexpr auto dim_world = MsFEMTraits::LocalGridType::dimensionworld;
 
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
                                                                                CommonTraits::DomainType(8), dim_world);
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
-  typedef StructuredGridFactory<LocalGridType> FactoryType;
+  typedef StructuredGridFactory<MsFEMTraits::LocalGridType> FactoryType;
   const auto& gridCorners = Problem::getModelData().gridCorners();
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
@@ -49,7 +49,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
     assert(subGridList_.find(coarse_index) == subGridList_.end());
 
     const auto dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarse_entity);
-    typedef FieldVector<typename LocalGridType::ctype, dim_world> CoordType;
+    typedef FieldVector<typename MsFEMTraits::LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
     array<unsigned int, dim_world> elemens;
@@ -82,13 +82,13 @@ const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(IndexType coarseCell
   return *(found->second);
 } // getSubGrid
 
-const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& entity) const {
+const MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const MsFEMTraits::CoarseEntityType& entity) const {
   BOOST_ASSERT_MSG((entity.partitionType() == Dune::InteriorEntity), "Subgrids exist only for interior entities!");
   const auto index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
 } // getSubGrid
 
-MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& entity) {
+MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const MsFEMTraits::CoarseEntityType& entity) {
   BOOST_ASSERT_MSG((entity.partitionType() == Dune::InteriorEntity), "Subgrids exist only for interior entities!");
   const auto index = coarseGridLeafIndexSet_.index(entity);
   return getSubGrid(index);
@@ -97,12 +97,13 @@ MsFEMTraits::LocalGridType& LocalGridList::getSubGrid(const CoarseEntityType& en
 // get number of sub grids
 std::size_t LocalGridList::size() const { return subGridList_.size(); }
 
-bool LocalGridList::covers_strict(const CoarseEntityType& coarse_entity,
+bool LocalGridList::covers_strict(const MsFEMTraits::CoarseEntityType& coarse_entity,
                                   const MsFEMTraits::LocalEntityType& local_entity) {
   return covers_strict(coarse_entity, local_entity.geometry());
 }
 
-bool LocalGridList::covers(const CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity) {
+bool LocalGridList::covers(const MsFEMTraits::CoarseEntityType& coarse_entity,
+                           const MsFEMTraits::LocalEntityType& local_entity) {
   const auto& center = local_entity.geometry().center();
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   return reference_element.checkInside(coarse_entity.geometry().local(center));

@@ -16,20 +16,7 @@
 namespace Dune {
 namespace Multiscale {
 class LocalProblemOperator {
-  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef Problem::DiffusionBase DiffusionOperatorType;
-  typedef Problem::NeumannBCType NeumannBoundaryType;
-
-  typedef MsFEMTraits::LocalSpaceType::BaseFunctionSetType BaseFunctionSetType;
-  typedef MsFEMTraits::LocalSpaceType::EntityType EntityType;
-  typedef MsFEMTraits::LocalSpaceType::EntityType LocalEntityType;
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::LinearOperatorType LocalLinearOperatorType;
-
-  typedef typename LocalEntityType::EntityPointer LocalEntityPointerType;
-  typedef MsFEMTraits::CoarseBaseFunctionSetType CoarseBaseFunctionSetType;
-  typedef CommonTraits::SpaceType CoarseSpaceType;
-  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-
   typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, MsFEMTraits::LocalSpaceType>
       EllipticOperatorType;
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
@@ -39,7 +26,7 @@ class LocalProblemOperator {
   typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
 
 public:
-  LocalProblemOperator(const CoarseSpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
+  LocalProblemOperator(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -49,7 +36,7 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assemble_all_local_rhs(const CoarseEntityType& coarseEntity, MsFEMTraits::LocalSolutionVectorType& allLocalRHS);
+  void assemble_all_local_rhs(const MsFEMTraits::CoarseEntityType& coarseEntity, MsFEMTraits::LocalSolutionVectorType& allLocalRHS);
 
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);
@@ -57,7 +44,7 @@ public:
 private:
   const MsFEMTraits::LocalSpaceType localSpace_;
   const Problem::LocalDiffusionType local_diffusion_operator_;
-  const CoarseSpaceType& coarse_space_;
+  const CommonTraits::SpaceType& coarse_space_;
   LocalLinearOperatorType system_matrix_;
   GDT::SystemAssembler<MsFEMTraits::LocalSpaceType> system_assembler_;
   EllipticOperatorType elliptic_operator_;

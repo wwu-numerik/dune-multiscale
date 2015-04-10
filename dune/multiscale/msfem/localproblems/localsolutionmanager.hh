@@ -20,20 +20,14 @@ class LocalGridList;
  * @brief One LocalSolutionManager instance per coarse cell
  */
 class LocalSolutionManager {
-private:
-  typedef MsFEMTraits::CoarseEntityType CoarseEntityType;
-  typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
-  typedef MsFEMTraits::LocalGridDiscreteFunctionType LocalGridDiscreteFunctionType;
-  typedef MsFEMTraits::LocalSpaceType LocalSpaceType;
-
 public:
-  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const CoarseEntityType& coarseEntity,
+  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::CoarseEntityType& coarseEntity,
                        const LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();
 
-  const LocalSpaceType& space() const;
-  const LocalGridViewType& grid_view() const;
+  const MsFEMTraits::LocalSpaceType& space() const;
+  const MsFEMTraits::LocalGridViewType& grid_view() const;
 
   void load();
   void save() const;
@@ -43,7 +37,7 @@ public:
 private:
   const LocalGridList& subgridList_;
   const MsFEMTraits::LocalGridType& subgrid_;
-  LocalGridViewType grid_view_;
+  MsFEMTraits::LocalGridViewType grid_view_;
   const std::size_t numBoundaryCorrectors_;
   const std::size_t numLocalProblems_;
   MsFEMTraits::LocalSolutionVectorType localSolutions_;

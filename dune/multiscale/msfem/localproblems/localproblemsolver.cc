@@ -85,13 +85,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     //!TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
-    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
-                          .induced_norm(current_rhs);
-    if (norm < 1e-12) {
-      current_solution.vector() *= 0;
-      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
-      continue;
-    }
+//    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
+//                          .induced_norm(current_rhs);
+//    if (norm < 1e-12) {
+//      current_solution.vector() *= 0;
+//      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
+//      continue;
+//    }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       current_solution.vector() *= 0;

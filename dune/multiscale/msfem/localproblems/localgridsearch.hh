@@ -11,30 +11,28 @@ class LocalGridList;
 
 //! given a Localgridlist, facilitate searching for evaluation points in a pseudo-hierachical manner
 class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> {
-  typedef MsFEMTraits::LocalGridViewType LocalGridViewType;
-  typedef DSG::EntitySearchBase<LocalGridViewType> BaseType;
-
-  typedef DSG::EntityInlevelSearch<LocalGridViewType> PerGridSearchType;
-  typedef CommonTraits::SpaceType CoarseGridSpaceType;
-  typedef typename CoarseGridSpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
-  typedef typename CoarseGridSpaceType::EntityType::EntityPointer CoarseEntityPointerType;
-  typedef std::vector<CoarseGridSpaceType::DomainType> PointContainerType;
+  typedef DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> BaseType;
+  typedef DSG::EntityInlevelSearch<MsFEMTraits::LocalGridViewType> PerGridSearchType;
+  typedef typename CommonTraits::SpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
+  typedef typename CommonTraits::SpaceType::EntityType::EntityPointer CoarseEntityPointerType;
+  typedef std::vector<CommonTraits::DomainType> PointContainerType;
   typedef PointContainerType::const_iterator PointIterator;
 
 public:
   typedef typename BaseType::EntityPointerVectorType EntityPointerVectorType;
 
-  LocalGridSearch(const CoarseGridSpaceType& space, const LocalGridList& gridlist);
+  LocalGridSearch(const CommonTraits::SpaceType& space, const LocalGridList& gridlist);
 
   EntityPointerVectorType operator()(const PointContainerType& points);
 
   const CoarseEntityPointerType& current_coarse_pointer() const;
 
-  bool covers_strict(const typename CoarseGridSpaceType::EntityType& coarse_entity, const PointIterator first,
+  bool covers_strict(const CommonTraits::SpaceType
+                     ::EntityType& coarse_entity, const PointIterator first,
                      const PointIterator last);
 
 private:
-  const CoarseGridSpaceType& coarse_space_;
+  const CommonTraits::SpaceType& coarse_space_;
   const LocalGridList& gridlist_;
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
   std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;

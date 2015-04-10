@@ -41,7 +41,7 @@ namespace Dune {
 namespace Multiscale {
 
 void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_list,
-                                                     const DiscreteFunctionType& coarse_msfem_solution,
+                                                     const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                                      const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
   DSC::ScopedTiming st("msfem.idFine");
@@ -135,7 +135,7 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
   DSC::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   const auto clearGuard = DiscreteFunctionIO::clear_guard();
 
-  DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
+  CommonTraits::DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");
   coarse_msfem_solution.vector() *= 0;
 
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
