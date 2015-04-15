@@ -24,6 +24,7 @@ namespace Multiscale {
 //! the main FEM computation
 void cgfem_algorithm() {
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
+  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
 

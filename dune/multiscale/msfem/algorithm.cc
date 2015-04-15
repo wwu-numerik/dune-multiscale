@@ -49,6 +49,7 @@ std::map<std::string, double> msfem_algorithm() {
 
   DSC::ScopedTiming algo("msfem.algorithm");
   auto grid = make_coarse_grid();
+  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
   const MPIHelper::MPICommunicator& comm = grid->comm();
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
