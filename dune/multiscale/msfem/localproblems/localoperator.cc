@@ -87,7 +87,11 @@ LocalProblemOperator::LocalProblemOperator(const CommonTraits::SpaceType &coarse
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(Problem::getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
                           localSpace_.mapper().maxNumDofs())
+  #if HAVE_UMFPACK
   , use_umfpack_(DSC_CONFIG_GET("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
+  #else
+  , use_umfpack_(false)
+  #endif
 {
   system_assembler_.add(elliptic_operator_);
 }
@@ -136,9 +140,11 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
     system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
+#if HAVE_UMFPACK
   if(use_umfpack_)
     local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
         system_matrix_.backend(), DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
+#endif
 }
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
@@ -155,9 +161,11 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   {
     InverseOperatorResult stat;
     auto writable_rhs = current_rhs.vector().copy();
+#if HAVE_UMFPACK
     if(use_umfpack_)
       local_direct_inverse_->apply(current_solution.vector().backend(), writable_rhs.backend(), stat);
     else
+#endif
       local_inverse.apply(current_solution.vector(), writable_rhs, options);
   }
   if (!current_solution.dofs_valid())

@@ -22,8 +22,11 @@ class LocalProblemOperator {
   typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
                                               CommonTraits::RangeFieldType> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
-
+#if HAVE_UMFPACK
   typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
+#else
+  typedef void LocalDirectInverseType;
+#endif
 
 public:
   LocalProblemOperator(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
@@ -52,7 +55,9 @@ private:
   DirichletConstraintsType dirichletConstraints_;
   DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
   const bool use_umfpack_;
+#if HAVE_UMFPACK
   std::unique_ptr<LocalDirectInverseType> local_direct_inverse_;
+#endif
 };
 
 } // namespace Multiscale {
