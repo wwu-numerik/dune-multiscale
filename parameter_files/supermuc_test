@@ -20,12 +20,12 @@ local_corrections_vtk_output = 0
 # compute the errors between MsFEM and (standard) FEM approximations?
 fem_comparison = 0
 
-localproblemsolver_verbose = 1
+localproblemsolver_verbose = 0
 #bicgstab.ilut,bicgstab.amg.ilu0 or umfpack
 localproblemsolver_type = umfpack
 
 [problem]
-name = "Nine"
+name = "Synthetic"
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
 
 [logging]
@@ -39,6 +39,6 @@ file = ms.log
 dir = logdata
 
 [threading]
-max_count = 12
+max_count = 16
 partition_factor = 1
 
