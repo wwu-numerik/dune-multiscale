@@ -165,10 +165,18 @@ int main(int argc, char** argv) {
 
     // name of the grid file that describes the macro-grid:
     auto grids = Dune::Multiscale::make_grids(false);
+    const auto& coarse_grid = *grids.first;
+    const auto& comm = coarse_grid.comm();
+    Problem::getMutableModelData().problem_init(comm, comm);
+    Problem::getMutableModelData().prepare_new_evaluation();
+
+    if (DSC_CONFIG_GET("global.vtk_output", false)) {
+      Problem::getDiffusion().visualize(coarse_grid.leafGridView(), OutputParameters().fullpath("diffusion"));
+    }
 //    partition_vis(*grids.first, *grids.second);
 //    subgrid_vis(*grids.first, *grids.second);
     DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
-    DSG::ElementVisualization::all(*grids.first, datadir + "/coarse_element_visualization");
+    DSG::ElementVisualization::all(coarse_grid, datadir + "/coarse_element_visualization");
   }
   catch (Dune::Exception& e) {
     return handle_exception(e);
