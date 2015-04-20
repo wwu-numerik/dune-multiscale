@@ -82,7 +82,12 @@ ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfe
   assert(msfem_solution_);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
     fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>();
-    fem_solution_ = &fem_solver_->solve();
+    try {
+      fem_solution_ = &fem_solver_->solve();
+    } catch (Dune::Exception& e) {
+      DSC_LOG_ERROR << "fine CGFEM solution failed: " << e.what();
+      fem_solution_ = nullptr;
+    }
   }
 }
 
@@ -104,12 +109,18 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       fine_space, fine_interior_view);
   const auto& grid_view = fine_space.grid_view();
 
-  Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
-  auto& coarse_fem_solution = coarse_fem_solver.solve();
   CommonTraits::DiscreteFunctionType projected_coarse_fem_solution(fine_space);
-  const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
-      fine_space.grid_view());
-  prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
+  Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
+  try {
+    auto& coarse_fem_solution = coarse_fem_solver.solve();
+    const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
+          fine_space.grid_view());
+      prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
+    if (DSC_CONFIG_GET("global.vtk_output", false))  solution_output(coarse_fem_solution, "coarse-cg-fem_solution_");
+  } catch (Dune::Exception& e) {
+    DSC_LOG_ERROR << "coarse CGFEM solution failed: " << e.what();
+    fem_solution_ = nullptr;
+  }
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
   if (msfem_solution_) {
@@ -247,7 +258,6 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       solution_output(mpair.second, grid_view, mpair.first);
     for (const auto& mpair : discrete_differences)
       solution_output(mpair.second, grid_view, mpair.first);
-    solution_output(coarse_fem_solution, "coarse-cg-fem_solution_");
     if (fem_solution_)
       solution_output(*fem_solution_, "fine-cg-fem_solution_");
   }
