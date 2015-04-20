@@ -53,6 +53,9 @@ std::map<std::string, double> msfem_algorithm() {
   const MPIHelper::MPICommunicator& comm = grid->comm();
   Problem::getMutableModelData().problem_init(comm, comm);
   Problem::getMutableModelData().prepare_new_evaluation();
+  if (DSC_CONFIG_GET("global.vtk_output", false)) {
+    Problem::getDiffusion().visualize(grid->leafGridView(), OutputParameters().fullpath("diffusion"));
+  }
   const CommonTraits::SpaceType coarseSpace(
       CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
