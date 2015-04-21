@@ -43,24 +43,24 @@ typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceTyp
 typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
-void solution_output(const CommonTraits::ConstDiscreteFunctionType& solution, std::string name = "msfem_solution_") {
+void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::ConstDiscreteFunctionType& solution, std::string name = "msfem_solution_") {
   using namespace Dune;
 
-  Dune::Multiscale::OutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
   outputparam.set_prefix(name);
   solution.visualize(outputparam.fullpath(solution.name()));
 }
 template <typename L, typename R>
-void solution_output(const DSFu::Difference<L, R>& solution, const CommonTraits::GridViewType& view, std::string name) {
+void solution_output(const DMP::ProblemContainer& problem, const DSFu::Difference<L, R>& solution, const CommonTraits::GridViewType& view, std::string name) {
   using namespace Dune;
 
-  Dune::Multiscale::OutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
   outputparam.set_prefix(name);
   solution.visualize(view, outputparam.fullpath(solution.name()));
 }
 void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
-  Dune::Multiscale::OutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
 
   if (problem.getModelData().hasExactSolution()) {
     const auto& u = problem.getExactSolution();
@@ -82,7 +82,7 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &problem, const std
   , msfem_solution_(msfem_solution)
   , fem_solution_(nullptr) {
   assert(msfem_solution_);
-  if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
+  if (problem.config().get("msfem.fem_comparison", false)) {
     fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>(problem);
     try {
       fem_solution_ = &fem_solver_->solve();
@@ -118,7 +118,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
           fine_space.grid_view());
       prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
-    if (DSC_CONFIG_GET("global.vtk_output", false))  solution_output(coarse_fem_solution, "coarse-cg-fem_solution_");
+    if (problem_.config().get("global.vtk_output", false))  solution_output(problem_, coarse_fem_solution, "coarse-cg-fem_solution_");
   } catch (Dune::Exception& e) {
     DSC_LOG_ERROR << "coarse CGFEM solution failed: " << e.what();
     fem_solution_ = nullptr;
@@ -127,10 +127,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
   if (msfem_solution_) {
     MsFEMProjection::project(*msfem_solution_, fine_msfem_solution, msfem_solution_->search());
-    if (DSC_CONFIG_GET("global.vtk_output", false)) {
+    if (problem_.config().get("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
       data_output(problem_, fine_space.grid_view());
-      solution_output(fine_msfem_solution);
+      solution_output(problem_, fine_msfem_solution);
     }
   }
 
@@ -254,18 +254,18 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     }
   }
 
-  if (DSC_CONFIG_GET("global.vtk_output", false)) {
+  if (problem_.config().get("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
     for (const auto& mpair : differences)
-      solution_output(mpair.second, grid_view, mpair.first);
+      solution_output(problem_, mpair.second, grid_view, mpair.first);
     for (const auto& mpair : discrete_differences)
-      solution_output(mpair.second, grid_view, mpair.first);
+      solution_output(problem_, mpair.second, grid_view, mpair.first);
     if (fem_solution_)
-      solution_output(*fem_solution_, "fine-cg-fem_solution_");
+      solution_output(problem_, *fem_solution_, "fine-cg-fem_solution_");
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(
-      DSC::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/errors.csv")));
+      DSC::make_ofstream(std::string(problem_.config().get("global.datadir", "data/")) + std::string("/errors.csv")));
   const std::string sep(",");
   for (const auto& key_val : csv) {
     *csvfile << key_val.first << sep;

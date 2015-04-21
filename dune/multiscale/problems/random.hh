@@ -108,7 +108,7 @@ public:
 
   virtual size_t order() const final override;
 
-  virtual void init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
+  virtual void init(const DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
   virtual void prepare_new_evaluation() final override;
 
 private:

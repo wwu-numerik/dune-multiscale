@@ -54,8 +54,8 @@ public:
    *  filename may include additional path components
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
-  DiskBackend(const std::string filename = "nonsense_default_for_map")
-    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
+  DiskBackend(const DSC::Configuration& config, const std::string filename = "nonsense_default_for_map")
+    : dir_(boost::filesystem::path(config.get("global.datadir", "data")) / filename)
     , index_(0) {}
 
   void append(const IOTraits::DiscreteFunction_ptr& /*df*/) {
@@ -88,8 +88,7 @@ public:
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
   MemoryBackend(IOTraits::GridViewType& grid_view, const std::string filename = "nonsense_default_for_map")
-    : dir_(boost::filesystem::path(DSC_CONFIG_GET("global.datadir", "data")) / filename)
-    , space_(MsFEMTraits::SpaceChooserType::make_space(grid_view)) {}
+    : space_(MsFEMTraits::SpaceChooserType::make_space(grid_view)) {}
 
   void append(const IOTraits::DiscreteFunction_ptr& df) { functions_.push_back(df); }
 
@@ -104,7 +103,6 @@ public:
   IOTraits::DiscreteFunctionSpaceType& space() { return space_; }
 
 private:
-  const boost::filesystem::path dir_;
   IOTraits::DiscreteFunctionSpaceType space_;
   IOTraits::Vector functions_;
 };
@@ -141,7 +139,7 @@ private:
     return ret.first->second;
   }
 
-  DiskBackend& get_disk(std::string filename);
+  DiskBackend& get_disk(const DSC::Configuration& config, std::string filename);
   MemoryBackend& get_memory(std::string filename, IOTraits::GridViewType& grid_view);
 
   //! this needs to be called before global de-init or else dune fem fails
@@ -149,7 +147,7 @@ private:
 
 public:
   static MemoryBackend& memory(std::string filename, IOTraits::GridViewType& grid_view);
-  static DiskBackend& disk(std::string filename);
+  static DiskBackend& disk(const Stuff::Common::Configuration &config, std::string filename);
 
   static ClearGuard clear_guard() { return ClearGuard(); }
 

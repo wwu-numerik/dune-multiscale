@@ -107,3 +107,13 @@ const Problem::NeumannDataBase& DMP::ProblemContainer::getNeumannData() const {
 const std::string DMP::ProblemContainer::name() const{
   return name_;
 }
+
+const Dune::Stuff::Common::Configuration &Problem::ProblemContainer::config() const
+{
+  return config_;
+}
+
+Dune::Stuff::Common::Configuration &Problem::ProblemContainer::config()
+{
+  return config_;
+}

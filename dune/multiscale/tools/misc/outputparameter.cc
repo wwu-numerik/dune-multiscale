@@ -10,7 +10,7 @@ namespace Dune {
 namespace Multiscale {
 
 // OutputParameters::OutputParameters(const std::string path
-//                                  = DSC_CONFIG_GET("global.datadir", "data")
+//                                  = problem.config().get("global.datadir", "data")
 OutputParameters::OutputParameters(const std::string path_in)
   : my_prefix_("solutions")
   , my_path_(path_in) {

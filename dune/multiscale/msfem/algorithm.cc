@@ -61,12 +61,12 @@ std::map<std::string, double> msfem_algorithm() {
   LocalGridList localgrid_list(problem, coarseSpace);
   Elliptic_MsFEM_Solver().apply(problem, coarseSpace, msfem_solution, localgrid_list);
 
-  if (DSC_CONFIG_GET("global.vtk_output", false)) {
+  if (problem.config().get("global.vtk_output", false)) {
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
-    coarse_grid_visualization.visualize(OutputParameters().fullpath(coarse_grid_visualization.name()));
+    coarse_grid_visualization.visualize(OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));
   }
 
-  if (!DSC_CONFIG_GET("global.skip_error", false))
+  if (!problem.config().get("global.skip_error", false))
     return ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0);
   return decltype(ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0))();
 } // function algorithm

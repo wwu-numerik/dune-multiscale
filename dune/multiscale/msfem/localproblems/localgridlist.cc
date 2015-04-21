@@ -31,7 +31,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer &problem, const Com
   const auto gridParameterTree = DSC_CONFIG.sub("grids");
   const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
                                                                                CommonTraits::DomainType(8), dim_world);
-  const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
+  const auto oversampling_layer = problem.config().get("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<MsFEMTraits::LocalGridType> FactoryType;
   const auto& gridCorners = problem.getModelData().gridCorners();
