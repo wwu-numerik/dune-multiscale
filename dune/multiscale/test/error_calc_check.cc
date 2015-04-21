@@ -17,7 +17,7 @@ struct ErrorCheck : public GridAndSpaces {
   void run_error_calc() {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     auto& coarse_space = this->coarseSpace;
-    LocalGridList localgrid_list(coarse_space);
+    LocalGridList localgrid_list(*problem_, coarse_space);
     const CommonTraits::InteriorGridViewType interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
     const auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
     for (auto& coarse_entity : DSC::entityRange(interior)) {
@@ -28,7 +28,7 @@ struct ErrorCheck : public GridAndSpaces {
           DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), "correction");
     }
       const auto msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
-    ErrorCalculator ec(msfem_solution);
+    ErrorCalculator ec(*problem_, msfem_solution);
     auto errors = ec.print(DSC_LOG_INFO_0);
       return ;
   }

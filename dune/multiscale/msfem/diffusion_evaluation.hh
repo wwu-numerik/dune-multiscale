@@ -40,11 +40,13 @@ public:
   typedef typename Traits::DomainFieldType DomainFieldType;
   typedef typename Traits::LocalizableFunctionType LocalizableFunctionType;
 
-  CoarseBasisProduct(const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base,
+  CoarseBasisProduct(const DMP::DiffusionBase& diffusion, const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base,
                      const LocalizableFunctionType& inducingFunction, const std::size_t coarseBaseFunc)
     : inducingFunction_(inducingFunction)
     , coarse_base_set_(coarse_base)
-    , coarseBaseFunc_(coarseBaseFunc) {}
+    , coarseBaseFunc_(coarseBaseFunc)
+    , diffusion_(diffusion)
+  {}
 
   CoarseBasisProduct(const CoarseBasisProduct&) = default;
 
@@ -97,7 +99,7 @@ public:
 
     DMP::JacobianRangeType flux;
     //! todo make member
-    DMP::getDiffusion().diffusiveFlux(global_point, direction, flux);
+    diffusion_.diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();
     const auto transformed_gradients = testBase.jacobian(localPoint);
@@ -117,6 +119,7 @@ private:
   const LocalizableFunctionType& inducingFunction_;
   const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base_set_;
   const std::size_t coarseBaseFunc_;
+  const DMP::DiffusionBase& diffusion_;
 }; // class CoarseBasisProduct
 
 // forward, to be used in the traits
@@ -134,10 +137,12 @@ public:
   typedef DirichletProductTraits Traits;
   typedef typename Traits::LocalizableFunctionType LocalizableFunctionType;
 
-  DirichletProduct(const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension,
+  DirichletProduct(const DMP::DiffusionBase& diffusion, const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension,
                    const LocalizableFunctionType& inducingFunction)
     : inducingFunction_(inducingFunction)
-    , dirichlet_extension_(dirichlet_extension) {}
+    , dirichlet_extension_(dirichlet_extension)
+    , diffusion_(diffusion)
+  {}
 
   template <class EntityType>
   class LocalfunctionTuple {
@@ -195,7 +200,7 @@ public:
     DMP::JacobianRangeType flux;
     const auto global_point = entity.geometry().global(localPoint);
     //!TODO make member
-    DMP::getDiffusion().diffusiveFlux(global_point, direction, flux);
+    diffusion_.diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();
     const auto grad_phi_s = testBase.jacobian(localPoint);
@@ -215,6 +220,7 @@ public:
 private:
   const LocalizableFunctionType& inducingFunction_;
   const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension_;
+    const DMP::DiffusionBase& diffusion_;
 }; // class Product
 
 } // namespace Multiscale {

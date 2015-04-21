@@ -48,18 +48,19 @@ std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
 
   DSC::ScopedTiming algo("msfem.algorithm");
-  auto grid = make_coarse_grid();
+  const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
+  DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+  auto grid = make_coarse_grid(problem);
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
-  const MPIHelper::MPICommunicator& comm = grid->comm();
-  Problem::getMutableModelData().problem_init(comm, comm);
-  Problem::getMutableModelData().prepare_new_evaluation();
+  problem.getMutableModelData().problem_init(problem, comm, comm);
+  problem.getMutableModelData().prepare_new_evaluation(problem);
 
   const CommonTraits::SpaceType coarseSpace(
       CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
-  LocalGridList localgrid_list(coarseSpace);
-  Elliptic_MsFEM_Solver().apply(coarseSpace, msfem_solution, localgrid_list);
+  LocalGridList localgrid_list(problem, coarseSpace);
+  Elliptic_MsFEM_Solver().apply(problem, coarseSpace, msfem_solution, localgrid_list);
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
@@ -67,8 +68,8 @@ std::map<std::string, double> msfem_algorithm() {
   }
 
   if (!DSC_CONFIG_GET("global.skip_error", false))
-    return ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0);
-  return decltype(ErrorCalculator(msfem_solution).print(DSC_LOG_INFO_0))();
+    return ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0);
+  return decltype(ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0))();
 } // function algorithm
 
 } // namespace Multiscale {

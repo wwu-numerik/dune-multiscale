@@ -11,6 +11,7 @@
 
 namespace Dune {
 namespace Multiscale {
+
 //! define output parameters for \ref Dune::DataOutput
 struct OutputParameters {
 public:

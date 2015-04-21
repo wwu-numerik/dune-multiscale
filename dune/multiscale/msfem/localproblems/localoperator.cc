@@ -28,33 +28,34 @@ namespace Dune {
 namespace Multiscale {
 
 //! holds functionals,etc for boundary correctors to make conditional usage simpler
+template <class LocalNeumann>
 class BoundaryValueHelper {
-  typedef decltype(DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>()) LocalNeumann;
   typedef GDT::Functionals::L2Face<LocalNeumann, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType> NeumannFunctional;
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
                                      DirichletProduct> DirichletCorrectorFunctionalType;
 
 public:
-  BoundaryValueHelper(const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
+  BoundaryValueHelper(DMP::ProblemContainer& problem, const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
                       std::size_t coarseBaseFunc)
     : localSpace_(localSpace)
     , dirichletExtensionLocal(localSpace_, "dirichletExtension")
-    , local_neumann(DMP::getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
+    , local_neumann(problem.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
     , neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
-    , dl_corrector_functional(dirichletExtensionLocal,
+    , dl_corrector_functional(problem.getDiffusion(), dirichletExtensionLocal,
                               local_diffusion_operator)
     , dirichlet_corrector(local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_,
                           dl_corrector_functional)
+    , problem_(problem)
   {}
 
   void dirichlet_projection(const CommonTraits::SpaceType& coarse_space) {
     GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space);
-    const auto& dirichlet_data = DMP::getDirichletData();
+    const auto& dirichlet_data = problem_.getDirichletData();
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space, "Dirichlet Extension Coarse");
     GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
                                                    CommonTraits::DiscreteFunctionType>
-        coarse_dirichlet_projection_operator(coarse_space.grid_view(), DMP::getModelData().boundaryInfo(),
+        coarse_dirichlet_projection_operator(coarse_space.grid_view(), problem_.getModelData().boundaryInfo(),
                                              dirichlet_data, dirichletExtensionCoarse);
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
                                 new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
@@ -75,23 +76,25 @@ private:
   NeumannFunctional neumann_functional;
   GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional;
   DirichletCorrectorFunctionalType dirichlet_corrector;
+  DMP::ProblemContainer& problem_;
 };
 
 
-LocalProblemOperator::LocalProblemOperator(const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
+LocalProblemOperator::LocalProblemOperator(DMP::ProblemContainer& problem, const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
   : localSpace_(space)
-  , local_diffusion_operator_(DMP::getDiffusion())
+  , local_diffusion_operator_(problem.getDiffusion())
   , coarse_space_(coarse_space)
   , system_matrix_(localSpace_.mapper().size(), localSpace_.mapper().size(), EllipticOperatorType::pattern(localSpace_))
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
-  , dirichletConstraints_(Problem::getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
+  , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
                           localSpace_.mapper().maxNumDofs())
   #if HAVE_UMFPACK
   , use_umfpack_(DSC_CONFIG_GET("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
   #else
   , use_umfpack_(false)
   #endif
+  , problem_(problem)
 {
   system_assembler_.add(elliptic_operator_);
 }
@@ -107,9 +110,10 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
-  std::unique_ptr<BoundaryValueHelper> bv_helper(nullptr);
+  typedef BoundaryValueHelper<decltype(problem_.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())> BVHelper;
+  std::unique_ptr<BVHelper> bv_helper(nullptr);
   if (coarseEntity.hasBoundaryIntersections()){
-    bv_helper = DSC::make_unique<BoundaryValueHelper>(localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
+    bv_helper = DSC::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
 
@@ -121,7 +125,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   const auto coarseBaseFunctionSet = coarse_space_.base_function_set(coarseEntity);
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc) {
     assert(allLocalRHS[coarseBaseFunc]);
-    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(
+    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(problem_.getDiffusion(),
         coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
     rhs_functionals[coarseBaseFunc] =

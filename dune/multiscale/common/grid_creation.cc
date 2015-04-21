@@ -54,12 +54,12 @@ typedef tuple<CommonTraits::DomainType, CommonTraits::DomainType, array<unsigned
               array<unsigned int, CommonTraits::world_dim>,
               array<unsigned int, CommonTraits::world_dim>> SetupReturnType;
 
-SetupReturnType setup() {
+SetupReturnType setup(DMP::ProblemContainer& problem) {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
   const auto world_dim = CommonTraits::world_dim;
   typedef CommonTraits::DomainType CoordType;
-  const auto& gridCorners = Problem::getModelData().gridCorners();
+  const auto& gridCorners = problem.getModelData().gridCorners();
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
 
@@ -77,10 +77,10 @@ SetupReturnType setup() {
   return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
 }
 
-std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(Dune::MPIHelper::MPICommunicator communicator  ) {
+std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(DMP::ProblemContainer& problem, Dune::MPIHelper::MPICommunicator communicator  ) {
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
-  std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup();
+  std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup(problem);
   auto coarse_gridptr =
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse, communicator);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
@@ -91,18 +91,18 @@ std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(Dune:
 }
 
 pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>>
-Dune::Multiscale::make_grids(const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
-  auto coarse_grid = make_coarse_grid(communicator);
-  return {coarse_grid, make_fine_grid(coarse_grid, check_partitioning)};
+Dune::Multiscale::make_grids(DMP::ProblemContainer &problem, const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
+  auto coarse_grid = make_coarse_grid(problem, communicator);
+  return {coarse_grid, make_fine_grid(problem, coarse_grid, check_partitioning)};
 }
 
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
-Dune::Multiscale::make_fine_grid(std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
+Dune::Multiscale::make_fine_grid(DMP::ProblemContainer& problem, std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
                                  const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
   const auto world_dim = CommonTraits::world_dim;
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, world_dim> elements, overFine;
-  std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup();
+  std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup(problem);
   const auto coarse_cells =
       DSC_CONFIG.get<CommonTraits::DomainType>("grids.macro_cells_per_dim", CommonTraits::DomainType(8), world_dim);
   const auto microPerMacro = DSC_CONFIG.get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim",

@@ -130,7 +130,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
   msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 
-void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
+void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
                                   std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& localgrid_list) const {
   DSC::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   const auto clearGuard = DiscreteFunctionIO::clear_guard();
@@ -139,9 +139,9 @@ void Elliptic_MsFEM_Solver::apply(const CommonTraits::SpaceType& coarse_space,
   coarse_msfem_solution.vector() *= 0;
 
   //! Solutions are kept in-memory via DiscreteFunctionIO::MemoryBackend by LocalsolutionManagers
-  LocalProblemSolver(coarse_space, localgrid_list).solve_for_all_cells();
+  LocalProblemSolver(problem, coarse_space, localgrid_list).solve_for_all_cells();
 
-  CoarseScaleOperator elliptic_msfem_op(coarse_space, localgrid_list);
+  CoarseScaleOperator elliptic_msfem_op(problem, coarse_space, localgrid_list);
   elliptic_msfem_op.apply_inverse(coarse_msfem_solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)

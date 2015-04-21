@@ -46,9 +46,10 @@ public:
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
+LocalProblemSolver::LocalProblemSolver(DMP::ProblemContainer &problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
-  , coarse_space_(coarse_space) {}
+  , coarse_space_(coarse_space)
+, problem_(problem){}
 
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const {
@@ -66,7 +67,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperator localProblemOperator(*coarse_space_, subDiscreteFunctionSpace);
+  LocalProblemOperator localProblemOperator(problem_, *coarse_space_, subDiscreteFunctionSpace);
 
   // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());

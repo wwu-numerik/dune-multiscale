@@ -21,6 +21,10 @@ namespace Multiscale {
 struct LocalFunctor;
 class LocalGridList;
 
+namespace Problem {
+  struct ProblemContainer;
+}
+
 //! the essential local msfem problem solver class
 class LocalProblemSolver {
 private:
@@ -37,7 +41,7 @@ public:
    * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const
    *grid
    **/
-  LocalProblemSolver(CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list);
+  LocalProblemSolver(DMP::ProblemContainer& problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list);
 
   /** method for solving and saving the solutions of the local msfem problems
     * for the whole set of macro-entities and for every unit vector e_i
@@ -50,6 +54,7 @@ private:
   //! Solve all local MsFEM problems for one coarse entity at once.
   void solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                 MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const;
+  DMP::ProblemContainer& problem_;
 }; // end class
 
 } // namespace Multiscale {

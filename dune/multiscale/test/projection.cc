@@ -28,7 +28,7 @@ struct Projection : public GridAndSpaces {
   }
 
   void project() {
-    LocalGridList localgrid_list(coarseSpace);
+    LocalGridList localgrid_list(*problem_, coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
     auto local_corrections = fill_local_corrections(lambda, localgrid_list);

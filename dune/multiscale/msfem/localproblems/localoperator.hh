@@ -29,7 +29,7 @@ class LocalProblemOperator {
 #endif
 
 public:
-  LocalProblemOperator(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
+  LocalProblemOperator(DMP::ProblemContainer& problem,const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -58,6 +58,7 @@ private:
 #if HAVE_UMFPACK
   std::unique_ptr<LocalDirectInverseType> local_direct_inverse_;
 #endif
+  DMP::ProblemContainer& problem_;
 };
 
 } // namespace Multiscale {

@@ -22,6 +22,10 @@
 namespace Dune {
 namespace Multiscale {
 
+namespace Problem {
+struct ProblemContainer;
+}
+
 //! container for cell problem subgrids
 class LocalGridList : public boost::noncopyable {
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
@@ -29,7 +33,7 @@ class LocalGridList : public boost::noncopyable {
 
 public:
 
-  LocalGridList(const CommonTraits::SpaceType& coarseSpace);
+  LocalGridList(Dune::Multiscale::Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarseSpace);
 
   //! TODO toggle commnet. only used in ProxyGridView
 //private:

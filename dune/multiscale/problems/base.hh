@@ -19,6 +19,8 @@ namespace Dune {
 namespace Multiscale {
 namespace Problem {
 
+struct ProblemContainer;
+
 typedef CommonTraits::DomainType DomainType;
 typedef CommonTraits::RangeType RangeType;
 typedef CommonTraits::JacobianRangeType JacobianRangeType;
@@ -195,9 +197,9 @@ public:
   }
 
   //! call this once per grid setup
-  virtual void problem_init(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
+  virtual void problem_init(  DMP::ProblemContainer& /*problem*/, MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
   //! call this once per "run"
-  virtual void prepare_new_evaluation() {}
+  virtual void prepare_new_evaluation(DMP::ProblemContainer& /*problem*/) {}
 };
 
 } //! @} namespace Problem

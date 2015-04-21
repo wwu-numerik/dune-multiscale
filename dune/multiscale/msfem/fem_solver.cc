@@ -27,13 +27,15 @@
 namespace Dune {
 namespace Multiscale {
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(GridPtrType grid)
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(DMP::ProblemContainer &problem, GridPtrType grid)
   : grid_(grid)
   , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
-  , solution_(space_, "fem_solution") {}
+  , solution_(space_, "fem_solution")
+  , problem_(problem)
+{}
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver()
-  : Elliptic_FEM_Solver(make_fine_grid(nullptr, false)) {}
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(DMP::ProblemContainer& problem)
+  : Elliptic_FEM_Solver(problem, make_fine_grid(problem, nullptr, false)) {}
 
 CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
   apply(solution_);
@@ -47,9 +49,9 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   typedef CommonTraits::GridViewType GridViewType;
 
-  const auto& boundary_info = Problem::getModelData().boundaryInfo();
-  const auto& neumann = Problem::getNeumannData();
-  const auto& dirichlet = Problem::getDirichletData();
+  const auto& boundary_info = problem_.getModelData().boundaryInfo();
+  const auto& neumann = problem_.getNeumannData();
+  const auto& dirichlet = problem_.getDirichletData();
   const auto& space = space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
@@ -59,10 +61,10 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
-  EllipticOperatorType elliptic_operator(Problem::getDiffusion(), system_matrix, space);
+  EllipticOperatorType elliptic_operator(problem_.getDiffusion(), system_matrix, space);
   // right hand side
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-      force_functional(DMP::getSource(), rhs_vector, space);
+      force_functional(problem_.getSource(), rhs_vector, space);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
       neumann_functional(neumann, rhs_vector, space);
   // dirichlet boundary values

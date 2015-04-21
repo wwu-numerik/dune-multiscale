@@ -21,6 +21,7 @@
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/common/grid_creation.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/stuff/common/float_cmp.hh>
 #include <dune/stuff/common/configuration.hh>
 
@@ -51,13 +52,15 @@ public:
 
  GridTestBase() {
     set_param(GetParam());
-    grids_ = make_grids();
+    problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DSC_CONFIG);
+    grids_ = make_grids(*problem_);
   }
  virtual ~GridTestBase() {
  }
 
 protected:
- decltype(make_grids()) grids_;
+ std::unique_ptr<DMP::ProblemContainer> problem_;
+ std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> grids_;
 };
 
 

@@ -47,8 +47,8 @@ private:
                                            CommonTraits::dimRange, 1> TestLocalfunctionSetInterfaceType;
 
 public:
-  explicit RhsCodim0Integral(const size_t over_integrate = 0)
-    : over_integrate_(over_integrate) {}
+  explicit RhsCodim0Integral(DMP::ProblemContainer& problem, const size_t over_integrate = 0)
+    : over_integrate_(over_integrate) , problem_(problem) {}
 
   size_t numTmpObjectsRequired() const;
 
@@ -60,6 +60,7 @@ public:
 
 private:
   const size_t over_integrate_;
+  DMP::ProblemContainer& problem_;
 };
 
 class RhsCodim0Vector // LocalAssemblerType
@@ -129,7 +130,7 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(VectorType& vec, const SpaceType& spc, LocalGridList& localGridList,
+  CoarseRhsFunctional(Problem::ProblemContainer &problem, VectorType& vec, const SpaceType& spc, LocalGridList& localGridList,
                       const CommonTraits::InteriorGridViewType& interior);
 
   virtual ~CoarseRhsFunctional() {}

@@ -1,9 +1,9 @@
 #include <config.h>
 #include "base.hh"
 
-void Dune::Multiscale::Problem::DiffusionBase::jacobianDiffusiveFlux(
-    const Dune::Multiscale::Problem::DomainType& /*x*/, const Dune::Multiscale::Problem::JacobianRangeType&,
-    const Dune::Multiscale::Problem::JacobianRangeType& /*direction_gradient*/,
-    Dune::Multiscale::Problem::JacobianRangeType& /*flux*/) const {
+void DMP::DiffusionBase::jacobianDiffusiveFlux(
+    const DMP::DomainType& /*x*/, const DMP::JacobianRangeType&,
+    const DMP::JacobianRangeType& /*direction_gradient*/,
+    DMP::JacobianRangeType& /*flux*/) const {
   DUNE_THROW(NotImplemented, "");
 }
