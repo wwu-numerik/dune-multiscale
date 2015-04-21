@@ -23,7 +23,7 @@ class Elliptic_MsFEM_Solver {
 private:
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(LocalGridList& localgrid_list, const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
+  void identify_fine_scale_part(const DMP::ProblemContainer& problem, LocalGridList& localgrid_list, const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                 const CommonTraits::SpaceType& coarse_space,
                                 std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 

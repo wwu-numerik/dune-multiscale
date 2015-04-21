@@ -24,8 +24,8 @@ public:
                                                   const Dune::array<unsigned int, dim>& elements,
                                                   const Dune::array<unsigned int, dim>& /*overlap*/) {
     // structured grid factory allows overlap only for SPGrid at the moment, hence the following check
-    BOOST_ASSERT_MSG((DSC_CONFIG_GET("msfem.oversampling_layers", 0) == 0),
-                     "Oversampling may only be used in combination with SPGrid!");
+    assert(false);
+//    BOOST_ASSERT_MSG((problem.config().get("msfem.oversampling_layers", 0) == 0), "Oversampling may only be used in combination with SPGrid!");
     return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);
   }
 };
@@ -63,16 +63,16 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
 
-  const auto oversamplingLayers = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
-  const auto microPerMacro = DSC_CONFIG.get<CoordType>("grids.micro_cells_per_macrocell_dim", CoordType(8), world_dim);
-  const auto coarse_cells = DSC_CONFIG.get<CoordType>("grids.macro_cells_per_dim", CoordType(8), world_dim);
+  const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
+  const auto microPerMacro = problem.config().get<CoordType>("grids.micro_cells_per_macrocell_dim", CoordType(8), world_dim);
+  const auto coarse_cells = problem.config().get<CoordType>("grids.macro_cells_per_dim", CoordType(8), world_dim);
 
   array<unsigned int, world_dim> elements, overCoarse, overFine;
 
   for (const auto i : DSC::valueRange(world_dim)) {
     elements[i] = coarse_cells[i];
     overCoarse[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
-    overFine[i] = DSC_CONFIG_GET("grids.overlap", 1);
+    overFine[i] = problem.config().get("grids.overlap", 1);
   }
   return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
 }
@@ -104,8 +104,8 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem, std::shar
   array<unsigned int, world_dim> elements, overFine;
   std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup(problem);
   const auto coarse_cells =
-      DSC_CONFIG.get<CommonTraits::DomainType>("grids.macro_cells_per_dim", CommonTraits::DomainType(8), world_dim);
-  const auto microPerMacro = DSC_CONFIG.get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim",
+      problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", CommonTraits::DomainType(8), world_dim);
+  const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim",
                                                                       CommonTraits::DomainType(8), world_dim);
 
   for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {

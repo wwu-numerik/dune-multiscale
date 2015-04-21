@@ -40,7 +40,7 @@
 namespace Dune {
 namespace Multiscale {
 
-void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_list,
+void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemContainer &problem, LocalGridList& localgrid_list,
                                                      const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                                      const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
@@ -92,7 +92,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
       // oversampling : restrict the local correctors to the element T
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
-      const auto cut_overlay = DSC_CONFIG_GET("msfem.oversampling_layers", 0) > 0;
+      const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
       for (auto& local_entity : DSC::entityRange(localSolManager.space().grid_view())) {
         const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
         const auto& reference_element = DSG::reference_element(coarse_entity);
@@ -116,9 +116,9 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(LocalGridList& localgrid_li
       // substract neumann corrector
       local_correction.vector() -= localSolutions[coarseSolutionLF->vector().size()]->vector();
 
-      if (DSC_CONFIG_GET("msfem.local_corrections_vtk_output", false)) {
+      if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
         const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();
-        Dune::Multiscale::OutputParameters outputparam;
+        Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
         outputparam.set_prefix(name);
         local_correction.visualize(outputparam.fullpath(local_correction.name()));
       }
@@ -145,7 +145,7 @@ void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem, const CommonTr
   elliptic_msfem_op.apply_inverse(coarse_msfem_solution);
 
   //! identify fine scale part of MsFEM solution (including the projection!)
-  identify_fine_scale_part(localgrid_list, coarse_msfem_solution, coarse_space, solution);
+  identify_fine_scale_part(problem, localgrid_list, coarse_msfem_solution, coarse_space, solution);
   solution->add(coarse_msfem_solution);
 }
 

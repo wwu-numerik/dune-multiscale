@@ -15,7 +15,7 @@ namespace Multiscale {
 //! define output parameters for \ref Dune::DataOutput
 struct OutputParameters {
 public:
-  explicit OutputParameters(const std::string _path = DSC_CONFIG_GET("global.datadir", "data"));
+  explicit OutputParameters(const std::string _path);
   virtual ~OutputParameters() {}
 
 private:

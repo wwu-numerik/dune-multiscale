@@ -23,7 +23,7 @@ namespace Multiscale {
 void write_discrete_function(const DMP::ProblemContainer& problem, typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
   // writing paraview data output
   // general output parameters
-  Dune::Multiscale::OutputParameters outputparam;
+  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
   outputparam.set_prefix((boost::format("%s_solution") % prefix).str());
   discrete_solution->visualize(outputparam.fullpath(discrete_solution->name()));
 
@@ -37,8 +37,8 @@ void write_discrete_function(const DMP::ProblemContainer& problem, typename Comm
 void print_info(const Problem::ProblemContainer &problem,  std::ostream& out) {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
-  const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);
-  const int refinement_level_ = DSC_CONFIG_GET("fem.grid_level", 4);
+  const double epsilon_ = problem.config().get("problem.epsilon", 1.0f);
+  const int refinement_level_ = problem.config().get("fem.grid_level", 4);
   out << "Log-File for Elliptic Model Problem " << problem.name() << "." << std::endl << std::endl;
   if (problem.getModelData().linear())
     out << "Problem is declared as being LINEAR." << std::endl;

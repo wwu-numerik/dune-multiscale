@@ -31,13 +31,13 @@ void cgfem_algorithm() {
   Elliptic_FEM_Solver solver(problem);
   auto& solution = solver.solve();
 
-  if (DSC_CONFIG_GET("global.vtk_output", false)) {
+  if (problem.config().get("global.vtk_output", false)) {
     DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
-    Dune::Multiscale::OutputParameters outputparam;
+    Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
-  if (!DSC_CONFIG_GET("global.skip_error", false))
+  if (!problem.config().get("global.skip_error", false))
     ErrorCalculator(problem, nullptr, &solution).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 

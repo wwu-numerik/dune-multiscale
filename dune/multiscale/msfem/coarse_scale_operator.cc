@@ -82,7 +82,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer &problem, c
   this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   this->add(dirichlet_constraints,
             force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  if (DSC_CONFIG_GET("threading.smp_constraints", false))
+  if (problem.config().get("threading.smp_constraints", false))
     AssemblerBaseType::assemble(partitioning);
   else
     AssemblerBaseType::assemble(false);
@@ -104,7 +104,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("verbose", "2", overwrite);
-  options.set("max_iter", DSC_CONFIG_GET("msfem.max_coarse_iter", 300u), overwrite);
+  options.set("max_iter", problem_.config().get("msfem.max_coarse_iter", 300u), overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
   options.set("post_check_solves_system", "0", overwrite);

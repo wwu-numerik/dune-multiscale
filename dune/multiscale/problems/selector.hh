@@ -36,6 +36,9 @@ struct ProblemContainer {
 
   const std::string name() const;
 
+  const DSC::Configuration& config() const;
+  DSC::Configuration &config();
+
 private:
   DSC::Configuration config_;
   const std::string name_;

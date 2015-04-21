@@ -90,7 +90,7 @@ LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
   , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
                           localSpace_.mapper().maxNumDofs())
   #if HAVE_UMFPACK
-  , use_umfpack_(DSC_CONFIG_GET("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
+  , use_umfpack_(problem.config().get("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
   #else
   , use_umfpack_(false)
   #endif
@@ -147,7 +147,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 #if HAVE_UMFPACK
   if(use_umfpack_)
     local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
-        system_matrix_.backend(), DSC_CONFIG_GET("msfem.localproblemsolver_verbose", 0));
+        system_matrix_.backend(), problem_.config().get("msfem.localproblemsolver_verbose", 0));
 #endif
 }
 
@@ -159,9 +159,9 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   typedef BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
-  auto options = local_inverse.options(DSC_CONFIG_GET("msfem.localproblemsolver_type", "umfpack"));
-  options["precision"] =
-  options["verbose"] = DSC_CONFIG_GET("msfem.localproblemsolver_verbose", "0");
+  auto options = local_inverse.options(problem_.config().get("msfem.localproblemsolver_type", "umfpack"));
+  options["precision"] = 1;assert(false);
+  options["verbose"] = problem_.config().get("msfem.localproblemsolver_verbose", "0");
   {
     InverseOperatorResult stat;
     auto writable_rhs = current_rhs.vector().copy();

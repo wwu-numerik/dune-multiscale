@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
     problem.getMutableModelData().prepare_new_evaluation(problem);
 
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
-      problem.getDiffusion().visualize(coarse_grid.leafGridView(), OutputParameters().fullpath("diffusion"));
+      problem.getDiffusion().visualize(coarse_grid.leafGridView(), OutputParameters(problem.config().get("global.datadir", "data")).fullpath("diffusion"));
     }
 //    partition_vis(*grids.first, *grids.second);
 //    subgrid_vis(*grids.first, *grids.second);

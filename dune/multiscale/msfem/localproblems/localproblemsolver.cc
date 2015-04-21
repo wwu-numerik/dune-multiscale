@@ -40,11 +40,11 @@ namespace Multiscale {
  **/
 struct LocalProblemDataOutputParameters : public OutputParameters {
 public:
-  explicit LocalProblemDataOutputParameters();
+  explicit LocalProblemDataOutputParameters(const Problem::ProblemContainer &problem);
 };
 
-LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
-  : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
+LocalProblemDataOutputParameters::LocalProblemDataOutputParameters(const DMP::ProblemContainer& problem)
+  : OutputParameters(problem.config().get("global.datadir", "data") + std::string("/local_problems/")) {}
 
 LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer &problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
