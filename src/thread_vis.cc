@@ -80,14 +80,14 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
   output_all(functions, view_ptr, function_name+"all");
 }
 
-void subgrid_vis(CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fine_grid)
+void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_grid, CommonTraits::GridType& fine_grid)
 {
   CommonTraits::GridProviderType coarse_grid_provider(coarse_grid);
   CommonTraits::GridProviderType fine_grid_provider(fine_grid);
   const CommonTraits::SpaceType coarseSpace(CommonTraits::SpaceChooserType::PartViewType::create(coarse_grid, CommonTraits::st_gdt_grid_level));
   const CommonTraits::SpaceType fineSpace(CommonTraits::SpaceChooserType::PartViewType::create(fine_grid, CommonTraits::st_gdt_grid_level));
 
-  LocalGridList localgrid_list(coarseSpace);
+  LocalGridList localgrid_list(problem, coarseSpace);
 
   auto fine_view_ptr = fine_grid.leafGridView();
   typedef GDT::Spaces::FV::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
@@ -163,15 +163,17 @@ int main(int argc, char** argv) {
         DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
     }
 
-    // name of the grid file that describes the macro-grid:
-    auto grids = Dune::Multiscale::make_grids(false);
+    const auto& comm = Dune::MPIHelper::getCommunicator();
+    DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
+    DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+
+    auto grids = Dune::Multiscale::make_grids(problem, false);
     const auto& coarse_grid = *grids.first;
-    const auto& comm = coarse_grid.comm();
-    Problem::getMutableModelData().problem_init(comm, comm);
-    Problem::getMutableModelData().prepare_new_evaluation();
+    problem.getMutableModelData().problem_init(problem, comm, comm);
+    problem.getMutableModelData().prepare_new_evaluation(problem);
 
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
-      Problem::getDiffusion().visualize(coarse_grid.leafGridView(), OutputParameters().fullpath("diffusion"));
+      problem.getDiffusion().visualize(coarse_grid.leafGridView(), OutputParameters().fullpath("diffusion"));
     }
 //    partition_vis(*grids.first, *grids.second);
 //    subgrid_vis(*grids.first, *grids.second);

@@ -43,8 +43,7 @@ private:
   typedef AnsatzLocalfunctionSetInterfaceType TestLocalfunctionSetInterfaceType;
 
 public:
-  explicit MsFEMCodim0Integral(const size_t over_integrate = 0)
-    : over_integrate_(over_integrate) {}
+  explicit MsFEMCodim0Integral(const DMP::DiffusionBase& diffusion, const size_t over_integrate = 0);
 
   size_t numTmpObjectsRequired() const;
 
@@ -56,6 +55,7 @@ public:
 
 private:
   const size_t over_integrate_;
+  const DMP::DiffusionBase& diffusion_;
 };
 
 class MsFemCodim0Matrix {

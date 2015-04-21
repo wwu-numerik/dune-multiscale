@@ -7,7 +7,7 @@ skip_error = 1
 
 [grids]
 macro_cells_per_dim = 8
-micro_cells_per_macrocell_dim = 32
+micro_cells_per_macrocell_dim = 2
 overlap = 1
 
 [msfem]

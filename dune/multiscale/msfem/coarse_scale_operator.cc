@@ -32,27 +32,31 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
   return range_space.compute_volume_pattern(grid_view, source_space);
 }
 
-CoarseScaleOperator::CoarseScaleOperator(const CoarseScaleOperator::SourceSpaceType& source_space_in,
+CoarseScaleOperator::CoarseScaleOperator(DMP::ProblemContainer &problem, const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
   , AssemblerBaseType(source_space_in,
                       source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
   , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
                    EllipticOperatorType::pattern(coarse_space()))
+  , local_operator_(problem.getDiffusion())
   , local_assembler_(local_operator_, localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
-  , dirichlet_projection_(coarse_space()) {
+  , dirichlet_projection_(coarse_space())
+  , problem_(problem)
+{
+
   DSC::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
   const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
-  CoarseRhsFunctional force_functional(msfem_rhs_.vector(), coarse_space(), localGridList, interior);
+  CoarseRhsFunctional force_functional(problem_, msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
-  const auto& dirichlet = DMP::getDirichletData();
-  const auto& boundary_info = Problem::getModelData().boundaryInfo();
-  const auto& neumann = Problem::getNeumannData();
+  const auto& dirichlet = problem_.getDirichletData();
+  const auto& boundary_info = problem_.getModelData().boundaryInfo();
+  const auto& neumann = problem_.getNeumannData();
 
   typedef CommonTraits::InteriorGridViewType InteriorView;
   GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,

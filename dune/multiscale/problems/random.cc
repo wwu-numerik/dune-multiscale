@@ -39,11 +39,11 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   return {lowerLeft, upperRight};
 }
 
-void ModelProblemData::problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
-  getMutableDiffusion().init(global, local);
+void ModelProblemData::problem_init(  DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
+  problem.getMutableDiffusion().init(global, local);
 }
 
-void ModelProblemData::prepare_new_evaluation() { getMutableDiffusion().prepare_new_evaluation(); }
+void ModelProblemData::prepare_new_evaluation(DMP::ProblemContainer &problem) { problem.getMutableDiffusion().prepare_new_evaluation(); }
 
 void Diffusion::init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
   const auto cells_per_dim = DSC_CONFIG.get<std::vector<std::size_t>>("grids.macro_cells_per_dim");

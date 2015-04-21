@@ -21,6 +21,10 @@
 namespace Dune {
 namespace Multiscale {
 
+MsFEMCodim0Integral::MsFEMCodim0Integral(const Problem::DiffusionBase &diffusion, const size_t over_integrate)
+  : over_integrate_(over_integrate)
+  , diffusion_(diffusion){}
+
 size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void
@@ -30,7 +34,7 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
                            const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
                            Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
                            std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& /*tmpLocalMatrices*/) const {
-  auto& diffusion_operator = DMP::getDiffusion();
+  const auto& diffusion_operator = diffusion_;
 
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;

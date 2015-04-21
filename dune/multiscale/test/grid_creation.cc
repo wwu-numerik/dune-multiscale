@@ -48,7 +48,7 @@ struct PointsAndStuff : public GridAndSpaces {
   }
 
   void check_fine_lp_in_coarse() {
-    LocalGridList localgrid_list(coarseSpace);
+    LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
 
     for (const auto& ent : fineSpace) {
@@ -64,7 +64,7 @@ struct PointsAndStuff : public GridAndSpaces {
   }
 
   void check_search() {
-    LocalGridList localgrid_list(coarseSpace);
+    LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
 
     for (const auto& ent : fineSpace) {
@@ -74,12 +74,10 @@ struct PointsAndStuff : public GridAndSpaces {
     }
   }
 
-
   void check_local_grids() {
-    LocalGridList localgrid_list(coarseSpace);
+    LocalGridList localgrid_list(*problem_, coarseSpace);
     EXPECT_EQ(localgrid_list.size(), grids_.first->size(0));
   }
-
 
 };
 
@@ -125,7 +123,7 @@ struct GridMatch : public GridTestBase {
          for (auto i : DSC::valueRange(geo.corners())) {
            for (auto j : DSC::valueRange(geo.corners())) {
              if (i!=j) {
-               EXPECT_TRUE(DSC::FloatCmp::vec_ne(geo.corner(i), geo.corner(j)));
+               EXPECT_TRUE(DSC::FloatCmp::ne(geo.corner(i), geo.corner(j)));
                EXPECT_NE(geo.corner(i), geo.corner(j));
              } else {
                EXPECT_TRUE(DSC::FloatCmp::eq(geo.corner(i), geo.corner(j)));

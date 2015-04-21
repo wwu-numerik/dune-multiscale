@@ -27,68 +27,84 @@ using namespace Dune::Multiscale;
  * funcs.emplace("NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
 */
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
-  struct foo {                                                                                                         \
-    static std::map<std::string, const std::unique_ptr<const ReturnType>> mk_map() {                                   \
-      std::map<std::string, const std::unique_ptr<const ReturnType>> funcs;                                            \
-      funcs.emplace("Synthetic", std::unique_ptr<const ReturnType>(new DMP::Synthetic::FunctionName()));               \
-      funcs.emplace("Random", std::unique_ptr<const ReturnType>(new DMP::Random::FunctionName()));                     \
-      funcs.emplace("SPE10", std::unique_ptr<const ReturnType>(new DMP::SPE10::FunctionName()));                       \
-      funcs.emplace("Tarbert", std::unique_ptr<const ReturnType>(new DMP::Tarbert::FunctionName()));                   \
+  struct FunctionName ## Mapper {         \
+    typedef  std::function<ReturnType*()> FF; \
+    static std::map<std::string,FF> mk_map() {                          \
+      std::map<std::string, FF> funcs;                                            \
+      funcs.emplace("Synthetic", [](){return new DMP::Synthetic::FunctionName();});        \
+      funcs.emplace("Random", [](){return new DMP::Random::FunctionName();});              \
+      funcs.emplace("SPE10", [](){return new DMP::SPE10::FunctionName();});                \
+      funcs.emplace("Tarbert", [](){return new DMP::Tarbert::FunctionName();});            \
       return funcs;                                                                                                    \
     }                                                                                                                  \
-  };                                                                                                                   \
-  static const auto funcs = foo::mk_map()
+  };               \
+  static const auto FunctionName ## _map = FunctionName ## Mapper::mk_map();
+
+FUNCTION_MAP(Problem::IModelProblemData, ModelProblemData)
+FUNCTION_MAP(CommonTraits::FunctionBaseType, Source)
+FUNCTION_MAP(CommonTraits::FunctionBaseType, ExactSolution)
+FUNCTION_MAP(Problem::DiffusionBase, Diffusion)
+FUNCTION_MAP(Problem::DirichletDataBase, DirichletData)
+FUNCTION_MAP(Problem::NeumannDataBase, NeumannData)
 
 template <class FunctionType>
-const FunctionType& find_and_call_item(const std::map<std::string, const std::unique_ptr<const FunctionType>>& rets) {
-  const auto it = rets.find(Dune::Multiscale::Problem::name());
+FunctionType* make_f(const std::map<std::string, std::function<FunctionType*()>>& rets,
+                                           std::string name) {
+  const auto it = rets.find(name);
   if (it == rets.end())
     DUNE_THROW(Dune::InvalidStateException, "no data for Problem. (toggle PROBLEM_NINE_ONLY?)");
   const auto& el = it->second;
-  return *el;
+  return el();
 }
 
-const CommonTraits::FunctionBaseType& Dune::Multiscale::Problem::getSource() {
-  FUNCTION_MAP(CommonTraits::FunctionBaseType, Source);
-  return find_and_call_item(funcs);
+Problem::ProblemContainer::ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+                                            DSC::Configuration config)
+  : config_(config)
+  , name_(config_.get("problem.name", "Synthetic"))
+  , data_(make_f(ModelProblemData_map, name_))
+  , source_(make_f(Source_map, name_))
+  , exact_solution_(make_f(ExactSolution_map, name_))
+  , diffusion_(make_f(Diffusion_map, name_))
+  , dirichlet_(make_f(DirichletData_map, name_))
+  , neumann_(make_f(NeumannData_map, name_))
+{
+  assert(false);
 }
 
-const CommonTraits::FunctionBaseType& Dune::Multiscale::Problem::getExactSolution() {
-  FUNCTION_MAP(CommonTraits::FunctionBaseType, ExactSolution);
-  return find_and_call_item(funcs);
+const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getSource() {
+  return *source_;
 }
 
-const Problem::IModelProblemData& Dune::Multiscale::Problem::getModelData() {
-  FUNCTION_MAP(Problem::IModelProblemData, ModelProblemData);
-  return find_and_call_item(funcs);
+const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getExactSolution() {
+  return *exact_solution_;
 }
 
-Problem::IModelProblemData& Dune::Multiscale::Problem::getMutableModelData() {
+const Problem::IModelProblemData& DMP::ProblemContainer::getModelData() {
+  return *data_;
+}
+
+Problem::IModelProblemData& DMP::ProblemContainer::getMutableModelData() {
   const auto& data = getModelData();
   return const_cast<Problem::IModelProblemData&>(data);
 }
 
-const Problem::DiffusionBase& Dune::Multiscale::Problem::getDiffusion() {
-  FUNCTION_MAP(Problem::DiffusionBase, Diffusion);
-  return find_and_call_item(funcs);
+const Problem::DiffusionBase& DMP::ProblemContainer::getDiffusion() {
+  return *diffusion_;
 }
 
-Problem::DiffusionBase& Dune::Multiscale::Problem::getMutableDiffusion() {
+Problem::DiffusionBase& DMP::ProblemContainer::getMutableDiffusion() {
   const auto& diffusion = getDiffusion();
   return const_cast<Problem::DiffusionBase&>(diffusion);
 }
 
-const Problem::DirichletDataBase& Dune::Multiscale::Problem::getDirichletData() {
-  FUNCTION_MAP(Problem::DirichletDataBase, DirichletData);
-  return find_and_call_item(funcs);
+const Problem::DirichletDataBase& DMP::ProblemContainer::getDirichletData() {
+  return *dirichlet_;
 }
 
-const Problem::NeumannDataBase& Dune::Multiscale::Problem::getNeumannData() {
-  FUNCTION_MAP(Problem::NeumannDataBase, NeumannData);
-  return find_and_call_item(funcs);
+const Problem::NeumannDataBase& DMP::ProblemContainer::getNeumannData() {
+  return *neumann_;
 }
 
-const std::string& Dune::Multiscale::Problem::name() {
-  static std::string myName = DSC_CONFIG_GET("problem.name", "Nine");
-  return myName;
+const std::string& DMP::ProblemContainer::name() {
+  return name_;
 }

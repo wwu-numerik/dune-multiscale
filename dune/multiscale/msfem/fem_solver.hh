@@ -11,14 +11,18 @@
 namespace Dune {
 namespace Multiscale {
 
+namespace Problem {
+struct ProblemContainer;
+}
+
 //! \todo docme
 class Elliptic_FEM_Solver {
 
   typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
 
 public:
-  Elliptic_FEM_Solver();
-  Elliptic_FEM_Solver(GridPtrType grid);
+  Elliptic_FEM_Solver(DMP::ProblemContainer &problem);
+  Elliptic_FEM_Solver(DMP::ProblemContainer &problem, GridPtrType grid);
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:
@@ -34,6 +38,7 @@ private:
   GridPtrType grid_;
   const CommonTraits::SpaceType space_;
   CommonTraits::DiscreteFunctionType solution_;
+  DMP::ProblemContainer& problem_;
 };
 
 } // namespace Multiscale

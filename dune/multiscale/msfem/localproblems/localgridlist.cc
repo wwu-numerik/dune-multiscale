@@ -22,7 +22,7 @@
 namespace Dune {
 namespace Multiscale {
 
-LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
+LocalGridList::LocalGridList(  DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
@@ -34,7 +34,7 @@ LocalGridList::LocalGridList(const CommonTraits::SpaceType& coarseSpace)
   const auto oversampling_layer = DSC_CONFIG_GET("msfem.oversampling_layers", 0);
 
   typedef StructuredGridFactory<MsFEMTraits::LocalGridType> FactoryType;
-  const auto& gridCorners = Problem::getModelData().gridCorners();
+  const auto& gridCorners = problem.getModelData().gridCorners();
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
 

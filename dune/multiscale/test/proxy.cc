@@ -12,7 +12,7 @@
 struct PointsAndStuff : public GridAndSpaces {
 
   void check_fine_lp_in_coarse() {
-    LocalGridList localgrid_list(coarseSpace);
+    LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
 //    auto proxy_view = msfem_solution_->grid_view();
   }

@@ -23,12 +23,13 @@ namespace Multiscale {
 
 //! the main FEM computation
 void cgfem_algorithm() {
-  const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
+  const auto& comm = Dune::MPIHelper::getCommunicator();
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
-  Problem::getMutableModelData().problem_init(comm, comm);
-  Problem::getMutableModelData().prepare_new_evaluation();
+  DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+  problem.getMutableModelData().problem_init(problem, comm, comm);
+  problem.getMutableModelData().prepare_new_evaluation(problem);
 
-  Elliptic_FEM_Solver solver;
+  Elliptic_FEM_Solver solver(problem);
   auto& solution = solver.solve();
 
   if (DSC_CONFIG_GET("global.vtk_output", false)) {
@@ -38,7 +39,7 @@ void cgfem_algorithm() {
     solution.visualize(outputparam.fullpath(solution.name()));
   }
   if (!DSC_CONFIG_GET("global.skip_error", false))
-    ErrorCalculator(nullptr, &solution).print(DSC_LOG_INFO_0);
+    ErrorCalculator(problem, nullptr, &solution).print(DSC_LOG_INFO_0);
 } // ... algorithm(...)
 
 } // namespace Multiscale {

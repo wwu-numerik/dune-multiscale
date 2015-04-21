@@ -26,6 +26,10 @@ class LocalSolutionManager;
 class LocalGridList;
 class CoarseScaleOperator;
 
+namespace Problem {
+struct ProblemContainer;
+}
+
 class CoarseScaleOperatorTraits {
 public:
   typedef CoarseScaleOperator derived_type;
@@ -62,7 +66,7 @@ public:
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
                                                    const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(const SourceSpaceType& source_space_in, LocalGridList& localGridList);
+  CoarseScaleOperator(DMP::ProblemContainer &problem, const SourceSpaceType& source_space_in, LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 
@@ -79,6 +83,7 @@ private:
   const LocalAssemblerType local_assembler_;
   CommonTraits::DiscreteFunctionType msfem_rhs_;
   CommonTraits::DiscreteFunctionType dirichlet_projection_;
+  DMP::ProblemContainer& problem_;
 }; // class CoarseScaleOperator
 
 } // namespace Multiscale {

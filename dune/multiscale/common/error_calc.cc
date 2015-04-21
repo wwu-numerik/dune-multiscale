@@ -58,30 +58,32 @@ void solution_output(const DSFu::Difference<L, R>& solution, const CommonTraits:
   outputparam.set_prefix(name);
   solution.visualize(view, outputparam.fullpath(solution.name()));
 }
-void data_output(const CommonTraits::GridViewType& gridPart) {
+void data_output(DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
-  if (Problem::getModelData().hasExactSolution()) {
-    const auto& u = Dune::Multiscale::Problem::getExactSolution();
+  if (problem.getModelData().hasExactSolution()) {
+    const auto& u = problem.getExactSolution();
     outputparam.set_prefix("exact_solution");
     u.visualize(gridPart, outputparam.fullpath(u.name()));
   }
 }
 
-Dune::Multiscale::ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+Dune::Multiscale::ErrorCalculator::ErrorCalculator(DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
-  : msfem_solution_(msfem_solution)
+  : problem_(problem)
+  , msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution) {
   assert(fem_solution_);
 }
 
-ErrorCalculator::ErrorCalculator(const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
-  : msfem_solution_(msfem_solution)
+ErrorCalculator::ErrorCalculator(DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
+  : problem_(problem)
+  , msfem_solution_(msfem_solution)
   , fem_solution_(nullptr) {
   assert(msfem_solution_);
   if (DSC_CONFIG_GET("msfem.fem_comparison", false)) {
-    fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>();
+    fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>(problem);
     try {
       fem_solution_ = &fem_solver_->solve();
     } catch (Dune::Exception& e) {
@@ -97,7 +99,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
 
-  auto grids = make_grids();
+  auto grids = make_grids(problem_);
   const auto coarse_grid = grids.first;
   const auto fine_grid = grids.second;
   const auto fine_space =
@@ -110,7 +112,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const auto& grid_view = fine_space.grid_view();
 
   CommonTraits::DiscreteFunctionType projected_coarse_fem_solution(fine_space);
-  Elliptic_FEM_Solver coarse_fem_solver(coarse_grid);
+  Elliptic_FEM_Solver coarse_fem_solver(problem_, coarse_grid);
   try {
     auto& coarse_fem_solution = coarse_fem_solver.solve();
     const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
@@ -127,7 +129,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     MsFEMProjection::project(*msfem_solution_, fine_msfem_solution, msfem_solution_->search());
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-      data_output(fine_space.grid_view());
+      data_output(problem_, fine_space.grid_view());
       solution_output(fine_msfem_solution);
     }
   }
@@ -144,8 +146,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   constexpr auto pcw = std::piecewise_construct_t();
 
   //! ----------------- compute L2- and H1- errors -------------------
-  if (Problem::getModelData().hasExactSolution()) {
-    const auto& u = DMP::getExactSolution();
+  if (problem_.getModelData().hasExactSolution()) {
+    const auto& u = problem_.getExactSolution();
 
     if (msfem_solution_) {
       const auto name = forward_as_tuple(msfem_exact);
@@ -195,7 +197,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   system_assembler.assemble(partitioning);
 
   std::map<std::string, double> csv;
-  if (Problem::getModelData().hasExactSolution()) {
+  if (problem_.getModelData().hasExactSolution()) {
     if (msfem_solution_) {
       const auto msfem_error = std::sqrt(l2_analytical_errors.at(msfem_exact).apply2());
       out << "|| u_msfem - u_exact ||_L2 =  " << msfem_error << std::endl;

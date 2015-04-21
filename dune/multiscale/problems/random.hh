@@ -88,8 +88,8 @@ struct ModelProblemData : public IModelProblemData {
   const SubBoundaryInfoType& subBoundaryInfo() const final override;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
-  virtual void problem_init(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
-  virtual void prepare_new_evaluation() final override;
+  virtual void problem_init(  DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) final override;
+  virtual void prepare_new_evaluation(  DMP::ProblemContainer& problem) final override;
 
 private:
   Dune::ParameterTree boundary_settings() const;

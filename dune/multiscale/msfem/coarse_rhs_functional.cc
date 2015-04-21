@@ -28,8 +28,8 @@ RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletEx
                          const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
                          Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
                          std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
-  const auto& f = DMP::getSource();
-  const auto& diffusion = DMP::getDiffusion();
+  const auto& f = problem_.getSource();
+  const auto& diffusion = problem_.getDiffusion();
 
   // quadrature
   typedef Dune::QuadratureRules<CommonTraits::DomainFieldType, CommonTraits::dimDomain> VolumeQuadratureRules;
@@ -153,11 +153,12 @@ void RhsCodim0Vector::assembleLocal(
   }
 }
 
-CoarseRhsFunctional::CoarseRhsFunctional(CoarseRhsFunctional::VectorType& vec,
+CoarseRhsFunctional::CoarseRhsFunctional(DMP::ProblemContainer& problem, CoarseRhsFunctional::VectorType& vec,
                                          const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList,
                                          const CommonTraits::InteriorGridViewType& interior)
   : FunctionalBaseType(vec, spc, interior)
   , AssemblerBaseType(spc, interior)
+  , local_functional_(problem)
   , local_assembler_(local_functional_, localGridList) {
   this->add_codim0_assembler(local_assembler_, this->vector());
 }
