@@ -21,8 +21,8 @@ class Elliptic_FEM_Solver {
   typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
 
 public:
-  Elliptic_FEM_Solver(DMP::ProblemContainer &problem);
-  Elliptic_FEM_Solver(DMP::ProblemContainer &problem, GridPtrType grid);
+  Elliptic_FEM_Solver(const DMP::ProblemContainer &problem);
+  Elliptic_FEM_Solver(const DMP::ProblemContainer &problem, GridPtrType grid);
 
   //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
   //! then:
@@ -38,7 +38,7 @@ private:
   GridPtrType grid_;
   const CommonTraits::SpaceType space_;
   CommonTraits::DiscreteFunctionType solution_;
-  DMP::ProblemContainer& problem_;
+  const DMP::ProblemContainer& problem_;
 };
 
 } // namespace Multiscale

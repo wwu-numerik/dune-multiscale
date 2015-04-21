@@ -33,7 +33,7 @@ class LocalGridList : public boost::noncopyable {
 
 public:
 
-  LocalGridList(Dune::Multiscale::Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarseSpace);
+  LocalGridList(const Dune::Multiscale::Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarseSpace);
 
   //! TODO toggle commnet. only used in ProxyGridView
 //private:

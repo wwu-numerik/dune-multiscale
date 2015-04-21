@@ -16,11 +16,11 @@ class LocalsolutionProxy;
 class ErrorCalculator {
 
 public:
-  ErrorCalculator(DMP::ProblemContainer& problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+  ErrorCalculator(const Problem::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                   CommonTraits::ConstDiscreteFunctionType* fem_solution);
 
   //! this one runs cg-fem sim if mandated by config
-  ErrorCalculator(DMP::ProblemContainer& problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
+  ErrorCalculator(const Problem::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
 
   /** Compute and print errors between exact, msfem and fem solution
    *
@@ -46,7 +46,7 @@ public:
   std::map<std::string, double> print(std::ostream& out);
 
 private:
-  DMP::ProblemContainer& problem_;
+  const DMP::ProblemContainer& problem_;
   const std::unique_ptr<LocalsolutionProxy>& msfem_solution_;
   std::unique_ptr<CommonTraits::DiscreteFunctionType> fem_solution_ptr_;
   std::unique_ptr<CommonTraits::DiscreteFunctionType> coarse_fem_solution_ptr_;

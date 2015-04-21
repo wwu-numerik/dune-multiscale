@@ -46,7 +46,7 @@ public:
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters()
   : OutputParameters(DSC_CONFIG_GET("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(DMP::ProblemContainer &problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
+LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer &problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
   , coarse_space_(coarse_space)
 , problem_(problem){}

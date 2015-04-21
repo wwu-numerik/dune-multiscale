@@ -36,7 +36,7 @@ class BoundaryValueHelper {
                                      DirichletProduct> DirichletCorrectorFunctionalType;
 
 public:
-  BoundaryValueHelper(DMP::ProblemContainer& problem, const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
+  BoundaryValueHelper(const DMP::ProblemContainer& problem, const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
                       std::size_t coarseBaseFunc)
     : localSpace_(localSpace)
     , dirichletExtensionLocal(localSpace_, "dirichletExtension")
@@ -76,11 +76,11 @@ private:
   NeumannFunctional neumann_functional;
   GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional;
   DirichletCorrectorFunctionalType dirichlet_corrector;
-  DMP::ProblemContainer& problem_;
+  const DMP::ProblemContainer& problem_;
 };
 
 
-LocalProblemOperator::LocalProblemOperator(DMP::ProblemContainer& problem, const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
+LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem, const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
   : localSpace_(space)
   , local_diffusion_operator_(problem.getDiffusion())
   , coarse_space_(coarse_space)

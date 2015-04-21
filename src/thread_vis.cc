@@ -169,7 +169,6 @@ int main(int argc, char** argv) {
 
     auto grids = Dune::Multiscale::make_grids(problem, false);
     const auto& coarse_grid = *grids.first;
-    problem.getMutableModelData().problem_init(problem, comm, comm);
     problem.getMutableModelData().prepare_new_evaluation(problem);
 
     if (DSC_CONFIG_GET("global.vtk_output", false)) {
