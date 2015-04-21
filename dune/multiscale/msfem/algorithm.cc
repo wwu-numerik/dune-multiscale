@@ -63,7 +63,8 @@ std::map<std::string, double> msfem_algorithm() {
 
   if (problem.config().get("global.vtk_output", false)) {
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
-    coarse_grid_visualization.visualize(OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));
+    coarse_grid_visualization.visualize(
+        OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));
   }
 
   if (!problem.config().get("global.skip_error", false))

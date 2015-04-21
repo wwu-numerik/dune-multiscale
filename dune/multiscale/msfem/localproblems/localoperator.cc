@@ -30,24 +30,24 @@ namespace Multiscale {
 //! holds functionals,etc for boundary correctors to make conditional usage simpler
 template <class LocalNeumann>
 class BoundaryValueHelper {
-  typedef GDT::Functionals::L2Face<LocalNeumann, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType> NeumannFunctional;
+  typedef GDT::Functionals::L2Face<LocalNeumann, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType>
+      NeumannFunctional;
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
                                      DirichletProduct> DirichletCorrectorFunctionalType;
 
 public:
-  BoundaryValueHelper(const DMP::ProblemContainer& problem, const  MsFEMTraits::LocalSpaceType& localSpace, const Problem::LocalDiffusionType& local_diffusion_operator, MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
-                      std::size_t coarseBaseFunc)
+  BoundaryValueHelper(const DMP::ProblemContainer& problem, const MsFEMTraits::LocalSpaceType& localSpace,
+                      const Problem::LocalDiffusionType& local_diffusion_operator,
+                      MsFEMTraits::LocalSolutionVectorType& allLocalRHS, std::size_t coarseBaseFunc)
     : localSpace_(localSpace)
     , dirichletExtensionLocal(localSpace_, "dirichletExtension")
     , local_neumann(problem.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
     , neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
-    , dl_corrector_functional(problem.getDiffusion(), dirichletExtensionLocal,
-                              local_diffusion_operator)
+    , dl_corrector_functional(problem.getDiffusion(), dirichletExtensionLocal, local_diffusion_operator)
     , dirichlet_corrector(local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_,
                           dl_corrector_functional)
-    , problem_(problem)
-  {}
+    , problem_(problem) {}
 
   void dirichlet_projection(const CommonTraits::SpaceType& coarse_space) {
     GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space);
@@ -64,7 +64,7 @@ public:
     projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
   }
 
-  void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler)  {
+  void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler) {
     system_assembler.add(neumann_functional);
     system_assembler.add(dirichlet_corrector);
   }
@@ -79,8 +79,9 @@ private:
   const DMP::ProblemContainer& problem_;
 };
 
-
-LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem, const CommonTraits::SpaceType &coarse_space, const  MsFEMTraits::LocalSpaceType& space)
+LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
+                                           const CommonTraits::SpaceType& coarse_space,
+                                           const MsFEMTraits::LocalSpaceType& space)
   : localSpace_(space)
   , local_diffusion_operator_(problem.getDiffusion())
   , coarse_space_(coarse_space)
@@ -89,13 +90,13 @@ LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
                           localSpace_.mapper().maxNumDofs())
-  #if HAVE_UMFPACK
-  , use_umfpack_(problem.config().get("msfem.localproblemsolver_type", std::string("umfpack")) == std::string("umfpack"))
-  #else
+#if HAVE_UMFPACK
+  , use_umfpack_(problem.config().get("msfem.localproblemsolver_type", std::string("umfpack")) ==
+                 std::string("umfpack"))
+#else
   , use_umfpack_(false)
-  #endif
-  , problem_(problem)
-{
+#endif
+  , problem_(problem) {
   system_assembler_.add(elliptic_operator_);
 }
 
@@ -112,8 +113,9 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 
   typedef BoundaryValueHelper<decltype(problem_.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())> BVHelper;
   std::unique_ptr<BVHelper> bv_helper(nullptr);
-  if (coarseEntity.hasBoundaryIntersections()){
-    bv_helper = DSC::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
+  if (coarseEntity.hasBoundaryIntersections()) {
+    bv_helper =
+        DSC::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
 
@@ -125,15 +127,15 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   const auto coarseBaseFunctionSet = coarse_space_.base_function_set(coarseEntity);
   for (; coarseBaseFunc < numInnerCorrectors; ++coarseBaseFunc) {
     assert(allLocalRHS[coarseBaseFunc]);
-    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(problem_.getDiffusion(),
-        coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
+    GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(
+        problem_.getDiffusion(), coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
     rhs_functionals[coarseBaseFunc] =
         DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
-  if(coarseEntity.hasBoundaryIntersections())
+  if (coarseEntity.hasBoundaryIntersections())
     bv_helper->add_to(system_assembler_);
   system_assembler_.assemble();
 
@@ -145,7 +147,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 
   system_assembler_.assemble();
 #if HAVE_UMFPACK
-  if(use_umfpack_)
+  if (use_umfpack_)
     local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
         system_matrix_.backend(), problem_.config().get("msfem.localproblemsolver_verbose", 0));
 #endif
@@ -160,13 +162,14 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
   auto options = local_inverse.options(problem_.config().get("msfem.localproblemsolver_type", "umfpack"));
-  options["precision"] = 1;assert(false);
+  options["precision"] = 1;
+  assert(false);
   options["verbose"] = problem_.config().get("msfem.localproblemsolver_verbose", "0");
   {
     InverseOperatorResult stat;
     auto writable_rhs = current_rhs.vector().copy();
 #if HAVE_UMFPACK
-    if(use_umfpack_)
+    if (use_umfpack_)
       local_direct_inverse_->apply(current_solution.vector().backend(), writable_rhs.backend(), stat);
     else
 #endif

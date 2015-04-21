@@ -32,7 +32,8 @@ Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScale
   return range_space.compute_volume_pattern(grid_view, source_space);
 }
 
-CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer &problem, const CoarseScaleOperator::SourceSpaceType& source_space_in,
+CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
+                                         const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
   , AssemblerBaseType(source_space_in,
@@ -43,8 +44,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer &problem, c
   , local_assembler_(local_operator_, localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
   , dirichlet_projection_(coarse_space())
-  , problem_(problem)
-{
+  , problem_(problem) {
 
   DSC::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;

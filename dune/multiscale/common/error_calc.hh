@@ -16,11 +16,11 @@ class LocalsolutionProxy;
 class ErrorCalculator {
 
 public:
-  ErrorCalculator(const Problem::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+  ErrorCalculator(const Problem::ProblemContainer& problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                   CommonTraits::ConstDiscreteFunctionType* fem_solution);
 
   //! this one runs cg-fem sim if mandated by config
-  ErrorCalculator(const Problem::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
+  ErrorCalculator(const Problem::ProblemContainer& problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution);
 
   /** Compute and print errors between exact, msfem and fem solution
    *

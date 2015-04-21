@@ -29,7 +29,8 @@ class LocalProblemOperator {
 #endif
 
 public:
-  LocalProblemOperator(const DMP::ProblemContainer& problem,const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
+  LocalProblemOperator(const DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
+                       const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.
   *
@@ -39,7 +40,8 @@ public:
   * @note The vector allLocalRHS is assumed to have the correct size and contain pointers to all local rhs
   * functions. The discrete functions in allLocalRHS will be cleared in this function.
   */
-  void assemble_all_local_rhs(const MsFEMTraits::CoarseEntityType& coarseEntity, MsFEMTraits::LocalSolutionVectorType& allLocalRHS);
+  void assemble_all_local_rhs(const MsFEMTraits::CoarseEntityType& coarseEntity,
+                              MsFEMTraits::LocalSolutionVectorType& allLocalRHS);
 
   void apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
                      MsFEMTraits::LocalGridDiscreteFunctionType& current_solution);

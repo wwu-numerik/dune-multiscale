@@ -48,7 +48,8 @@ private:
 
 public:
   explicit RhsCodim0Integral(const DMP::ProblemContainer& problem, const size_t over_integrate = 0)
-    : over_integrate_(over_integrate) , problem_(problem) {}
+    : over_integrate_(over_integrate)
+    , problem_(problem) {}
 
   size_t numTmpObjectsRequired() const;
 
@@ -130,8 +131,8 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(const Problem::ProblemContainer &problem, VectorType& vec, const SpaceType& spc, LocalGridList& localGridList,
-                      const CommonTraits::InteriorGridViewType& interior);
+  CoarseRhsFunctional(const Problem::ProblemContainer& problem, VectorType& vec, const SpaceType& spc,
+                      LocalGridList& localGridList, const CommonTraits::InteriorGridViewType& interior);
 
   virtual ~CoarseRhsFunctional() {}
 

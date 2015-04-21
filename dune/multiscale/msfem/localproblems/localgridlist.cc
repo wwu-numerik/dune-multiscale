@@ -22,7 +22,7 @@
 namespace Dune {
 namespace Multiscale {
 
-LocalGridList::LocalGridList(const Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarseSpace)
+LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");

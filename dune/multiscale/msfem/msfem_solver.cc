@@ -40,7 +40,8 @@
 namespace Dune {
 namespace Multiscale {
 
-void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemContainer &problem, LocalGridList& localgrid_list,
+void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemContainer& problem,
+                                                     LocalGridList& localgrid_list,
                                                      const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                                      const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {

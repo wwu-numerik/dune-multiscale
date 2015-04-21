@@ -43,7 +43,8 @@ typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceTyp
 typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
-void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::ConstDiscreteFunctionType& solution, std::string name = "msfem_solution_") {
+void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::ConstDiscreteFunctionType& solution,
+                     std::string name = "msfem_solution_") {
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
@@ -51,7 +52,8 @@ void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::C
   solution.visualize(outputparam.fullpath(solution.name()));
 }
 template <typename L, typename R>
-void solution_output(const DMP::ProblemContainer& problem, const DSFu::Difference<L, R>& solution, const CommonTraits::GridViewType& view, std::string name) {
+void solution_output(const DMP::ProblemContainer& problem, const DSFu::Difference<L, R>& solution,
+                     const CommonTraits::GridViewType& view, std::string name) {
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
@@ -69,7 +71,8 @@ void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridV
   }
 }
 
-Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
+                                                   const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
@@ -77,7 +80,8 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &
   assert(fem_solution_);
 }
 
-ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
+ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
+                                 const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
   , fem_solution_(nullptr) {
@@ -116,9 +120,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   try {
     auto& coarse_fem_solution = coarse_fem_solver.solve();
     const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
-          fine_space.grid_view());
-      prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
-    if (problem_.config().get("global.vtk_output", false))  solution_output(problem_, coarse_fem_solution, "coarse-cg-fem_solution_");
+        fine_space.grid_view());
+    prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
+    if (problem_.config().get("global.vtk_output", false))
+      solution_output(problem_, coarse_fem_solution, "coarse-cg-fem_solution_");
   } catch (Dune::Exception& e) {
     DSC_LOG_ERROR << "coarse CGFEM solution failed: " << e.what();
     fem_solution_ = nullptr;

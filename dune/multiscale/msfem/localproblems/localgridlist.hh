@@ -32,11 +32,10 @@ class LocalGridList : public boost::noncopyable {
   typedef typename LeafIndexSet::IndexType IndexType;
 
 public:
-
-  LocalGridList(const Dune::Multiscale::Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarseSpace);
+  LocalGridList(const Dune::Multiscale::Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace);
 
   //! TODO toggle commnet. only used in ProxyGridView
-//private:
+  // private:
   MsFEMTraits::LocalGridType& getSubGrid(IndexType i);
   const MsFEMTraits::LocalGridType& getSubGrid(IndexType i) const;
 
@@ -52,7 +51,8 @@ public:
   std::size_t size() const;
 
   //! returns true iff all corners of local_entity are inside coarse_entity
-  static bool covers_strict(const MsFEMTraits::CoarseEntityType& coarse_entity, const MsFEMTraits::LocalEntityType& local_entity);
+  static bool covers_strict(const MsFEMTraits::CoarseEntityType& coarse_entity,
+                            const MsFEMTraits::LocalEntityType& local_entity);
   template <class GridImp, template <int, int, class> class GeometryImp>
   static bool covers_strict(
       const MsFEMTraits::CoarseEntityType& coarse_entity,

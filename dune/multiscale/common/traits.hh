@@ -131,6 +131,6 @@ std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::SpaceTy
 } // namespace Multiscale
 } // namespace Dune
 
-namespace DMP=Dune::Multiscale::Problem;
+namespace DMP = Dune::Multiscale::Problem;
 
 #endif // DUNE_MULTISCALE_COMMON_TRAITS_HH

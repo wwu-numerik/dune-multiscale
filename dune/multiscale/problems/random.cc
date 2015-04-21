@@ -39,13 +39,17 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   return {lowerLeft, upperRight};
 }
 
-void ModelProblemData::problem_init(  DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
+void ModelProblemData::problem_init(DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
+                                    MPIHelper::MPICommunicator local) {
   problem.getMutableDiffusion().init(problem, global, local);
 }
 
-void ModelProblemData::prepare_new_evaluation(DMP::ProblemContainer &problem) { problem.getMutableDiffusion().prepare_new_evaluation(); }
+void ModelProblemData::prepare_new_evaluation(DMP::ProblemContainer& problem) {
+  problem.getMutableDiffusion().prepare_new_evaluation();
+}
 
-void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local) {
+void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
+                     MPIHelper::MPICommunicator local) {
   const auto cells_per_dim = problem.config().get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
   std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
   const int log2Seg = std::log2l(cells_per_dim[0]);
@@ -54,7 +58,7 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   assert(seed >= 0);
   const int overlap = problem.config().get("grids.overlap", 1u);
   const auto corrLen = problem.config().get("mlmc.correlation_length", 0.2f);
-  const auto sigma   = problem.config().get("mlmc.correlation_sigma", 1.0f);
+  const auto sigma = problem.config().get("mlmc.correlation_sigma", 1.0f);
   correlation_ = DSC::make_unique<Correlation>(corrLen, sigma);
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
 #if HAVE_RANDOM_PROBLEM

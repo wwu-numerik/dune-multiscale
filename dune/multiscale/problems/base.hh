@@ -57,7 +57,8 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   virtual size_t order() const { return 2; }
 
   //! call this once per grid setup
-  virtual void init(const ProblemContainer&, MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
+  virtual void init(const ProblemContainer&, MPIHelper::MPICommunicator /*global*/,
+                    MPIHelper::MPICommunicator /*local*/) {}
   //! call this once per "run"
   virtual void prepare_new_evaluation() {}
 };
@@ -197,7 +198,8 @@ public:
   }
 
   //! call this once per grid setup
-  virtual void problem_init(  DMP::ProblemContainer& /*problem*/, MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/) {}
+  virtual void problem_init(DMP::ProblemContainer& /*problem*/, MPIHelper::MPICommunicator /*global*/,
+                            MPIHelper::MPICommunicator /*local*/) {}
   //! call this once per "run"
   virtual void prepare_new_evaluation(DMP::ProblemContainer& /*problem*/) {}
 };

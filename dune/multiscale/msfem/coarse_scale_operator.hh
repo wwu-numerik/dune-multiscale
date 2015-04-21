@@ -66,7 +66,8 @@ public:
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
                                                    const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(const DMP::ProblemContainer &problem, const SourceSpaceType& source_space_in, LocalGridList& localGridList);
+  CoarseScaleOperator(const DMP::ProblemContainer& problem, const SourceSpaceType& source_space_in,
+                      LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 

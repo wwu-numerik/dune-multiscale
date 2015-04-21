@@ -12,7 +12,8 @@ namespace Dune {
 namespace Multiscale {
 
 LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
-                                           const MsFEMTraits::CoarseEntityType& coarseEntity, const LocalGridList& subgridList)
+                                           const MsFEMTraits::CoarseEntityType& coarseEntity,
+                                           const LocalGridList& subgridList)
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , grid_view_(subgrid_.leafGridView())

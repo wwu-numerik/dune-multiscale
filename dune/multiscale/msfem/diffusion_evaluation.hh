@@ -40,13 +40,13 @@ public:
   typedef typename Traits::DomainFieldType DomainFieldType;
   typedef typename Traits::LocalizableFunctionType LocalizableFunctionType;
 
-  CoarseBasisProduct(const DMP::DiffusionBase& diffusion, const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base,
+  CoarseBasisProduct(const DMP::DiffusionBase& diffusion,
+                     const Multiscale::CommonTraits::BaseFunctionSetType& coarse_base,
                      const LocalizableFunctionType& inducingFunction, const std::size_t coarseBaseFunc)
     : inducingFunction_(inducingFunction)
     , coarse_base_set_(coarse_base)
     , coarseBaseFunc_(coarseBaseFunc)
-    , diffusion_(diffusion)
-  {}
+    , diffusion_(diffusion) {}
 
   CoarseBasisProduct(const CoarseBasisProduct&) = default;
 
@@ -137,12 +137,12 @@ public:
   typedef DirichletProductTraits Traits;
   typedef typename Traits::LocalizableFunctionType LocalizableFunctionType;
 
-  DirichletProduct(const DMP::DiffusionBase& diffusion, const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension,
+  DirichletProduct(const DMP::DiffusionBase& diffusion,
+                   const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension,
                    const LocalizableFunctionType& inducingFunction)
     : inducingFunction_(inducingFunction)
     , dirichlet_extension_(dirichlet_extension)
-    , diffusion_(diffusion)
-  {}
+    , diffusion_(diffusion) {}
 
   template <class EntityType>
   class LocalfunctionTuple {
@@ -220,7 +220,7 @@ public:
 private:
   const LocalizableFunctionType& inducingFunction_;
   const MsFEMTraits::LocalGridDiscreteFunctionType& dirichlet_extension_;
-    const DMP::DiffusionBase& diffusion_;
+  const DMP::DiffusionBase& diffusion_;
 }; // class Product
 
 } // namespace Multiscale {
