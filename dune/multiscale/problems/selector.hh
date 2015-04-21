@@ -22,7 +22,7 @@ namespace Multiscale {
 namespace Problem {
 
 struct ProblemContainer {
-  ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local, DSC::Configuration config);
+  ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local, DSC::Configuration config_in);
 
   typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
   const CommonTraits::FunctionBaseType& getSource() const;

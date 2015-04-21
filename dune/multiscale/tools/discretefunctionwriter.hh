@@ -87,7 +87,7 @@ public:
    *  filename may include additional path components
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
-  MemoryBackend(IOTraits::GridViewType& grid_view, const std::string filename = "nonsense_default_for_map")
+  MemoryBackend(IOTraits::GridViewType& grid_view, const std::string /*filename*/ = "nonsense_default_for_map")
     : space_(MsFEMTraits::SpaceChooserType::make_space(grid_view)) {}
 
   void append(const IOTraits::DiscreteFunction_ptr& df) { functions_.push_back(df); }
