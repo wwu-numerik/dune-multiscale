@@ -13,6 +13,7 @@
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/logging.hh>
 #include <dune/stuff/common/profiler.hh>
+#include <dune/stuff/common/misc.hh>
 #include <dune/stuff/common/parallel/threadmanager.hh>
 
 #include <dune/multiscale/common/traits.hh>
@@ -79,4 +80,12 @@ void Dune::Multiscale::mem_usage() {
     *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                     << "," << meanPeakMemConsumption << std::endl;
   }
+}
+
+
+void Dune::Multiscale::dump_environment()
+{
+  std::unique_ptr<boost::filesystem::ofstream> of(DSC::make_ofstream(
+                         std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/env.txt")));
+  DSC::dump_environment(*of);
 }
