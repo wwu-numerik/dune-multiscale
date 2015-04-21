@@ -68,27 +68,26 @@ Problem::ProblemContainer::ProblemContainer(MPIHelper::MPICommunicator global, M
   , dirichlet_(make_f(DirichletData_map, name_))
   , neumann_(make_f(NeumannData_map, name_))
 {
-  assert(false);
+  getMutableModelData().problem_init(*this, global, local);
 }
 
-const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getSource() {
+const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getSource() const {
   return *source_;
 }
 
-const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getExactSolution() {
+const CommonTraits::FunctionBaseType& DMP::ProblemContainer::getExactSolution() const{
   return *exact_solution_;
 }
 
-const Problem::IModelProblemData& DMP::ProblemContainer::getModelData() {
+const Problem::IModelProblemData& DMP::ProblemContainer::getModelData() const {
   return *data_;
 }
 
 Problem::IModelProblemData& DMP::ProblemContainer::getMutableModelData() {
-  const auto& data = getModelData();
-  return const_cast<Problem::IModelProblemData&>(data);
+  return *data_;
 }
 
-const Problem::DiffusionBase& DMP::ProblemContainer::getDiffusion() {
+const Problem::DiffusionBase& DMP::ProblemContainer::getDiffusion() const {
   return *diffusion_;
 }
 
@@ -97,14 +96,14 @@ Problem::DiffusionBase& DMP::ProblemContainer::getMutableDiffusion() {
   return const_cast<Problem::DiffusionBase&>(diffusion);
 }
 
-const Problem::DirichletDataBase& DMP::ProblemContainer::getDirichletData() {
+const Problem::DirichletDataBase& DMP::ProblemContainer::getDirichletData() const{
   return *dirichlet_;
 }
 
-const Problem::NeumannDataBase& DMP::ProblemContainer::getNeumannData() {
+const Problem::NeumannDataBase& DMP::ProblemContainer::getNeumannData() const {
   return *neumann_;
 }
 
-const std::string& DMP::ProblemContainer::name() {
+const std::string DMP::ProblemContainer::name() const{
   return name_;
 }

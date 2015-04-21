@@ -66,7 +66,7 @@ public:
   static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
                                                    const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(DMP::ProblemContainer &problem, const SourceSpaceType& source_space_in, LocalGridList& localGridList);
+  CoarseScaleOperator(const DMP::ProblemContainer &problem, const SourceSpaceType& source_space_in, LocalGridList& localGridList);
 
   virtual ~CoarseScaleOperator() {}
 
@@ -83,7 +83,7 @@ private:
   const LocalAssemblerType local_assembler_;
   CommonTraits::DiscreteFunctionType msfem_rhs_;
   CommonTraits::DiscreteFunctionType dirichlet_projection_;
-  DMP::ProblemContainer& problem_;
+  const DMP::ProblemContainer& problem_;
 }; // class CoarseScaleOperator
 
 } // namespace Multiscale {

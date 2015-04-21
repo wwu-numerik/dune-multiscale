@@ -52,7 +52,6 @@ std::map<std::string, double> msfem_algorithm() {
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
   auto grid = make_coarse_grid(problem);
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
-  problem.getMutableModelData().problem_init(problem, comm, comm);
   problem.getMutableModelData().prepare_new_evaluation(problem);
 
   const CommonTraits::SpaceType coarseSpace(

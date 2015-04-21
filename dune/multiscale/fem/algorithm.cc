@@ -26,7 +26,6 @@ void cgfem_algorithm() {
   const auto& comm = Dune::MPIHelper::getCommunicator();
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
-  problem.getMutableModelData().problem_init(problem, comm, comm);
   problem.getMutableModelData().prepare_new_evaluation(problem);
 
   Elliptic_FEM_Solver solver(problem);

@@ -153,7 +153,7 @@ void RhsCodim0Vector::assembleLocal(
   }
 }
 
-CoarseRhsFunctional::CoarseRhsFunctional(DMP::ProblemContainer& problem, CoarseRhsFunctional::VectorType& vec,
+CoarseRhsFunctional::CoarseRhsFunctional(const DMP::ProblemContainer& problem, CoarseRhsFunctional::VectorType& vec,
                                          const CoarseRhsFunctional::SpaceType& spc, LocalGridList& localGridList,
                                          const CommonTraits::InteriorGridViewType& interior)
   : FunctionalBaseType(vec, spc, interior)

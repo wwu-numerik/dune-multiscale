@@ -20,7 +20,7 @@
 namespace Dune {
 namespace Multiscale {
 
-void write_discrete_function(DMP::ProblemContainer& problem, typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
+void write_discrete_function(const DMP::ProblemContainer& problem, typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
   // writing paraview data output
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam;
@@ -34,7 +34,7 @@ void write_discrete_function(DMP::ProblemContainer& problem, typename CommonTrai
   }
 }
 
-void print_info(DMP::ProblemContainer& problem,  std::ostream& out) {
+void print_info(const Problem::ProblemContainer &problem,  std::ostream& out) {
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = DSC_CONFIG_GET("problem.epsilon", 1.0f);

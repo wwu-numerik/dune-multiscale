@@ -25,49 +25,26 @@ struct ProblemContainer {
   ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local, DSC::Configuration config);
 
   typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
-  const CommonTraits::FunctionBaseType& getSource();
-  const CommonTraits::FunctionBaseType& getExactSolution();
-  const DiffusionBase& getDiffusion();
+  const CommonTraits::FunctionBaseType& getSource() const;
+  const CommonTraits::FunctionBaseType& getExactSolution() const;
+  const DiffusionBase& getDiffusion() const;
   DiffusionBase& getMutableDiffusion();
-  const IModelProblemData& getModelData();
+  const IModelProblemData& getModelData() const;
   IModelProblemData& getMutableModelData();
-  const DirichletDataBase& getDirichletData();
-  const NeumannDataBase& getNeumannData();
+  const DirichletDataBase& getDirichletData() const;
+  const NeumannDataBase& getNeumannData() const;
 
-  const std::string& name();
+  const std::string name() const;
 
-  template <class IntersectionType>
-  typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
-  is_neumann(const IntersectionType& face) {
-    return getModelData().boundaryInfo().neumann(face);
-  }
-
-  template <class IntersectionType>
-  typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
-  is_neumann(const IntersectionType& face) {
-    return getModelData().subBoundaryInfo().neumann(face);
-  }
-
-  template <class IntersectionType>
-  typename std::enable_if<std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
-  is_dirichlet(const IntersectionType& face) {
-    return getModelData().boundaryInfo().dirichlet(face);
-  }
-
-  template <class IntersectionType>
-  typename std::enable_if<!std::is_same<IntersectionType, CommonTraits::GridViewType::Intersection>::value, bool>::type
-  is_dirichlet(const IntersectionType& face) {
-    return getModelData().subBoundaryInfo().dirichlet(face);
-  }
 private:
   DSC::Configuration config_;
   const std::string name_;
-  std::unique_ptr<Problem::IModelProblemData> data_;
-  std::unique_ptr<CommonTraits::FunctionBaseType> source_;
-  std::unique_ptr<CommonTraits::FunctionBaseType> exact_solution_;
-  std::unique_ptr<Problem::DiffusionBase> diffusion_;
-  std::unique_ptr<Problem::DirichletDataBase> dirichlet_;
-  std::unique_ptr<Problem::NeumannDataBase> neumann_;
+  const std::unique_ptr<Problem::IModelProblemData> data_;
+  const std::unique_ptr<const CommonTraits::FunctionBaseType> source_;
+  const std::unique_ptr<const CommonTraits::FunctionBaseType> exact_solution_;
+  const std::unique_ptr<Problem::DiffusionBase> diffusion_;
+  const std::unique_ptr<const Problem::DirichletDataBase> dirichlet_;
+  const std::unique_ptr<const Problem::NeumannDataBase> neumann_;
 }; // struct ProblemContainer {
 
 } //! @} namespace Problem

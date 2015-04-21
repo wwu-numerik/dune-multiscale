@@ -58,7 +58,7 @@ void solution_output(const DSFu::Difference<L, R>& solution, const CommonTraits:
   outputparam.set_prefix(name);
   solution.visualize(view, outputparam.fullpath(solution.name()));
 }
-void data_output(DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart) {
+void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart) {
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam;
 
@@ -69,7 +69,7 @@ void data_output(DMP::ProblemContainer& problem, const CommonTraits::GridViewTyp
   }
 }
 
-Dune::Multiscale::ErrorCalculator::ErrorCalculator(DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
@@ -77,7 +77,7 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(DMP::ProblemContainer &proble
   assert(fem_solution_);
 }
 
-ErrorCalculator::ErrorCalculator(DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
+ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer &problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
   , fem_solution_(nullptr) {

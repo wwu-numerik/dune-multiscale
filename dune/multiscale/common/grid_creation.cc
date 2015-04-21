@@ -54,7 +54,7 @@ typedef tuple<CommonTraits::DomainType, CommonTraits::DomainType, array<unsigned
               array<unsigned int, CommonTraits::world_dim>,
               array<unsigned int, CommonTraits::world_dim>> SetupReturnType;
 
-SetupReturnType setup(DMP::ProblemContainer& problem) {
+SetupReturnType setup(const DMP::ProblemContainer& problem) {
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
   const auto world_dim = CommonTraits::world_dim;
@@ -77,7 +77,7 @@ SetupReturnType setup(DMP::ProblemContainer& problem) {
   return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
 }
 
-std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(DMP::ProblemContainer& problem, Dune::MPIHelper::MPICommunicator communicator  ) {
+std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem, Dune::MPIHelper::MPICommunicator communicator  ) {
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
   std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup(problem);
@@ -91,13 +91,13 @@ std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(DMP::
 }
 
 pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>>
-Dune::Multiscale::make_grids(DMP::ProblemContainer &problem, const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
+Dune::Multiscale::make_grids(const DMP::ProblemContainer &problem, const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
   auto coarse_grid = make_coarse_grid(problem, communicator);
   return {coarse_grid, make_fine_grid(problem, coarse_grid, check_partitioning)};
 }
 
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
-Dune::Multiscale::make_fine_grid(DMP::ProblemContainer& problem, std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
+Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem, std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
                                  const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
   const auto world_dim = CommonTraits::world_dim;
   CommonTraits::DomainType lowerLeft, upperRight;
