@@ -27,12 +27,11 @@
 namespace Dune {
 namespace Multiscale {
 
-Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Problem::ProblemContainer &problem, GridPtrType grid)
+Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Problem::ProblemContainer& problem, GridPtrType grid)
   : grid_(grid)
   , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
   , solution_(space_, "fem_solution")
-  , problem_(problem)
-{}
+  , problem_(problem) {}
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const DMP::ProblemContainer& problem)
   : Elliptic_FEM_Solver(problem, make_fine_grid(problem, nullptr, false)) {}

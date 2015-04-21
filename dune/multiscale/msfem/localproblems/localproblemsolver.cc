@@ -40,16 +40,17 @@ namespace Multiscale {
  **/
 struct LocalProblemDataOutputParameters : public OutputParameters {
 public:
-  explicit LocalProblemDataOutputParameters(const Problem::ProblemContainer &problem);
+  explicit LocalProblemDataOutputParameters(const Problem::ProblemContainer& problem);
 };
 
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters(const DMP::ProblemContainer& problem)
   : OutputParameters(problem.config().get("global.datadir", "data") + std::string("/local_problems/")) {}
 
-LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer &problem, CommonTraits::SpaceType coarse_space, LocalGridList& localgrid_list)
+LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer& problem, CommonTraits::SpaceType coarse_space,
+                                       LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
   , coarse_space_(coarse_space)
-, problem_(problem){}
+  , problem_(problem) {}
 
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
                                                   MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const {
@@ -86,13 +87,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
     //!TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
-//    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
-//                          .induced_norm(current_rhs);
-//    if (norm < 1e-12) {
-//      current_solution.vector() *= 0;
-//      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
-//      continue;
-//    }
+    //    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
+    //                          .induced_norm(current_rhs);
+    //    if (norm < 1e-12) {
+    //      current_solution.vector() *= 0;
+    //      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
+    //      continue;
+    //    }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       current_solution.vector() *= 0;

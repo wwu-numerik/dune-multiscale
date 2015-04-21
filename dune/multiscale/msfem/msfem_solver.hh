@@ -21,9 +21,9 @@ class LocalsolutionProxy;
 //! \TODO needs a better name
 class Elliptic_MsFEM_Solver {
 private:
-
   //! identify fine scale part of MsFEM solution (including the projection!)
-  void identify_fine_scale_part(const DMP::ProblemContainer& problem, LocalGridList& localgrid_list, const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
+  void identify_fine_scale_part(const DMP::ProblemContainer& problem, LocalGridList& localgrid_list,
+                                const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                 const CommonTraits::SpaceType& coarse_space,
                                 std::unique_ptr<LocalsolutionProxy>& msfem_solution) const;
 
@@ -36,8 +36,8 @@ public:
    f --> 'first' source term, scalar ('SourceTermType')
    homogenous Dirchilet boundary condition!:
    **/
-  void apply(Problem::ProblemContainer &problem, const CommonTraits::SpaceType& coarse_space, std::unique_ptr<LocalsolutionProxy>& msfem_solution,
-             LocalGridList& localgrid_list) const;
+  void apply(Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
+             std::unique_ptr<LocalsolutionProxy>& msfem_solution, LocalGridList& localgrid_list) const;
 };
 
 } // namespace Multiscale {

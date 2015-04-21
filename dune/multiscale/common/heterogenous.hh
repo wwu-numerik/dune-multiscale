@@ -39,8 +39,8 @@ std::vector<typename GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>
 class MsFEMProjection {
 public:
   //! signature for non-default SearchStrategy constructions
-  static void project(const LocalsolutionProxy& source,
-                      CommonTraits::DiscreteFunctionType& target, LocalGridSearch& search);
+  static void project(const LocalsolutionProxy& source, CommonTraits::DiscreteFunctionType& target,
+                      LocalGridSearch& search);
 
 protected:
   static void preprocess(CommonTraits::DiscreteFunctionType& func);

@@ -1,7 +1,8 @@
 #include <config.h>
 #include "discretefunctionwriter.hh"
 
-Dune::Multiscale::DiskBackend& Dune::Multiscale::DiscreteFunctionIO::get_disk(const Stuff::Common::Configuration &config, std::string filename) {
+Dune::Multiscale::DiskBackend&
+Dune::Multiscale::DiscreteFunctionIO::get_disk(const Stuff::Common::Configuration& config, std::string filename) {
   return *get(disk_, filename, config, filename);
 }
 
@@ -17,7 +18,8 @@ Dune::Multiscale::DiscreteFunctionIO::memory(std::string filename,
   return instance().get_memory(filename, grid_view);
 }
 
-Dune::Multiscale::DiskBackend& Dune::Multiscale::DiscreteFunctionIO::disk(const DSC::Configuration& config, std::string filename) {
+Dune::Multiscale::DiskBackend& Dune::Multiscale::DiscreteFunctionIO::disk(const DSC::Configuration& config,
+                                                                          std::string filename) {
   return instance().get_disk(config, filename);
 }
 

@@ -21,9 +21,9 @@
 namespace Dune {
 namespace Multiscale {
 
-MsFEMCodim0Integral::MsFEMCodim0Integral(const Problem::DiffusionBase &diffusion, const size_t over_integrate)
+MsFEMCodim0Integral::MsFEMCodim0Integral(const Problem::DiffusionBase& diffusion, const size_t over_integrate)
   : over_integrate_(over_integrate)
-  , diffusion_(diffusion){}
+  , diffusion_(diffusion) {}
 
 size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 

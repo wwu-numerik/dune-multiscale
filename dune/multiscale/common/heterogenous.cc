@@ -5,7 +5,9 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 
-void Dune::Multiscale::MsFEMProjection::project(const Dune::Multiscale::LocalsolutionProxy &source, Dune::Multiscale::CommonTraits::DiscreteFunctionType &target, Dune::Multiscale::LocalGridSearch &search) {
+void Dune::Multiscale::MsFEMProjection::project(const Dune::Multiscale::LocalsolutionProxy& source,
+                                                Dune::Multiscale::CommonTraits::DiscreteFunctionType& target,
+                                                Dune::Multiscale::LocalGridSearch& search) {
   constexpr size_t target_dimRange = CommonTraits::dimRange;
 
   const auto& space = target.space();
@@ -42,12 +44,12 @@ void Dune::Multiscale::MsFEMProjection::project(const Dune::Multiscale::Localsol
   postprocess(target);
 }
 
-void Dune::Multiscale::MsFEMProjection::preprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType &func) {
+void Dune::Multiscale::MsFEMProjection::preprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func) {
   // set all DoFs to zero
   func.vector() *= 0;
 }
 
-void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType &func) {
+void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func) {
   // compute node to entity relations
   std::vector<int> nodeToEntity(func.space().grid_view().grid().size(CommonTraits::world_dim), 0);
   identifySharedNodes(func.space().grid_view(), nodeToEntity);
@@ -62,7 +64,9 @@ void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTrai
   return;
 }
 
-void Dune::Multiscale::MsFEMProjection::identifySharedNodes(const Dune::Multiscale::CommonTraits::GridViewType &gridPart, std::vector<int> &map) {
+void
+Dune::Multiscale::MsFEMProjection::identifySharedNodes(const Dune::Multiscale::CommonTraits::GridViewType& gridPart,
+                                                       std::vector<int>& map) {
   const auto& indexSet = gridPart.indexSet();
 
   for (auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {

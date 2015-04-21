@@ -25,7 +25,8 @@ public:
                                                   const Dune::array<unsigned int, dim>& /*overlap*/) {
     // structured grid factory allows overlap only for SPGrid at the moment, hence the following check
     assert(false);
-//    BOOST_ASSERT_MSG((problem.config().get("msfem.oversampling_layers", 0) == 0), "Oversampling may only be used in combination with SPGrid!");
+    //    BOOST_ASSERT_MSG((problem.config().get("msfem.oversampling_layers", 0) == 0), "Oversampling may only be used
+    //    in combination with SPGrid!");
     return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);
   }
 };
@@ -41,8 +42,9 @@ public:
                                                   const Dune::FieldVector<ctype, dimworld>& upperRight,
                                                   const Dune::array<unsigned int, dim>& elements,
                                                   const Dune::array<unsigned int, dim>& overlap,
-                                                  Dune::MPIHelper::MPICommunicator communicator ) {
-    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap, communicator);
+                                                  Dune::MPIHelper::MPICommunicator communicator) {
+    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap,
+                                                                 communicator);
   }
 };
 }
@@ -64,7 +66,8 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
-  const auto microPerMacro = problem.config().get<CoordType>("grids.micro_cells_per_macrocell_dim", CoordType(8), world_dim);
+  const auto microPerMacro =
+      problem.config().get<CoordType>("grids.micro_cells_per_macrocell_dim", CoordType(8), world_dim);
   const auto coarse_cells = problem.config().get<CoordType>("grids.macro_cells_per_dim", CoordType(8), world_dim);
 
   array<unsigned int, world_dim> elements, overCoarse, overFine;
@@ -77,7 +80,9 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
   return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
 }
 
-std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem, Dune::MPIHelper::MPICommunicator communicator  ) {
+std::shared_ptr<CommonTraits::GridType>
+Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem,
+                                   Dune::MPIHelper::MPICommunicator communicator) {
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
   std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup(problem);
@@ -91,28 +96,30 @@ std::shared_ptr<CommonTraits::GridType> Dune::Multiscale::make_coarse_grid(const
 }
 
 pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>>
-Dune::Multiscale::make_grids(const DMP::ProblemContainer &problem, const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
+Dune::Multiscale::make_grids(const DMP::ProblemContainer& problem, const bool check_partitioning,
+                             Dune::MPIHelper::MPICommunicator communicator) {
   auto coarse_grid = make_coarse_grid(problem, communicator);
   return {coarse_grid, make_fine_grid(problem, coarse_grid, check_partitioning)};
 }
 
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
-Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem, std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
-                                 const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator  ) {
+Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
+                                 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
+                                 const bool check_partitioning, Dune::MPIHelper::MPICommunicator communicator) {
   const auto world_dim = CommonTraits::world_dim;
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, world_dim> elements, overFine;
   std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup(problem);
-  const auto coarse_cells =
-      problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", CommonTraits::DomainType(8), world_dim);
+  const auto coarse_cells = problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim",
+                                                                           CommonTraits::DomainType(8), world_dim);
   const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim",
-                                                                      CommonTraits::DomainType(8), world_dim);
+                                                                            CommonTraits::DomainType(8), world_dim);
 
   for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
-  auto fine_gridptr =
-      StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine, communicator);
+  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements,
+                                                                                    overFine, communicator);
 
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     // check whether grids match (may not match after load balancing if different refinements in different
@@ -121,9 +128,9 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem, std::shar
                          coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
-//    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim))
-//      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
-//          << " | " << coarse_view.size(0) << '\n');
+    //    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim))
+    //      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
+    //          << " | " << coarse_view.size(0) << '\n');
     const auto coarse_dimensions = DSG::dimensions(coarse_view);
     const auto fine_dimensions = DSG::dimensions(fine_view);
     for (const auto i : DSC::valueRange(world_dim)) {

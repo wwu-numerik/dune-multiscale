@@ -147,7 +147,7 @@ private:
 
 public:
   static MemoryBackend& memory(std::string filename, IOTraits::GridViewType& grid_view);
-  static DiskBackend& disk(const Stuff::Common::Configuration &config, std::string filename);
+  static DiskBackend& disk(const Stuff::Common::Configuration& config, std::string filename);
 
   static ClearGuard clear_guard() { return ClearGuard(); }
 

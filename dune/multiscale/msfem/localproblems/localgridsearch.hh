@@ -27,8 +27,7 @@ public:
 
   const CoarseEntityPointerType& current_coarse_pointer() const;
 
-  bool covers_strict(const CommonTraits::SpaceType
-                     ::EntityType& coarse_entity, const PointIterator first,
+  bool covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity, const PointIterator first,
                      const PointIterator last);
 
 private:
