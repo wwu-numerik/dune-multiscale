@@ -57,8 +57,8 @@ FunctionType* make_f(const std::map<std::string, std::function<FunctionType*()>>
 }
 
 Problem::ProblemContainer::ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
-                                            DSC::Configuration config)
-  : config_(config)
+                                            DSC::Configuration config_in)
+  : config_(config_in)
   , name_(config_.get("problem.name", "Synthetic"))
   , data_(make_f(ModelProblemData_map, name_))
   , source_(make_f(Source_map, name_))
