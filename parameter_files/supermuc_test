@@ -22,7 +22,7 @@ fem_comparison = 0
 
 localproblemsolver_verbose = 0
 #bicgstab.ilut,bicgstab.amg.ilu0 or umfpack
-localproblemsolver_type = umfpack
+localproblemsolver_type = bicgstab.amg.ilu0
 
 [problem]
 name = "Synthetic"

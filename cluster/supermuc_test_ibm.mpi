@@ -1,0 +1,61 @@
+#!/bin/bash
+##
+## optional: energy policy tags
+#@ energy_policy_tag = my_energy_tag
+#@ minimize_time_to_solution = yes
+# DO NOT USE environment = COPY_ALL
+#@ job_type = parallel
+#@ class = test
+#@ node = 8
+#@ island_count=1
+# other example
+#@ tasks_per_node = 2
+#@ wall_clock_limit = 0:3:30
+##                    1 h 20 min 30 secs
+#@ job_name = muc_test
+#@ network.MPI = sn_all,not_shared,us
+#@ initialdir = $(home)/multiscale-build-gcc/dune-multiscale
+#@ output = job$(jobid).out
+#@ error = job$(jobid).err
+#@ notification=always
+#@ notify_user=rene.milk@wwu.de
+#@ queue
+. /etc/profile
+. /etc/profile.d/modules.sh
+#setup of environment
+source $HOME/.modules
+#optional: 
+#module load mpi_pinning/hybrid_blocked
+
+MA=16
+MI=8
+THREADS=1
+PPN=8
+#MPIOPT="-binding pin=1;cell=core;map=scatter;domain=socket -ppn ${PPN}"
+DATA=${HOME}/multiscale-build-gcc/dune-multiscale/
+BIN=${DATA}/elliptic_msfem
+export OMP_NUM_THREADS=1
+#export MP_SINGLE_THREAD=yes
+#export MP_TASK_AFFINITY=core:$OMP_NUM_THREADS
+#export MP_PRINTENV=YES
+
+NODES=512
+PROCS=512
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test -global.datadir ${DATA}/speedup_n${PROCS}_${MA}x${MI}_T${THREADS} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count ${THREADS} "
+#mpiexec -n ${PROCS} ${MPIOPT} $BIN ${OPT} 
+
+NODES=256
+PROCS=256
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test -global.datadir ${DATA}/speedup_n${PROCS}_${MA}x${MI}_T${THREADS} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count ${THREADS} "
+#mpiexec -n ${PROCS} ${MPIOPT} $BIN ${OPT} 
+
+NODES=16
+PROCS=32
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test -global.datadir ${DATA}/speedup_n${PROCS}_${MA}x${MI}_T${THREADS} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count ${THREADS} "
+#mpitune --application "mpiexec -n  ${PROCS} $BIN ${OPT}" –of ./tune_speedup_n${PROCS}_${MA}x${MI}_T${THREADS}.conf
+#mpiexec -n ${PROCS} ${MPIOPT} $BIN ${OPT} 
+
+NODES=08
+PROCS=16
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test -global.datadir ${DATA}/speedup_n${PROCS}_${MA}x${MI}_T${THREADS} -grids.macro_cells_per_dim $MA -grids.micro_cells_per_macrocell_dim $MI -threading.max_count ${THREADS} "
+mpiexec -n ${PROCS} ${MPIOPT} $BIN ${OPT} 
