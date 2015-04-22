@@ -76,6 +76,16 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
   output_all(functions, view_ptr, function_name + "all");
 }
 
+template <class T>
+unsigned long id_to_ulong(const T& id) {
+  return static_cast<unsigned long>(id);
+}
+
+template <int k>
+unsigned long id_to_ulong(const Dune::bigunsignedint<k>& id) {
+  return id.touint();
+}
+
 void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_grid,
                  CommonTraits::GridType& fine_grid) {
   CommonTraits::GridProviderType coarse_grid_provider(coarse_grid);
@@ -112,7 +122,7 @@ void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_
       if (localgrid_list.covers_strict(coarse_entity, fine_entity.geometry())) {
         auto oversampled_local_function = oversampled_function->local_discrete_function(fine_entity);
         for (const auto idx : DSC::valueRange(oversampled_local_function->vector().size())) {
-          oversampled_local_function->vector().set(idx, static_cast<unsigned long>(coarse_id + 1));
+          oversampled_local_function->vector().set(idx, id_to_ulong(coarse_id + 1));
         }
         //        if (coarse_id == localgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
         //        {

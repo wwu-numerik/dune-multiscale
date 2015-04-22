@@ -1,53 +1,14 @@
 #include <config.h>
+
 #include "grid_creation.hh"
 
 #include <dune/grid/common/gridenums.hh>
-
 #include <dune/stuff/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/common/parallel/mpihelper.hh>
-
-// Helper struct to make overlap for SPGrid possible
-// Declared in unnamed namespace to avoid naming conflicts
-namespace {
-template <class GridType>
-class MyGridFactory {
-  typedef typename GridType::ctype ctype;
-  static const int dimworld = GridType::dimensionworld;
-  static const int dim = GridType::dimension;
-
-public:
-  static std::shared_ptr<GridType> createCubeGrid(const Dune::FieldVector<ctype, dimworld>& lowerLeft,
-                                                  const Dune::FieldVector<ctype, dimworld>& upperRight,
-                                                  const Dune::array<unsigned int, dim>& elements,
-                                                  const Dune::array<unsigned int, dim>& /*overlap*/) {
-    // structured grid factory allows overlap only for SPGrid at the moment, hence the following check
-    assert(false);
-    //    BOOST_ASSERT_MSG((problem.config().get("msfem.oversampling_layers", 0) == 0), "Oversampling may only be used
-    //    in combination with SPGrid!");
-    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);
-  }
-};
-
-template <class ct, int dim, Dune::SPRefinementStrategy strategy, class Comm>
-class MyGridFactory<Dune::SPGrid<ct, dim, strategy, Comm>> {
-  typedef Dune::SPGrid<ct, dim, strategy, Comm> GridType;
-  typedef typename GridType::ctype ctype;
-  static const int dimworld = GridType::dimensionworld;
-
-public:
-  static std::shared_ptr<GridType> createCubeGrid(const Dune::FieldVector<ctype, dimworld>& lowerLeft,
-                                                  const Dune::FieldVector<ctype, dimworld>& upperRight,
-                                                  const Dune::array<unsigned int, dim>& elements,
-                                                  const Dune::array<unsigned int, dim>& overlap,
-                                                  Dune::MPIHelper::MPICommunicator communicator) {
-    return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap,
-                                                                 communicator);
-  }
-};
-}
+#include <dune/multiscale/common/mygridfactory.hh>
 
 using namespace Dune::Multiscale;
 using namespace std;
@@ -118,7 +79,7 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
-  auto fine_gridptr = StructuredGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements,
+  auto fine_gridptr = MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements,
                                                                                     overFine, communicator);
 
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
