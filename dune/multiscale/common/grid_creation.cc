@@ -51,8 +51,11 @@ Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem,
       MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse, communicator);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0) - coarse_gridptr->overlapSize(0);
-  if (int(expected_elements) != coarse_gridptr->comm().sum(actual_elements))
+  const auto sum_elements = coarse_gridptr->comm().sum(actual_elements);
+  if (int(expected_elements) != sum_elements)
     DUNE_THROW(InvalidStateException, "Wonky grid distribution");
+  if( (coarse_gridptr->comm().size()>1) && (actual_elements == int(expected_elements)))
+    DUNE_THROW(InvalidStateException, "Rank 0 fail");
   return coarse_gridptr;
 }
 
