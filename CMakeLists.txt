@@ -149,11 +149,11 @@ foreach(_mod ${ALL_DEPENDENCIES})
 endforeach(_mod DEPENDENCIES)
   
 ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
-             ${dune} ${header})
+            src/thread_vis.cc ${dune} ${header})
 add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
-            ${FEM_SOURCES} src/elliptic_msfem.cc )
+            ${FEM_SOURCES} src/elliptic_msfem.cc src/thread_vis.cc )
 add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
-           ${FEM_SOURCES} src/elliptic_msfem.cc
+           ${FEM_SOURCES} src/elliptic_msfem.cc src/thread_vis.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
