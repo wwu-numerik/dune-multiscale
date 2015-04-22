@@ -162,8 +162,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
   auto options = local_inverse.options(problem_.config().get("msfem.localproblemsolver_type", "umfpack"));
-  options["precision"] = 1;
-  assert(false);
+  options["precision"] = problem_.config().get("msfem.localproblemsolver_precision", 1e-5);
   options["verbose"] = problem_.config().get("msfem.localproblemsolver_verbose", "0");
   {
     InverseOperatorResult stat;
