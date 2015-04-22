@@ -8,6 +8,7 @@
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
 #include <dune/grid/spgrid.hh>
+#include <dune/grid/yaspgrid.hh>
 #include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/operators/elliptic-cg.hh>
@@ -68,9 +69,9 @@ struct CommonTraits {
   static constexpr int dimDomain = GridSelector::dimgrid;
   static constexpr int world_dim = GridSelector::dimworld;
   static_assert(dimDomain == world_dim, "we really don't want to use an embedded grid");
-  typedef Dune::SPGrid<double, world_dim> GridType;
+  typedef Dune::SPGrid<double, world_dim, SPIsotropicRefinement> GridType;
   //    typedef Dune::SGrid<world_dim, world_dim> GridType;
-  //    typedef Dune::YaspGrid<world_dim> GridType;
+//      typedef Dune::YaspGrid<world_dim> GridType;
 
   static constexpr unsigned int exact_solution_space_order = 3 * st_lagrangespace_order;
 

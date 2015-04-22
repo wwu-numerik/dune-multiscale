@@ -1,4 +1,5 @@
 #include <config.h>
+
 #include <assert.h>
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
@@ -16,6 +17,7 @@
 #include <memory>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/common/mygridfactory.hh>
 
 #include "localgridlist.hh"
 
@@ -33,7 +35,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
                                                                                CommonTraits::DomainType(8), dim_world);
   const auto oversampling_layer = problem.config().get("msfem.oversampling_layers", 0);
 
-  typedef StructuredGridFactory<MsFEMTraits::LocalGridType> FactoryType;
+  typedef MyGridFactory<MsFEMTraits::LocalGridType> FactoryType;
   const auto& gridCorners = problem.getModelData().gridCorners();
   auto globalLowerLeft = gridCorners.first;
   auto globalUpperRight = gridCorners.second;
@@ -63,7 +65,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
       int bigger = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
       elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
-    subGridList_[coarse_index] = FactoryType::createCubeGrid(lowerLeft, upperRight, elemens);
+    subGridList_[coarse_index] = FactoryType::createLocalGrid(lowerLeft, upperRight, elemens);
   }
 }
 

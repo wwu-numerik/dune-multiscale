@@ -9,18 +9,27 @@
 #include <dune/multiscale/common/traits.hh>
 
 #include <dune/grid/spgrid.hh>
-#include <dune/grid/sgrid.hh>
+#include <dune/grid/yaspgrid.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <vector>
 
 namespace Dune {
 namespace Multiscale {
 
+template <class GridType>
+struct LocalGridChooser {
+  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement> type;
+};
+
+template <>
+struct LocalGridChooser<Dune::YaspGrid<CommonTraits::world_dim>> {
+  typedef Dune::YaspGrid<CommonTraits::world_dim> type;
+};
+
 //! type construction for the MSFEM code
 struct MsFEMTraits {
-  typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement, No_Comm> LocalGridType;
   // change dirichletconstraints.cc bottom accordingly
-  // typedef Dune::SGrid<CommonTraits::GridType::dimension, CommonTraits::GridType::dimension> LocalGridType;
+  typedef typename LocalGridChooser<CommonTraits::GridType>::type LocalGridType;
 
   typedef SpaceChooser<LocalGridType, CommonTraits::FieldType, CommonTraits::dimRange> SpaceChooserType;
   typedef typename SpaceChooserType::Type LocalSpaceType;
