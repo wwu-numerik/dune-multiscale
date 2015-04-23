@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     mem_usage();
+    dump_environment();
   } catch (Dune::Exception& e) {
     return handle_exception(e);
   } catch (std::exception& s) {
