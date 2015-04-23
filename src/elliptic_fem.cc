@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
     DSC_LOG_INFO_0 << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     mem_usage();
+    dump_environment();
   } catch (Dune::Exception& e) {
     return handle_exception(e);
   } catch (std::exception& s) {
