@@ -15,7 +15,8 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
   , corrections_(std::move(corrections))
   , view_(coarseSpace.grid_view())
   , index_set_(view_.grid().leafIndexSet())
-  , search_(DSC::make_unique<LocalGridSearch>(coarseSpace, gridlist)) {
+  , search_(coarseSpace, gridlist)
+{
   assert(corrections_.size() == index_set_.size(0));
 }
 
@@ -47,7 +48,7 @@ Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::
   }
 }
 
-Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() const {
-  assert(search_);
+Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() {
   return *search_;
 }
+

@@ -22,6 +22,7 @@ public:
   typedef typename BaseType::EntityPointerVectorType EntityPointerVectorType;
 
   LocalGridSearch(const CommonTraits::SpaceType& space, const LocalGridList& gridlist);
+  LocalGridSearch(const LocalGridSearch& other);
 
   EntityPointerVectorType operator()(const PointContainerType& points);
 

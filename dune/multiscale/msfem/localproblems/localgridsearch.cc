@@ -72,6 +72,14 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
   , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
   , static_iterator_(nullptr) {}
 
+Dune::Multiscale::LocalGridSearch::LocalGridSearch(const Dune::Multiscale::LocalGridSearch &other)
+  : coarse_space_(other.coarse_space_)
+  , gridlist_(other.gridlist_)
+  , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
+  , static_iterator_(nullptr)
+{
+}
+
 const Dune::Multiscale::LocalGridSearch::CoarseEntityPointerType&
 Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
   assert(current_coarse_pointer_);

@@ -5,6 +5,8 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
+
+#include <dune/stuff/common/parallel/threadstorage.hh>
 #include <unordered_map>
 
 namespace Dune {
@@ -12,8 +14,7 @@ namespace Multiscale {
 
 class ProxyGridview;
 
-// class LocalGridSearch;
-class LocalGridList;
+class LocalGridSearch;
 
 /**
  * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
@@ -35,13 +36,13 @@ public:
 
   void add(const CommonTraits::DiscreteFunctionType& coarse_func);
 
-  LocalGridSearch& search() const;
+  LocalGridSearch& search();
 
 private:
   CorrectionsMapType corrections_;
   const CommonTraits::GridViewType view_;
   const LeafIndexSetType& index_set_;
-  const std::unique_ptr<LocalGridSearch> search_;
+  DS::PerThreadValue<LocalGridSearch> search_;
 };
 
 } // namespace Multiscale {
