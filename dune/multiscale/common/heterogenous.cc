@@ -4,19 +4,26 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
+#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/grid/utility/partitioning/seedlist.hh>
 
-void Dune::Multiscale::MsFEMProjection::project(const Dune::Multiscale::LocalsolutionProxy& source,
-                                                Dune::Multiscale::CommonTraits::DiscreteFunctionType& target,
-                                                Dune::Multiscale::LocalGridSearch& search) {
+void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::LocalsolutionProxy& source,
+                                                Dune::Multiscale::CommonTraits::DiscreteFunctionType& target) {
   constexpr size_t target_dimRange = CommonTraits::dimRange;
 
   const auto& space = target.space();
 
   preprocess(target);
   const auto interior = space.grid_view().grid().template leafGridView<Interior_Partition>();
-  for (const auto& target_entity : DSC::entityRange(interior)) {
+  typedef std::remove_const<decltype(interior)>::type InteriorType;
+  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(space, interior);
+  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
+
+  const auto func = [&](const CommonTraits::EntityType& target_entity) {
     auto target_local_function = target.local_discrete_function(target_entity);
     const auto global_quads = global_evaluation_points(space, target_entity);
+    auto& search = source.search();
     const auto evaluation_entity_ptrs = search(global_quads);
     assert(evaluation_entity_ptrs.size() >= global_quads.size());
 
@@ -39,7 +46,10 @@ void Dune::Multiscale::MsFEMProjection::project(const Dune::Multiscale::Localsol
         DUNE_THROW(InvalidStateException, "Did not find the local lagrange point in the source mesh!");
       }
     }
-  }
+  };
+
+  walker.add(func);
+  walker.assemble(partitioning);
 
   postprocess(target);
 }

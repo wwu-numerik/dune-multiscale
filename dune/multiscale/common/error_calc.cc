@@ -131,7 +131,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
   if (msfem_solution_) {
-    MsFEMProjection::project(*msfem_solution_, fine_msfem_solution, msfem_solution_->search());
+    MsFEMProjection::project(*msfem_solution_, fine_msfem_solution);
     if (problem_.config().get("global.vtk_output", false)) {
       DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
       data_output(problem_, fine_space.grid_view());
