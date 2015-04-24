@@ -37,6 +37,7 @@ public:
   void add(const CommonTraits::DiscreteFunctionType& coarse_func);
 
   LocalGridSearch& search();
+  void visualize_parts(const Stuff::Common::Configuration &config) const;
 
 private:
   CorrectionsMapType corrections_;

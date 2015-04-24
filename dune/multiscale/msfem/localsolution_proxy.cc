@@ -52,3 +52,14 @@ Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search(
   return *search_;
 }
 
+void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const DSC::Configuration& config) const
+{
+  boost::format name("msfemsolution_parts_%08i");
+  boost::filesystem::path base(config.get("global.datadir", "data/"));
+  for (const auto& part_pair : corrections_) {
+    const auto& id = part_pair.first;
+    const auto& solution = *part_pair.second;
+    const auto path = base / (name % id).str();
+    solution.visualize(path.string());
+  }
+}
