@@ -45,7 +45,6 @@ public:
                                                   const Dune::array<unsigned int, dim>& elements,
                                                   const Dune::array<unsigned int, dim>& overlap,
                                                   Dune::MPIHelper::MPICommunicator communicator) {
-    DUNE_THROW(InvalidStateException, "");
     return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap,
                                                                  communicator);
   }
