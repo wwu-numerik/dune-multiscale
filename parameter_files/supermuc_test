@@ -2,12 +2,12 @@
 # directory to save the data output
 datadir = data
 output_walltime = 1
-vtk_output = 0
-skip_error = 1
+vtk_output = 1
+skip_error = 0
 
 [grids]
-macro_cells_per_dim = 16
-micro_cells_per_macrocell_dim = 8
+macro_cells_per_dim = [60 220 85]
+micro_cells_per_macrocell_dim = 1
 overlap = 1
 
 [msfem]
@@ -25,7 +25,7 @@ localproblemsolver_verbose = 0
 localproblemsolver_type = bicgstab.amg.ilu0
 
 [problem]
-name = "Synthetic"
+name = "SPE10"
 # note that the grid is specified in '../multiscale/problems/elliptic_problems/XX.hh'
 
 [logging]
@@ -39,6 +39,6 @@ file = ms.log
 dir = logdata
 
 [threading]
-max_count = 16
+max_count = 4
 partition_factor = 1
 
