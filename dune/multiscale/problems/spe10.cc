@@ -108,7 +108,7 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
                     << "execute\n"
                     << "wget http://www.spe.org/web/csp/datasets/por_perm_case2a.zip\n"
                     << "unzip the file and move the file 'spe_perm.dat' to\n"
-                    << "dune-multiscale/dune/multiscale/problems/elliptic/spe10_permeability.dat!\n";
+                    << "dune-multiscale/dune/multiscale/problems/spe10_permeability.dat!\n";
     DUNE_THROW(IOError, "Data file for Groundwaterflow permeability could not be opened!");
   }
   // 3 is the maximum space dimension
@@ -144,7 +144,7 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
 
 void Diffusion::readPermeability() {
 
-  std::string filename = "../dune/multiscale/problems/elliptic/spe10_permeability.dat";
+  std::string filename = "spe10_permeability.dat";
   std::ifstream file(filename.c_str());
   double val;
   if (!file) { // file couldn't be opened

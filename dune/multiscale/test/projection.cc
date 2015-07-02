@@ -36,7 +36,7 @@ struct Projection : public GridAndSpaces {
     LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, localgrid_list);
 
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
-    MsFEMProjection::project(proxy, fine_scale_part, proxy.search());
+    MsFEMProjection::project(proxy, fine_scale_part);
 
     const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(fineSpace.grid_view())
                                     .induced_norm(fine_scale_part));
