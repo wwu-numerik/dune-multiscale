@@ -77,15 +77,14 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   global_matrix_.mv(dirichlet_projection_.vector(), tmp);
   force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::Constraints::Dirichlet<typename CommonTraits::GridViewType::Intersection, CommonTraits::RangeFieldType>
+  GDT::Spaces::DirichletConstraints<typename CommonTraits::GridViewType::Intersection>
       dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
-  this->add(dirichlet_constraints, global_matrix_ /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
-  this->add(dirichlet_constraints,
-            force_functional.vector() /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  this->add(dirichlet_constraints/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   if (problem.config().get("threading.smp_constraints", false))
     AssemblerBaseType::assemble(partitioning);
   else
     AssemblerBaseType::assemble(false);
+  dirichlet_constraints.apply(global_matrix_, force_functional.vector());
 }
 
 void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }

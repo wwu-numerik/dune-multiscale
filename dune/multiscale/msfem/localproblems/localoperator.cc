@@ -141,11 +141,12 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 
   // dirichlet-0 for all rhs
   typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
-  system_assembler_.add(dirichletConstraints_, system_matrix_, new OnLocalBoundaryEntities());
-  for (auto& rhs : allLocalRHS)
-    system_assembler_.add(dirichletConstraints_, rhs->vector(), new OnLocalBoundaryEntities());
+  system_assembler_.add(dirichletConstraints_, new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
+  dirichletConstraints_.apply(system_matrix_);
+  for (auto& rhs : allLocalRHS)
+    dirichletConstraints_.apply(rhs->vector());
 #if HAVE_UMFPACK
   if (use_umfpack_)
     local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
