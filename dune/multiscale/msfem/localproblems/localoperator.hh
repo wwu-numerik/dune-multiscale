@@ -19,8 +19,7 @@ class LocalProblemOperator {
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::LinearOperatorType LocalLinearOperatorType;
   typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, MsFEMTraits::LocalSpaceType>
       EllipticOperatorType;
-  typedef GDT::Spaces::Constraints::Dirichlet<typename MsFEMTraits::LocalGridViewType::Intersection,
-                                              CommonTraits::RangeFieldType> DirichletConstraintsType;
+  typedef GDT::Spaces::DirichletConstraints<typename MsFEMTraits::LocalGridViewType::Intersection> DirichletConstraintsType;
   typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
 #if HAVE_UMFPACK
   typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
