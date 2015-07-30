@@ -34,9 +34,9 @@ struct LocalGridFactory {
   }
 };
 
-template <class ct, int dim, Dune::SPRefinementStrategy strategy, class Comm>
-class MyGridFactory<Dune::SPGrid<ct, dim, strategy, Comm>> : public LocalGridFactory<Dune::SPGrid<ct, dim, strategy, Comm>>{
-  typedef Dune::SPGrid<ct, dim, strategy, Comm> GridType;
+template <class ct, int dim, template <int> class Refinement, class Comm>
+class MyGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>> : public LocalGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>>{
+  typedef Dune::SPGrid<ct, dim, Refinement, Comm> GridType;
   typedef typename GridType::ctype ctype;
 
 public:
