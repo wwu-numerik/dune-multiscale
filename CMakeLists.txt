@@ -24,13 +24,6 @@ if(NOT (dune-common_DIR OR dune-common_ROOT OR
       ${PROJECT_BINARY_DIR})
 endif()
 
-# guess dune-common build dir
-if(NOT (dune-common_DIR OR dune-common_ROOT OR
-        "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
-    string(REPLACE  ${CMAKE_PROJECT_NAME} dune-common dune-common_DIR
-    ${PROJECT_BINARY_DIR})
-endif()
-
 #find dune-common and set the module path
 find_package(dune-common REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
