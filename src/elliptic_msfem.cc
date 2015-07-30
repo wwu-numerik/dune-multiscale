@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     msfem_algorithm();
 
     auto comm = Dune::MPIHelper::getCollectiveCommunication();
-    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all", DSC_CONFIG_GET("global.output_walltime", false));
+    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
     auto max_cpu_time = comm.max(cpu_time);
     DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");

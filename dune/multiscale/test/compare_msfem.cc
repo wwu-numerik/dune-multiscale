@@ -27,7 +27,7 @@ struct MsFemCompare : public ::testing::TestWithParam<TestArgs> {
     set_param(this->GetParam().first);
     set_param({{"msfem.fem_comparison", "0"},
         {"global.vtk_output", "0"},
-        {"problem.name", "Nine"}});
+        {"problem.name", "Synthetic"}});
   }
 };
 

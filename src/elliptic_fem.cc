@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     cgfem_algorithm();
 
     const auto cpu_time =
-        DSC_PROFILER.stopTiming("total_cpu", DSC_CONFIG_GET("global.output_walltime", false)) / 1000.f;
+        DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
     DSC_LOG_INFO_0 << "Total runtime of the program: " << cpu_time << "s" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     mem_usage();
