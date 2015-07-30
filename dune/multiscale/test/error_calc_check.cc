@@ -20,7 +20,7 @@ struct ErrorCheck : public GridAndSpaces {
     LocalGridList localgrid_list(*problem_, coarse_space);
     const CommonTraits::InteriorGridViewType interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
     const auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
-    for (auto& coarse_entity : DSC::entityRange(interior)) {
+    for (const auto& coarse_entity : DSC::entityRange(interior)) {
       LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
 
       const auto coarse_index = coarse_indexset.index(coarse_entity);

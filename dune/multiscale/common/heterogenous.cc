@@ -79,7 +79,7 @@ Dune::Multiscale::MsFEMProjection::identifySharedNodes(const Dune::Multiscale::C
                                                        std::vector<int>& map) {
   const auto& indexSet = gridPart.indexSet();
 
-  for (auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {
+  for (const auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {
     const auto number_of_nodes_in_entity = entity.template count<CommonTraits::world_dim>();
     for (auto i : DSC::valueRange(number_of_nodes_in_entity)) {
       const auto node = entity.template subEntity<CommonTraits::world_dim>(i);

@@ -16,7 +16,7 @@ struct Projection : public GridAndSpaces {
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
                                                                 const LocalGridList& localgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
-    for (auto& coarse_entity : DSC::entityRange(coarseSpace.grid_view())) {
+    for (const auto& coarse_entity : DSC::entityRange(coarseSpace.grid_view())) {
       LocalSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
       auto& coarse_indexset = coarseSpace.grid_view().grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
