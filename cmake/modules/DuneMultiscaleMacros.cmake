@@ -10,7 +10,6 @@ include(AddParMETISFlags)
 include(CheckEmplace)
 
 find_package(Eigen3 3.2.0)
-find_package(TBB REQUIRED)
 
 find_package(UMFPack)
 find_package(SuiteSparse)
@@ -37,4 +36,4 @@ If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
   "-pipe" "-fomit-frame-pointer" "-O4" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
-add_definitions("-DSPGRID" "-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" -DMETISNAMEL )
+add_definitions("-DENABLE_PARMETIS=1" "-DGRIDDIM=${GRIDDIM}" "-DMETISNAMEL" )
