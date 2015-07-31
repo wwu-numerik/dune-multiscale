@@ -7,5 +7,4 @@ Module: dune-multiscale
 Version: 1.0
 Maintainer: rene.milk@wwu.de
 #depending on 
-Depends: dune-grid dune-common dune-istl dune-localfunctions dune-stuff dune-spgrid dune-pdelab dune-gdt
-Suggests: dune-fem
+Depends: dune-grid (>= 4.0) dune-common (>= 4.0) dune-istl (>= 4.0) dune-localfunctions (>= 4.0) dune-stuff dune-spgrid (> 2014.12) dune-pdelab dune-gdt
