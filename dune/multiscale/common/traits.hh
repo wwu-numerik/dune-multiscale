@@ -66,8 +66,8 @@ public:
 struct CommonTraits {
 
   static constexpr int dimRange = 1;
-  static constexpr int dimDomain = GridSelector::dimgrid;
-  static constexpr int world_dim = GridSelector::dimworld;
+  static constexpr int dimDomain = st_grid_dim;
+  static constexpr int world_dim = st_grid_dim;
   static_assert(dimDomain == world_dim, "we really don't want to use an embedded grid");
   typedef Dune::SPGrid<double, world_dim, SPIsotropicRefinement> GridType;
   //    typedef Dune::SGrid<world_dim, world_dim> GridType;

@@ -65,7 +65,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     const auto coarseSolutionLF = coarse_msfem_solution.local_discrete_function(coarse_entity);
 
     if (is_simplex_grid) {
-      BOOST_ASSERT_MSG(localSolutions.size() == Dune::GridSelector::dimgrid,
+      BOOST_ASSERT_MSG(localSolutions.size() == CommonTraits::world_dim,
                        "We should have dim local solutions per coarse element on triangular meshes!");
 
       MsFEMTraits::LocalGridDiscreteFunctionType::JacobianRangeType grad_coarse_msfem_on_entity;
@@ -73,7 +73,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       coarseSolutionLF->jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
 
       // get the coarse gradient on T, multiply it with the local correctors and sum it up.
-      for (int spaceDimension = 0; spaceDimension < Dune::GridSelector::dimgrid; ++spaceDimension) {
+      for (int spaceDimension = 0; spaceDimension < CommonTraits::world_dim; ++spaceDimension) {
         localSolutions[spaceDimension]->vector() *= grad_coarse_msfem_on_entity[0][spaceDimension];
         local_correction.vector() += localSolutions[spaceDimension]->vector();
       }

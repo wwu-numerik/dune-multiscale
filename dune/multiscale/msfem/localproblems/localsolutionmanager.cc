@@ -18,7 +18,7 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , grid_view_(subgrid_.leafGridView())
   , numBoundaryCorrectors_(DSG::is_simplex_grid(coarse_space) ? 1 : 2)
-  , numLocalProblems_(DSG::is_simplex_grid(coarse_space) ? GridSelector::dimgrid + 1
+  , numLocalProblems_(DSG::is_simplex_grid(coarse_space) ? CommonTraits::world_dim + 1
                                                          : coarse_space.mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d") %

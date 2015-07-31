@@ -42,6 +42,7 @@
 #include <string>
 static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
 static constexpr unsigned int st_lagrangespace_order = 1;
+static constexpr size_t st_grid_dim = GRIDDIM;
 #define HAVE_DUNE_MULTISCALE_STATIC_DATA
 #endif
 
