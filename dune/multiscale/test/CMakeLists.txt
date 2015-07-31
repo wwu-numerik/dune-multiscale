@@ -1,6 +1,6 @@
 BEGIN_TESTCASES()
 
-
+target_link_libraries(test_compare_cgfem multiscale_cgfem)
 foreach( test ${testnames} )
   add_dune_mpi_flags(${test})
   add_dune_alugrid_flags(${test})

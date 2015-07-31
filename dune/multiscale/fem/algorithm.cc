@@ -22,7 +22,7 @@ namespace Dune {
 namespace Multiscale {
 
 //! the main FEM computation
-void cgfem_algorithm() {
+std::map<std::string, double> cgfem_algorithm() {
   const auto& comm = Dune::MPIHelper::getCommunicator();
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
@@ -38,7 +38,8 @@ void cgfem_algorithm() {
     solution.visualize(outputparam.fullpath(solution.name()));
   }
   if (!problem.config().get("global.skip_error", false))
-    ErrorCalculator(problem, nullptr, &solution).print(DSC_LOG_INFO_0);
+    return ErrorCalculator(problem, nullptr, &solution).print(DSC_LOG_INFO_0);
+  return std::map<std::string, double>();
 } // ... algorithm(...)
 
 } // namespace Multiscale {
