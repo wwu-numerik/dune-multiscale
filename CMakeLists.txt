@@ -90,19 +90,19 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/coarse_rhs_functional.cc
     )
 
-set( FEM_SOURCES
+set( CGFEM_SOURCES
         dune/multiscale/fem/algorithm.cc
-        src/elliptic_fem.cc
     )
 
 dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
 dune_add_library(multiscale_problem ${PROBLEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
 dune_add_library(multiscale_msfem ${MSFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-message(STATUS MULTI ${MULTISCALE_LIBS})
-ADD_EXECUTABLE(elliptic_msfem src/elliptic_msfem.cc ${COMMON_HEADER} )
+dune_add_library(multiscale_cgfem ${CGFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
+
+ADD_EXECUTABLE(elliptic_msfem src/msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
 
-ADD_EXECUTABLE(elliptic_fem ${FEM_SOURCES} ${COMMON_HEADER} )
+ADD_EXECUTABLE(elliptic_fem src/cgfem.cc ${CGFEM_SOURCES} ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_fem ${MULTISCALE_LIBS} )
 
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
@@ -135,12 +135,12 @@ foreach(_mod ${ALL_DEPENDENCIES})
   endif(_index GREATER -1)
 endforeach(_mod DEPENDENCIES)
   
-ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
+ADD_CPPCHECK(src/msfem.cc src/cgfem.cc
             src/thread_vis.cc ${dune} ${header})
-add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
-            ${FEM_SOURCES} src/elliptic_msfem.cc src/thread_vis.cc )
-add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
-           ${FEM_SOURCES} src/elliptic_msfem.cc src/thread_vis.cc
+add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
+            ${CGFEM_SOURCES} src/cgfem.cc src/msfem.cc src/thread_vis.cc )
+add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
+           ${CGFEM_SOURCES} src/cgfem.cc src/msfem.cc src/thread_vis.cc
            ${header} ${dune})
 
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)

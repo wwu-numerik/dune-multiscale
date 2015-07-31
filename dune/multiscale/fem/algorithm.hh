@@ -16,7 +16,7 @@ namespace Dune {
 namespace Multiscale {
 
 //! the main FEM computation
-void cgfem_algorithm();
+std::map<std::string, double> cgfem_algorithm();
 
 } // namespace Multiscale {
 } // namespace Dune {
