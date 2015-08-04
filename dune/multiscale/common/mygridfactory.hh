@@ -51,9 +51,9 @@ public:
 
 };
 
-template <int dim>
-class MyGridFactory<Dune::YaspGrid<dim>> : public LocalGridFactory<Dune::YaspGrid<dim>> {
-  typedef Dune::YaspGrid<dim> GridType;
+template <int dim, class Coord>
+class MyGridFactory<Dune::YaspGrid<dim, Coord>> : public LocalGridFactory<Dune::YaspGrid<dim, Coord>> {
+  typedef Dune::YaspGrid<dim, Coord> GridType;
   typedef typename GridType::ctype ctype;
 
 public:
@@ -63,8 +63,6 @@ public:
                                                   const Dune::array<unsigned int, dim>& overlap,
                                                   Dune::MPIHelper::MPICommunicator communicator) {
     const auto no_periodic_direction = std::bitset<dim>();
-    if(DSC::FloatCmp::ne(lowerLeft, Dune::FieldVector<ctype, CommonTraits::world_dim>(0.0)))
-      DUNE_THROW(Dune::InvalidStateException, "YaspGrid + Origin != 0.0 is still a no-go");
     Dune::array<int, dim> elements;
     std::copy(elements_in.begin(), elements_in.end(), elements.begin());
     auto overlap_check = overlap;
@@ -72,8 +70,8 @@ public:
     for(auto i : DSC::valueRange(1,dim))
       if(overlap[i] != overlap[0])
         DUNE_THROW(Dune::InvalidStateException, "YaspGrid only supports uniform overlap");
-    return std::make_shared<GridType>(communicator, upperRight, elements,
-                      no_periodic_direction, overlap[0]);
+    return std::make_shared<GridType>(lowerLeft, upperRight, elements,
+                      no_periodic_direction, overlap[0], communicator);
   }
 };
 
