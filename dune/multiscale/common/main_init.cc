@@ -36,7 +36,6 @@ void Dune::Multiscale::init(int argc, char** argv) {
                        DSC_CONFIG_GETB("logging.file", std::string(argv[0]) + ".log", useLogger),
                        DSC_CONFIG_GETB("global.datadir", "data", useLogger),
                        DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger));
-  DSC_CONFIG.set_record_defaults(true);
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
   DS::threadManager().set_max_threads(DSC_CONFIG_GET("threading.max_count", 4));
 }
