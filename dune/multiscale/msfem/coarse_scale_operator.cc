@@ -78,7 +78,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::DirichletConstraints<typename CommonTraits::GridViewType::Intersection>
-      dirichlet_constraints(boundary_info, coarse_space().mapper().maxNumDofs(), coarse_space().mapper().maxNumDofs());
+      dirichlet_constraints(boundary_info, coarse_space().mapper().size(), true);
   this->add(dirichlet_constraints/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   if (problem.config().get("threading.smp_constraints", false))
     AssemblerBaseType::assemble(partitioning);
