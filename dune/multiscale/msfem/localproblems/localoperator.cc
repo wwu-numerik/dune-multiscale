@@ -88,8 +88,7 @@ LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
   , system_matrix_(localSpace_.mapper().size(), localSpace_.mapper().size(), EllipticOperatorType::pattern(localSpace_))
   , system_assembler_(localSpace_)
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
-  , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().maxNumDofs(),
-                          localSpace_.mapper().maxNumDofs())
+  , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().size(), true)
 #if HAVE_UMFPACK
   , use_umfpack_(problem.config().get("msfem.localproblemsolver_type", std::string("umfpack")) ==
                  std::string("umfpack"))
