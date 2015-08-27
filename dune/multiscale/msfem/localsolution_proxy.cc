@@ -22,7 +22,7 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
 
 std::unique_ptr<Dune::Multiscale::LocalsolutionProxy::LocalFunctionType>
 Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType& entity) const {
-  const auto& coarse_cell = *search_->current_coarse_pointer();
+  const auto& coarse_cell = search_->current_coarse_pointer();
   auto it = corrections_.find(index_set_.index(coarse_cell));
   if (it != corrections_.end())
     return it->second->local_function(entity);

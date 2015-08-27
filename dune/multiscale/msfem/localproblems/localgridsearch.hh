@@ -19,14 +19,14 @@ class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewT
   typedef PointContainerType::const_iterator PointIterator;
 
 public:
-  typedef typename BaseType::EntityPointerVectorType EntityPointerVectorType;
+  typedef typename BaseType::EntityVectorType EntityVectorType;
 
   LocalGridSearch(const CommonTraits::SpaceType& space, const LocalGridList& gridlist);
   LocalGridSearch(const LocalGridSearch& other);
 
-  EntityPointerVectorType operator()(const PointContainerType& points);
+  EntityVectorType operator()(const PointContainerType& points);
 
-  const CoarseEntityPointerType& current_coarse_pointer() const;
+  const MsFEMTraits::CoarseEntityType& current_coarse_pointer() const;
 
   bool covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity, const PointIterator first,
                      const PointIterator last);
@@ -35,7 +35,7 @@ private:
   const CommonTraits::SpaceType& coarse_space_;
   const LocalGridList& gridlist_;
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
-  std::unique_ptr<CoarseEntityPointerType> current_coarse_pointer_;
+  std::unique_ptr<MsFEMTraits::CoarseEntityType> current_coarse_entity_;
   CommonTraits::InteriorGridViewType static_view_;
   typedef typename CommonTraits::InteriorGridViewType::template Codim<0>::Iterator InteriorIteratorType;
   std::unique_ptr<InteriorIteratorType> static_iterator_;

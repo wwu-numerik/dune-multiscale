@@ -32,12 +32,11 @@ void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::Localsolution
     for (size_t qP = 0; qP < global_quads.size(); ++qP) {
       const auto& source_entity_unique_ptr = evaluation_entity_ptrs[qP];
       if (source_entity_unique_ptr) {
-        const auto& source_entity_ptr = (*source_entity_unique_ptr);
-        const auto& source_geometry = source_entity_ptr->geometry();
+        const auto source_entity = (*source_entity_unique_ptr);
+        const auto& source_geometry = source_entity.geometry();
         const auto& global_point = global_quads[qP];
         const auto& source_local_point = source_geometry.local(global_point);
-        const auto& ent = *source_entity_ptr;
-        const auto& source_local_function = source.local_function(ent);
+        const auto& source_local_function = source.local_function(source_entity);
         source_value = source_local_function->evaluate(source_local_point);
         for (size_t i = 0; i < target_dimRange; ++i, ++k) {
           target_local_function->vector().add(k, source_value[i]);
