@@ -7,9 +7,9 @@
 #include <dune/stuff/common/algorithm.hh>
 #include <dune/grid/common/gridenums.hh>
 
-Dune::Multiscale::LocalGridSearch::EntityPointerVectorType Dune::Multiscale::LocalGridSearch::
+Dune::Multiscale::LocalGridSearch::EntityVectorType Dune::Multiscale::LocalGridSearch::
 operator()(const PointContainerType& points) {
-  typedef typename EntityPointerVectorType::value_type EPV;
+  typedef typename EntityVectorType::value_type EPV;
   const auto is_null = [&](const EPV& ptr) { return ptr == nullptr; };
   const auto not_null = [&](const EPV& ptr) { return ptr != nullptr; };
 
@@ -21,7 +21,7 @@ operator()(const PointContainerType& points) {
   auto& it = *static_iterator_;
   const auto end = view.end<0>();
 
-  EntityPointerVectorType ret_entities(points.size());
+  EntityVectorType ret_entities(points.size());
   int steps = 0;
   bool did_cover = false;
   auto null_count = points.size();
@@ -31,7 +31,7 @@ operator()(const PointContainerType& points) {
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = view.grid().leafIndexSet();
     const auto index = index_set.index(coarse_entity);
-    current_coarse_pointer_ = DSC::make_unique<CoarseEntityPointerType>(coarse_entity);
+    current_coarse_entity_ = DSC::make_unique<MsFEMTraits::CoarseEntityType>(coarse_entity);
     auto& current_search_ptr = coarse_searches_[index];
     if (current_search_ptr == nullptr)
       current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafGridView());
@@ -80,8 +80,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const Dune::Multiscale::Local
 {
 }
 
-const Dune::Multiscale::LocalGridSearch::CoarseEntityPointerType&
-Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
-  assert(current_coarse_pointer_);
-  return *current_coarse_pointer_;
+const Dune::Multiscale::MsFEMTraits::CoarseEntityType &Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
+  assert(current_coarse_entity_);
+  return *current_coarse_entity_;
 }

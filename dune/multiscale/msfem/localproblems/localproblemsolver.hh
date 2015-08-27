@@ -8,7 +8,6 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/common/parallel/threadmanager.hh>
 
 namespace Dune {
 template <class K, int SIZE>

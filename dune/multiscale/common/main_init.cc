@@ -31,13 +31,12 @@ void Dune::Multiscale::init(int argc, char** argv) {
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
   // --> LOG_ERROR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
-  const bool useLogger = false;
-  DSC::Logger().create(DSC_CONFIG_GETB("logging.level", 62, useLogger),
-                       DSC_CONFIG_GETB("logging.file", std::string(argv[0]) + ".log", useLogger),
-                       DSC_CONFIG_GETB("global.datadir", "data", useLogger),
-                       DSC_CONFIG_GETB("logging.dir", "log" /*path below datadir*/, useLogger));
+  DSC::Logger().create(DSC_CONFIG_GET("logging.level", 62),
+                       DSC_CONFIG_GET("logging.file", std::string(argv[0]) + ".log"),
+                       DSC_CONFIG_GET("global.datadir", "data"),
+                       DSC_CONFIG_GET("logging.dir", "log" /*path below datadir*/));
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
-  DS::threadManager().set_max_threads(DSC_CONFIG_GET("threading.max_count", 4));
+  DS::threadManager().set_max_threads(DSC_CONFIG_GET("threading.max_count",1));
 }
 
 int Dune::Multiscale::handle_exception(const Dune::Exception& exp) {
