@@ -6,8 +6,8 @@ vtk_output = 1
 skip_error = 0
 
 [grids]
-macro_cells_per_dim = 12
-micro_cells_per_macrocell_dim = 32
+macro_cells_per_dim = 8
+micro_cells_per_macrocell_dim = 8
 overlap = 1
 
 [msfem]
@@ -39,6 +39,6 @@ file = msfem.log
 dir = logs
 
 [threading]
-max_count = 4
+max_count = 8
 partition_factor = 1
 
