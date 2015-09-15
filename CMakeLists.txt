@@ -111,7 +111,7 @@ ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${MULTISCALE_LIBS} )
 
-foreach(target multiscale_common multiscale_problem multiscale_msfem elliptic_msfem elliptic_fem thread_vis)
+foreach(target multiscale_common multiscale_problem multiscale_msfem multiscale_cgfem elliptic_msfem elliptic_fem thread_vis)
   add_dune_all_flags(${target})
 endforeach()
 
