@@ -76,24 +76,25 @@ MsFEMCodim0Integral::apply(LocalSolutionManager& localSolutionManager,
     const double integrationFactor = localGridEntity.geometry().integrationElement(x);
     const double quadratureWeight = quadPointIt->weight();
     const auto global_point_in_U_T = localGridEntity.geometry().global(x);
-
+    CommonTraits::DiffusionFunctionBaseType::RangeType diffusion_eval;
+    diffusion_operator.evaluate(global_point_in_U_T, diffusion_eval);
     // compute integral
     for (size_t ii = 0; ii < rows; ++ii) {
       for (size_t jj = 0; jj < cols; ++jj) {
-        RangeType local_integral(0.0);
-
         // Compute the gradients of the i'th and j'th local problem solutions
         assert(allLocalSolutionEvaluations.size() == rows /*numMacroBaseFunctions*/);
-        const auto gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
-        const auto gradLocProbSolj = allLocalSolutionEvaluations[jj][localQuadraturePoint];
+        const auto& gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
+        const auto& gradLocProbSolj = allLocalSolutionEvaluations[jj][localQuadraturePoint];
 
         auto reconstructionGradPhii = coarseBaseJacs[ii];
         reconstructionGradPhii += gradLocProbSoli;
         auto reconstructionGradPhij = coarseBaseJacs[jj];
         reconstructionGradPhij += gradLocProbSolj;
-        JacobianRangeType diffusive_flux(0.0);
-        diffusion_operator.diffusiveFlux(global_point_in_U_T, reconstructionGradPhii, diffusive_flux);
-        local_integral += diffusive_flux[0] * reconstructionGradPhij[0];
+
+        const auto& arg = reconstructionGradPhii[0];
+        CommonTraits::DiffusionFunctionBaseType::RangeType::row_type diffusive_flux;
+        diffusion_eval.mv(arg, diffusive_flux);
+        const RangeType local_integral = diffusive_flux * reconstructionGradPhij[0];
         //! TODO check indexing. Correct wrt pre-gdt, but still
         ret[jj][ii] += local_integral * integrationFactor * quadratureWeight;
       }
