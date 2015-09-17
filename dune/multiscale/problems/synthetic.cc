@@ -15,6 +15,7 @@ namespace Problem {
 namespace Synthetic {
 
 static constexpr double epsilon = 0.05;
+static constexpr double M_TWOPI = M_PI * 2.0;
 
 ModelProblemData::ModelProblemData()
   : IModelProblemData()
@@ -62,18 +63,18 @@ ExactSolution::ExactSolution() {}
 PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   constexpr double pi_square = M_PI * M_PI;
   const double x0_eps = (x[0] / epsilon);
-  const double cos_2_pi_x0_eps = cos(2.0 * M_PI * x0_eps);
-  const double sin_2_pi_x0_eps = sin(2.0 * M_PI * x0_eps);
+  const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
+  const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
   const double coefficient_0 = 2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos_2_pi_x0_eps));
   const double coefficient_1 = (1.0 / (8.0 * M_PI * M_PI)) * (1.0 + (0.5 * cos_2_pi_x0_eps));
-  const double sin_2_pi_x0 = sin(2.0 * M_PI * x[0]);
-  const double cos_2_pi_x0 = cos(2.0 * M_PI * x[0]);
-  const double sin_2_pi_x1 = sin(2.0 * M_PI * x[1]);
+  const double sin_2_pi_x0 = sin(M_TWOPI * x[0]);
+  const double cos_2_pi_x0 = cos(M_TWOPI * x[0]);
+  const double sin_2_pi_x1 = sin(M_TWOPI * x[1]);
 
   const double d_x0_coefficient_0 =
-      pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (2.0 * M_PI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
+      pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (M_TWOPI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
 
-  const auto grad_u = (2.0 * M_PI * cos_2_pi_x0 * sin_2_pi_x1) +
+  const auto grad_u = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) +
                       ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
                       (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
@@ -90,7 +91,7 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   const double x0_eps = (x[0] / epsilon);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
-  const double cos_eval = cos(2.0 * M_PI * x0_eps);
+  const double cos_eval = cos(M_TWOPI * x0_eps);
   ret[0][0] = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
   ret[1][1] = inv_pi8pi * (1.0 + (0.5 * cos_eval));
 }
@@ -112,7 +113,6 @@ std::string ExactSolution::name() const { return "synthetic.exact"; }
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
 
-  constexpr double M_TWOPI = M_PI * 2.0;
   const double x0_eps = (x[0] / epsilon);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
   const double x0_2_pi = M_TWOPI * x[0];
@@ -125,7 +125,6 @@ PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
 } // evaluate
 
 PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
-  constexpr double M_TWOPI = M_PI * 2.0;
   const double x0_eps = (x[0] / epsilon);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
