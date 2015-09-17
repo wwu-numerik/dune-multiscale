@@ -108,10 +108,13 @@ TARGET_LINK_LIBRARIES(elliptic_fem ${MULTISCALE_LIBS} )
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
 # TARGET_LINK_LIBRARIES(fail ${MULTISCALE_LIBS} )
 
+ADD_EXECUTABLE(minimal EXCLUDE_FROM_ALL src/minimal.cc ${COMMON_HEADER})
+TARGET_LINK_LIBRARIES(minimal ${MULTISCALE_LIBS} )
+
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${MULTISCALE_LIBS} )
 
-foreach(target multiscale_common multiscale_problem multiscale_msfem multiscale_cgfem elliptic_msfem elliptic_fem thread_vis)
+foreach(target multiscale_common multiscale_problem multiscale_msfem multiscale_cgfem elliptic_msfem elliptic_fem thread_vis minimal)
   add_dune_all_flags(${target})
 endforeach()
 
