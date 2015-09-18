@@ -46,6 +46,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   , dirichlet_projection_(coarse_space())
   , problem_(problem) {
 
+  MS_LOG_INFO << "Assembling coarse system" << std::endl;
   DSC::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
   const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
@@ -91,6 +92,7 @@ void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
 
+  MS_LOG_INFO << "Assembling coarse system took " <<  std::lround(DSC_PROFILER.getTiming("msfem.coarse.assemble")/100.)/10. << "s" << std::endl;
   DSC::ScopedTiming st("msfem.coarse.solve");
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
@@ -116,7 +118,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   solution.vector() += dirichlet_projection_.vector();
 
   DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
-  DSC_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
+  MS_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
                << std::endl;
 }
 

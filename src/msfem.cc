@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
-    DSC_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
+    MS_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
                           datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     msfem_algorithm();
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     auto comm = Dune::MPIHelper::getCollectiveCommunication();
     auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
     auto max_cpu_time = comm.max(cpu_time);
-    DSC_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
+    MS_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
     DSC_PROFILER.outputTimings("profiler");
     mem_usage();
     dump_environment();

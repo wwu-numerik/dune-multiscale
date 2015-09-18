@@ -1,0 +1,56 @@
+#ifndef DUNE_MULTISCALE_MSFEM_LOCALSOLUTION_PROXY_HH
+#define DUNE_MULTISCALE_MSFEM_LOCALSOLUTION_PROXY_HH
+
+#include <dune/stuff/functions.hh>
+#include <dune/multiscale/common/traits.hh>
+#include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
+
+#include <dune/stuff/common/parallel/threadstorage.hh>
+#include <unordered_map>
+
+namespace Dune {
+namespace Multiscale {
+
+class ProxyGridview;
+
+class LocalGridSearch;
+
+/**
+ * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
+ **/
+class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionType {
+  typedef LocalsolutionProxy ThisType;
+  typedef MsFEMTraits::LocalGridConstDiscreteFunctionType BaseType;
+  typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
+  typedef typename BaseType::LocalfunctionType LocalFunctionType;
+
+public:
+  typedef std::unordered_map<typename LeafIndexSetType::IndexType,
+                             std::unique_ptr<MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
+
+  LocalsolutionProxy(CorrectionsMapType&& corrections, const CommonTraits::SpaceType& coarseSpace,
+                     const LocalGridList& gridlist);
+
+  std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
+
+  void add(const CommonTraits::DiscreteFunctionType& coarse_func);
+
+<<<<<<< HEAD
+  LocalGridSearch& search();
+=======
+  LocalGridSearch& search() const;
+  void visualize_parts(const Stuff::Common::Configuration &config) const;
+>>>>>>> 175dc2a... adds output of localsolution proxy in coarse local vtus
+
+private:
+  CorrectionsMapType corrections_;
+  const CommonTraits::GridViewType view_;
+  const LeafIndexSetType& index_set_;
+  DS::PerThreadValue<LocalGridSearch> search_;
+};
+
+} // namespace Multiscale {
+} // namespace Dune {
+
+#endif // DUNE_MULTISCALE_MSFEM_LOCALSOLUTION_PROXY_HH

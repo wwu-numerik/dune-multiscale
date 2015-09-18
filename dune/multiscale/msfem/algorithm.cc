@@ -68,8 +68,8 @@ std::map<std::string, double> msfem_algorithm() {
   }
 
   if (!problem.config().get("global.skip_error", false))
-    return ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0);
-  return decltype(ErrorCalculator(problem, msfem_solution).print(DSC_LOG_INFO_0))();
+    return ErrorCalculator(problem, msfem_solution).print(MS_LOG_INFO_0);
+  return decltype(ErrorCalculator(problem, msfem_solution).print(MS_LOG_INFO_0))();
 } // function algorithm
 
 } // namespace Multiscale {

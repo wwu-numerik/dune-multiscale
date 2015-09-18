@@ -32,13 +32,13 @@ std::map<std::string, double> cgfem_algorithm() {
   auto& solution = solver.solve();
 
   if (problem.config().get("global.vtk_output", false)) {
-    DSC_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
+    MS_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
     Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
   if (!problem.config().get("global.skip_error", false))
-    return ErrorCalculator(problem, nullptr, &solution).print(DSC_LOG_INFO_0);
+    return ErrorCalculator(problem, nullptr, &solution).print(MS_LOG_INFO_0);
   return std::map<std::string, double>();
 } // ... algorithm(...)
 
