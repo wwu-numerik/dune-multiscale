@@ -98,7 +98,8 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
   const Inverse inverse(global_matrix_, msfem_rhs_.space().communicator());
 
-  auto options = Inverse::options("bicgstab.amg.ilu0");
+  const auto type = problem_.config().get("msfem.coarse_solver", "bicgstab.amg.ssor");
+  auto options = Inverse::options(type);
   constexpr bool overwrite = true;
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
