@@ -39,13 +39,14 @@
 
 #ifdef MS_TIMED_LOGGER
     #define MS_LOG         Dune::Stuff::Common::TimedLogger().get("msfem")
+    #define MS_LOG_ERROR   MS_LOG.warn()
 #else
     #define MS_LOG         Dune::Stuff::Common::Logger()
+    #define MS_LOG_ERROR   MS_LOG.error()
 #endif
 
 #define MS_LOG_INFO    MS_LOG.info()
 #define MS_LOG_DEBUG   MS_LOG.debug()
-#define MS_LOG_ERROR   MS_LOG.warn()
 #define MS_LOG_DEVNULL DSC_LOG.devnull()
 #define MS_LOG_INFO_0  \
     (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_INFO  : DSC_LOG.devnull())
