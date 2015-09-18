@@ -88,7 +88,7 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     // check whether grids match (may not match after load balancing if different refinements in different
     // spatial directions are used)
-    DSC_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
+    MS_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
                          coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();

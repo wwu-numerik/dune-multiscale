@@ -42,7 +42,7 @@ CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
 }
 
 void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const {
-  DSC_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
+  MS_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
   DSC_PROFILER.startTiming("fem.apply");
 

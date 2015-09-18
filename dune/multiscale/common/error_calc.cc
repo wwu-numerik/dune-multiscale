@@ -91,7 +91,7 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
     try {
       fem_solution_ = &fem_solver_->solve();
     } catch (Dune::Exception& e) {
-      DSC_LOG_ERROR << "fine CGFEM solution failed: " << e.what();
+      MS_LOG_ERROR << "fine CGFEM solution failed: " << e.what();
       fem_solution_ = nullptr;
     }
   }
@@ -125,7 +125,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     if (problem_.config().get("global.vtk_output", false))
       solution_output(problem_, coarse_fem_solution, "coarse-cg-fem_solution_");
   } catch (Dune::Exception& e) {
-    DSC_LOG_ERROR << "coarse CGFEM solution failed: " << e.what();
+    MS_LOG_ERROR << "coarse CGFEM solution failed: " << e.what();
     fem_solution_ = nullptr;
   }
 
@@ -133,7 +133,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if (msfem_solution_) {
     MsFEMProjection::project(*msfem_solution_, fine_msfem_solution);
     if (problem_.config().get("global.vtk_output", false)) {
-      DSC_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
+      MS_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
       data_output(problem_, fine_space.grid_view());
       solution_output(problem_, fine_msfem_solution);
     }
@@ -260,7 +260,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
 
   if (problem_.config().get("global.vtk_output", false)) {
-    DSC_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
+    MS_LOG_INFO_0 << "Differences output for MsFEM Solution." << std::endl;
     for (const auto& mpair : differences)
       solution_output(problem_, mpair.second, grid_view, mpair.first);
     for (const auto& mpair : discrete_differences)

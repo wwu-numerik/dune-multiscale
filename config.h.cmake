@@ -37,15 +37,31 @@
   #define DNDEBUG 1
 #endif
 
-
-#ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
-#include <string>
-static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
-static constexpr unsigned int st_lagrangespace_order = 1;
-static constexpr size_t st_grid_dim = GRIDDIM;
-#define HAVE_DUNE_MULTISCALE_STATIC_DATA
+#ifdef MS_TIMED_LOGGER
+    #define MS_LOG         Dune::Stuff::Common::TimedLogger().get("msfem")
+#else
+    #define MS_LOG         Dune::Stuff::Common::Logger()
 #endif
 
+#define MS_LOG_INFO    MS_LOG.info()
+#define MS_LOG_DEBUG   MS_LOG.debug()
+#define MS_LOG_ERROR   MS_LOG.warn()
+#define MS_LOG_DEVNULL DSC_LOG.devnull()
+#define MS_LOG_INFO_0  \
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_INFO  : DSC_LOG.devnull())
+#define MS_LOG_DEBUG_0 \
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_DEBUG : DSC_LOG.devnull())
+#define MS_LOG_ERROR_0 \
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_ERROR : DSC_LOG.devnull())
 
+#ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
+    #include <string>
+    static const std::string st_testdata_directory = "${CMAKE_CURRENT_SOURCE_DIR}/dune/multiscale/test";
+    static constexpr unsigned int st_lagrangespace_order = 1;
+    static constexpr size_t st_grid_dim = GRIDDIM;
+    #define HAVE_DUNE_MULTISCALE_STATIC_DATA
+#endif
+
+#include <dune/stuff/common/timedlogging.hh>
 
 /* end dune-multiscale */

@@ -91,13 +91,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     //                          .induced_norm(current_rhs);
     //    if (norm < 1e-12) {
     //      current_solution.vector() *= 0;
-    //      DSC_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
+    //      MS_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
     //      continue;
     //    }
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       current_solution.vector() *= 0;
-      DSC_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
+      MS_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
     localProblemOperator.apply_inverse(current_rhs, current_solution);
@@ -109,10 +109,10 @@ void LocalProblemSolver::solve_for_all_cells() {
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   if (grid.comm().size() > 0)
-    DSC_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
+    MS_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
                   << " coarse entities!" << std::endl;
   else {
-    DSC_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
+    MS_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
   DSC_PROFILER.startTiming("msfem.local.solve_for_all_cells");
 
@@ -127,7 +127,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   const auto func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
-    DSC_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
+    MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
     //    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
@@ -147,7 +147,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
-  DSC_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
+  MS_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
                //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
                //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
                //               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"

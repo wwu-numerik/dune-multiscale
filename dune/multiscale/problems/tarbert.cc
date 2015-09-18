@@ -103,7 +103,7 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
   if (!permeability_) {
-    DSC_LOG_ERROR_0 << "The SPE10-permeability data file could not be opened. This file does\n"
+    MS_LOG_ERROR_0 << "The SPE10-permeability data file could not be opened. This file does\n"
                     << "not come with the dune-multiscale repository due to file size. To download it\n"
                     << "execute\n"
                     << "wget http://www.spe.org/web/csp/datasets/por_perm_case2a.zip\n"

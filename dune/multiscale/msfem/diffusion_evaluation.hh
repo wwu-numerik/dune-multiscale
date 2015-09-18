@@ -111,7 +111,7 @@ public:
     for (size_t ii = 0; ii < size; ++ii) {
       // transformed_gradients[ii] is FieldMatrix<double, 1, 2> --> grad_phi_s[ii][0] is FieldVector<double,2>
       ret[ii] = -1 * (flux[0] * transformed_gradients[ii][0]);
-      //      DSC_LOG_DEBUG << "DIFF " << global_point << " | " << flux  << " | " << grad_phi_s[ii][0]<< std::endl;
+      //      MS_LOG_DEBUG << "DIFF " << global_point << " | " << flux  << " | " << grad_phi_s[ii][0]<< std::endl;
     }
   }
 

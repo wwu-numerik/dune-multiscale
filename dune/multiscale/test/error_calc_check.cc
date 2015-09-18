@@ -29,7 +29,7 @@ struct ErrorCheck : public GridAndSpaces {
     }
       const auto msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
     ErrorCalculator ec(*problem_, msfem_solution);
-    auto errors = ec.print(DSC_LOG_INFO_0);
+    auto errors = ec.print(MS_LOG_INFO_0);
       return ;
   }
 

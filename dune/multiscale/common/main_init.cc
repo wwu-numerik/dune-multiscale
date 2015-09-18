@@ -37,6 +37,16 @@ void Dune::Multiscale::init(int argc, char** argv) {
                        DSC_CONFIG_GET("logging.dir", "log" /*path below datadir*/));
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
   DS::threadManager().set_max_threads(DSC_CONFIG_GET("threading.max_count",1));
+#ifdef MS_TIMED_LOGGER
+  DSC::TimedLogger().create(20,          // max info level
+                       20,           // max debug level
+                       true,        // warnings are enabled (the default)
+                       true,        // colors are enabled (the default)
+                       "white",     // info color (the default)
+                       "lightgrey", // debug color (the default)
+                       "red"        // warning color (the default)
+                      );
+#endif
 }
 
 int Dune::Multiscale::handle_exception(const Dune::Exception& exp) {
