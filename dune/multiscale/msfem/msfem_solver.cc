@@ -127,7 +127,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     localSolutions.clear();
   }
 
-  DSC_LOG_INFO << "Dirichlet correctors are broken and disabled\n";
+  DSC_LOG_INFO_0 << "Dirichlet correctors are broken and disabled\n";
   msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 

@@ -62,7 +62,7 @@ public:
                                                   const Dune::array<unsigned int, dim>& elements_in,
                                                   const Dune::array<unsigned int, dim>& overlap,
                                                   Dune::MPIHelper::MPICommunicator communicator) {
-    const auto no_periodic_direction = std::bitset<dim>();
+    const auto no_periodic_direction = std::bitset<dim>(false);
     Dune::array<int, dim> elements;
     std::copy(elements_in.begin(), elements_in.end(), elements.begin());
     auto overlap_check = overlap;
