@@ -14,18 +14,7 @@
 #SBATCH --mail-user=rmilk@uni-koeln.de
 #SBATCH --mail-type=end 
 
-# number of nodes in $SLURM_NNODES (default: 1) 
-
-# number of tasks in $SLURM_NTASKS (default: 1) 
-
-# number of tasks per node in $SLURM_NTASKS_PER_NODE (default: 1) 
-
-# number of threads per task in $SLURM_CPUS_PER_TASK (default: 1) 
-
-module add gnu/4.8.2 openmpi/1.6.5 
-#source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_debug/tbbvars.sh intel64
-source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_release/tbbvars.sh intel64
-
+source $HOME/.modules
 MA=16
 MI=8
 BIN=/scratch/rmilk/dune/dune-multiscale/elliptic_msfem

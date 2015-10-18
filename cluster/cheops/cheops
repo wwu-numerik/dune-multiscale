@@ -14,10 +14,7 @@
 #SBATCH --mail-user=rmilk@uni-koeln.de
 #SBATCH --mail-type=end 
 
-module add gnu/4.8.2 openmpi/1.6.5 
-#source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_debug/tbbvars.sh intel64
-source /home/rmilk/local/src/tbb43_20141023oss/build/linux_intel64_gcc_cc4.8.2_libc2.12_kernel2.6.32_release/tbbvars.sh intel64
-
+source $HOME/.modules
 MA=16
 MI=16
 BIN=/scratch/rmilk/multiscale-build/dune-multiscale/elliptic_msfem
