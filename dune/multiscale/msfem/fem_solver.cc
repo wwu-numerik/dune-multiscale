@@ -87,8 +87,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_matrix.mv(dirichlet_projection.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::DirichletConstraints<typename GridViewType::Intersection>
-      dirichlet_constraints(boundary_info, space.mapper().size(), true);
+  GDT::Spaces::DirichletConstraints<typename GridViewType::Intersection> dirichlet_constraints(
+      boundary_info, space.mapper().size(), true);
   system_assembler.add(dirichlet_constraints /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble(problem_.config().get("threading.smp_constraints", false));
   dirichlet_constraints.apply(system_matrix, rhs_vector);

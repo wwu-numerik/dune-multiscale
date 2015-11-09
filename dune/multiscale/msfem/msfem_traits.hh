@@ -22,8 +22,10 @@ struct LocalGridChooser {
 };
 
 template <>
-struct LocalGridChooser<Dune::YaspGrid<CommonTraits::world_dim, Dune::EquidistantOffsetCoordinates<double,CommonTraits::world_dim> >> {
-  typedef Dune::YaspGrid<CommonTraits::world_dim,  Dune::EquidistantOffsetCoordinates<double,CommonTraits::world_dim>> type;
+struct LocalGridChooser<
+    Dune::YaspGrid<CommonTraits::world_dim, Dune::EquidistantOffsetCoordinates<double, CommonTraits::world_dim>>> {
+  typedef Dune::YaspGrid<CommonTraits::world_dim, Dune::EquidistantOffsetCoordinates<double, CommonTraits::world_dim>>
+      type;
 };
 
 //! type construction for the MSFEM code
