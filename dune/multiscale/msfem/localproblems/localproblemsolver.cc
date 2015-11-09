@@ -125,7 +125,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
-  const auto func = [&](const CommonTraits::EntityType& coarseEntity) {
+  const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
