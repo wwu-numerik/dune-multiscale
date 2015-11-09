@@ -156,25 +156,27 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (msfem_solution_) {
       const auto name = forward_as_tuple(msfem_exact);
-      const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
+      const auto& difference =
+          DSC::map_emplace(differences, pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
-      system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
     }
 
     if (fem_solution_) {
       const auto name = forward_as_tuple(fem_exact);
-      const auto& difference = differences.emplace(pcw, name, forward_as_tuple(u, *fem_solution_)).first->second;
+      const auto& difference =
+          DSC::map_emplace(differences, pcw, name, forward_as_tuple(u, *fem_solution_)).first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
-      system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
     }
     const auto name = forward_as_tuple(coarse_fem_exact);
     const auto& difference =
-        differences.emplace(pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
+        DSC::map_emplace(differences, pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
     const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-    system_assembler.add(l2_analytical_errors.emplace(pcw, name, product_args).first->second);
-    system_assembler.add(h1s_analytical_errors.emplace(pcw, name, product_args).first->second);
+    system_assembler.add(DSC::map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+    system_assembler.add(DSC::map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
   }
 
   if (msfem_solution_) {
@@ -182,20 +184,21 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
-      const auto& difference =
-          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
-              .first->second;
+      const auto& difference = DSC::map_emplace(discrete_differences, pcw, name,
+                                                  forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
+                                   .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
-      system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
     }
     if (fem_solution_) {
       const auto name = forward_as_tuple(msfem_fem);
       const auto& difference =
-          discrete_differences.emplace(pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
+          DSC::map_emplace(discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_))
+              .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(l2_discrete_errors.emplace(pcw, name, product_args).first->second);
-      system_assembler.add(h1s_discrete_errors.emplace(pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
+      system_assembler.add(DSC::map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
     }
   }
 
