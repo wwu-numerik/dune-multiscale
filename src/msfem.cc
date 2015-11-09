@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    //!TODO include base in config
+    //! TODO include base in config
     DSC_PROFILER.startTiming("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     // generate directories for data output
     DSC::testCreateDirectory(datadir);
     MS_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
-                          datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
+                         datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     msfem_algorithm();
 

@@ -15,8 +15,7 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
   , corrections_(std::move(corrections))
   , view_(coarseSpace.grid_view())
   , index_set_(view_.grid().leafIndexSet())
-  , search_(coarseSpace, gridlist)
-{
+  , search_(coarseSpace, gridlist) {
   assert(corrections_.size() == index_set_.size(0));
 }
 
@@ -29,8 +28,8 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
   DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
 }
 
-void
-Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func) {
+void Dune::Multiscale::LocalsolutionProxy::add(
+    const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func) {
   DSC::ScopedTiming st("proxy.add");
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
@@ -48,12 +47,9 @@ Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::
   }
 }
 
-Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() {
-  return *search_;
-}
+Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() { return *search_; }
 
-void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const DSC::Configuration& config) const
-{
+void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const DSC::Configuration& config) const {
   boost::format name("msfemsolution_parts_%08i");
   boost::filesystem::path base(config.get("global.datadir", "data/"));
   for (const auto& part_pair : corrections_) {

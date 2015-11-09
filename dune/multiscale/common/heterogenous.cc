@@ -7,7 +7,7 @@
 #include <dune/stuff/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 
-void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::LocalsolutionProxy& source,
+void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionProxy& source,
                                                 Dune::Multiscale::CommonTraits::DiscreteFunctionType& target) {
   constexpr size_t target_dimRange = CommonTraits::dimRange;
 
@@ -73,9 +73,8 @@ void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTrai
   return;
 }
 
-void
-Dune::Multiscale::MsFEMProjection::identifySharedNodes(const Dune::Multiscale::CommonTraits::GridViewType& gridPart,
-                                                       std::vector<int>& map) {
+void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
+    const Dune::Multiscale::CommonTraits::GridViewType& gridPart, std::vector<int>& map) {
   const auto& indexSet = gridPart.indexSet();
 
   for (const auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {

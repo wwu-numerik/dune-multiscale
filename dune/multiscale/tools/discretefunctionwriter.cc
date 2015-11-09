@@ -26,8 +26,9 @@ Dune::Multiscale::DiskBackend& Dune::Multiscale::DiscreteFunctionIO::disk(const 
 void Dune::Multiscale::DiscreteFunctionIO::clear() {
   auto& th = instance();
   MS_LOG_DEBUG << (boost::format("cleared %d in-memory functions\ncleared %d "
-                                  "on-disk   functions\nfor %s\n") %
-                    th.memory_.size() % th.disk_.size() % DSC::getTypename(th)).str();
+                                 "on-disk   functions\nfor %s\n") %
+                   th.memory_.size() % th.disk_.size() % DSC::getTypename(th))
+                      .str();
   th.memory_.clear();
   th.disk_.clear();
 }

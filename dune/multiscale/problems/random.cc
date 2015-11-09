@@ -114,7 +114,7 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   assert(field_);
   const double scalar = field_->operator()(x);
   ret = 0;
-  for(const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
     ret[i][i] = scalar;
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
@@ -126,7 +126,7 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux = 0;
-  for(const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
     flux[0][i] = eval[i][i] * direction[0][i];
 
 } // diffusiveFlux
