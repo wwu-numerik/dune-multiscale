@@ -20,7 +20,7 @@ void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::Localsolution
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
-  const auto func = [&](const CommonTraits::EntityType& target_entity) {
+  const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& target_entity) {
     auto target_local_function = target.local_discrete_function(target_entity);
     const auto global_quads = global_evaluation_points(space, target_entity);
     auto& search = source.search();
