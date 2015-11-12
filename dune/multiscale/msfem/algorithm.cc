@@ -51,7 +51,7 @@ std::map<std::string, double> msfem_algorithm() {
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
   auto grid = make_coarse_grid(problem);
-  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
+  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
   problem.getMutableModelData().prepare_new_evaluation(problem);
 
   const CommonTraits::SpaceType coarseSpace(

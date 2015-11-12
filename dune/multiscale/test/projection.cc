@@ -11,6 +11,7 @@
 using namespace Dune::GDT;
 
 struct Projection : public GridAndSpaces {
+
   typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
 
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
@@ -28,6 +29,7 @@ struct Projection : public GridAndSpaces {
   }
 
   void project() {
+    const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalGridList localgrid_list(*problem_, coarseSpace);
     const double constant(1);
     Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
@@ -51,8 +53,8 @@ TEST_P(Projection, Project) {
 
 static const auto common_values = CommonTraits::world_dim < 3
                                   // Values need to have number of elements
-                                  ? testing::Values(p_small/*, p_large, p_aniso, p_wover, p_fail*/)
-                                  : testing::Values(p_small/*, p_minimal, p_minimal, p_minimal, p_minimal*/);
+                                  ? testing::Values(p_small, p_large/*, p_aniso, p_wover, p_fail*/)
+                                  : testing::Values(p_small, p_minimal/*, p_minimal, p_minimal, p_minimal*/);
 
 INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
 
