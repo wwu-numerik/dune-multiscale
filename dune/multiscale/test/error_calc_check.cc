@@ -5,6 +5,7 @@
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/multiscale/common/error_calc.hh>
+#include <dune/multiscale/tools/discretefunctionwriter.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
@@ -15,6 +16,7 @@ using namespace Dune::Multiscale;
 struct ErrorCheck : public GridAndSpaces {
 
   void run_error_calc() {
+    const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     auto& coarse_space = this->coarseSpace;
     LocalGridList localgrid_list(*problem_, coarse_space);
@@ -29,8 +31,8 @@ struct ErrorCheck : public GridAndSpaces {
     }
       const auto msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
     ErrorCalculator ec(*problem_, msfem_solution);
-    auto errors = ec.print(MS_LOG_INFO_0);
-      return ;
+    auto errors = ec.print(DSC_LOG_INFO_0);
+    return;
   }
 
 };
