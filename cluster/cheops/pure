@@ -9,8 +9,8 @@
 #SBATCH --partition=mpi
 #SBATCH --constraint=[inca12*{{ NODES }}]
 #SBATCH --exclusive
-#SBATCH -o pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
-#SBATCH -e pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
+#SBATCH -o out_pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
+#SBATCH -e out_pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
 #SBATCH --mail-user=rmilk@uni-koeln.de
 #SBATCH --mail-type=end 
 

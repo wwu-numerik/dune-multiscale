@@ -44,7 +44,7 @@ for key, value in args.items():
 nodes = args['STARTNODE']
 for i, n in enumerate([int(nodes * math.pow(2, i)) for i in range(0, args['POWER'])]):
     args['NODES'] = n
-    fn = 'batch_speedup_{0:5d}_{}'.format(n, tpl_fn.replace('/', '_'))
+    fn = 'batch_speedup_{0:06}_{1}'.format(n, tpl_fn.replace('/', '_'))
     with open(fn, 'wb') as out:
         out.write(bytes(tpl.render(**args), 'UTF-8'))
     print('$SUBMIT {}'.format(fn))
