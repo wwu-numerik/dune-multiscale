@@ -31,7 +31,8 @@ except TypeError as t:
     loader = FileSystemLoader(dirname(realpath(__file__)))
 
 inargs = docopt(__doc__)
-tpl = Environment(loader=loader).get_template(inargs['TEMPLATE'])
+tpl_fn = inargs['TEMPLATE']
+tpl = Environment(loader=loader).get_template(tpl_fn)
 
 args = {'THREADS': 1, 'NODES': 2, 'MACRO': 8, 'MICRO': 4, 'POWER': 3, 'STARTNODE': 4 }
 for key, value in args.items():
@@ -43,6 +44,8 @@ for key, value in args.items():
 nodes = args['STARTNODE']
 for i, n in enumerate([int(nodes * math.pow(2, i)) for i in range(0, args['POWER'])]):
     args['NODES'] = n
-    with open('batch_speedup_{}'.format(i), 'wb') as out:
+    fn = 'batch_speedup_{0:5d}_{}'.format(n, tpl_fn.replace('/', '_'))
+    with open(fn, 'wb') as out:
         out.write(bytes(tpl.render(**args), 'UTF-8'))
+    print('$SUBMIT {}'.format(fn))
 

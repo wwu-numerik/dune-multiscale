@@ -3,22 +3,22 @@
 #SBATCH --ntasks-per-node=2
 #SBATCH --ntasks={{ NODES * 2 }}
 #SBATCH --cpus-per-task=6
-#SBATCH --mem=4gb 
+#SBATCH --mem=23gb 
 #SBATCH --time=02:00:00 
 #SBATCH --account=UniKoeln 
 #SBATCH --partition=mpi
 #SBATCH --constraint=[inca12*{{ NODES }}]
 #SBATCH --exclusive
-#SBATCH -o /scratch/rmilk/dune/hybrid_run_np_{{ NODES }}/out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
-#SBATCH -e /scratch/rmilk/dune/hybrid_run_np_{{ NODES }}/out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
+#SBATCH -o hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
+#SBATCH -e hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
 #SBATCH --mail-user=rmilk@uni-koeln.de
 #SBATCH --mail-type=end 
 
 source $HOME/.modules
 
 BIN=/scratch/rmilk/multiscale-build/dune-multiscale/elliptic_msfem
-OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops \
-    -global.datadir /scratch/rmilk/dune/hybrid_run_np_{{ NODES }} \
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops.ini \
+    -global.datadir /scratch/rmilk/dune/hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }} \
     -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} \
     -threading.max_count 6"
 srun -n {{ NODES * 2 }} -N {{ NODES }} $BIN ${OPT}
