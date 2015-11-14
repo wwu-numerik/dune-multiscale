@@ -18,7 +18,7 @@ source $HOME/.modules
 
 BIN=/scratch/rmilk/multiscale-build/dune-multiscale/elliptic_msfem
 OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops \
-    -global.datadir /scratch/rmilk/dune/single_run_np_{{ NODES }} \
+    -global.datadir /scratch/rmilk/dune/pure_run_np_{{ NODES }} \
     -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} \
     -threading.max_count 1 "
 srun -n {{ NODES * 12 }} -N {{ NODES }} $BIN ${OPT}
