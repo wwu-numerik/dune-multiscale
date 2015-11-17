@@ -96,7 +96,7 @@ public:
     if (index < functions_.size()) {
       df = functions_.at(index);
     } else
-      DUNE_THROW(InvalidStateException, "requesting function at oob index");
+      DUNE_THROW(InvalidStateException, "requesting function at oob index " << index);
     assert(df != nullptr);
   }
 
@@ -124,17 +124,13 @@ private:
   };
 
   template <class IOMapType, class... Args>
-  typename IOMapType::mapped_type& get(IOMapType& map, std::string filename, Args&&... ctor_args) {
-    auto it = map.find(filename);
+  typename IOMapType::mapped_type& get(IOMapType& map, typename IOMapType::key_type key, Args&&... ctor_args) {
+    auto it = map.find(key);
     if (it != map.end())
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
     auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
-#if HAVE_EMPLACE
-    auto ret = map.emplace(filename, std::move(ptr));
-#else
-    auto ret = map.insert(std::make_pair(filename, std::move(ptr)));
-#endif
+    auto ret = DSC::map_emplace(map, key, std::move(ptr));
     assert(ret.second);
     return ret.first->second;
   }
@@ -152,7 +148,7 @@ public:
   static ClearGuard clear_guard() { return ClearGuard(); }
 
 private:
-  std::unordered_map<std::string, std::shared_ptr<MemoryBackend>> memory_;
+  std::unordered_map<size_t, std::shared_ptr<MemoryBackend>> memory_;
   std::unordered_map<std::string, std::shared_ptr<DiskBackend>> disk_;
   std::mutex mutex_;
 
