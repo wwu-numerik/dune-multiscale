@@ -53,12 +53,12 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   LocalsolutionProxy::CorrectionsMapType local_corrections;
   const auto interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
   for (const auto& coarse_entity : DSC::entityRange(interior)) {
-    LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
-    localSolManager.load();
-    auto& localSolutions = localSolManager.getLocalSolutions();
+    LocalSolutionManager localSolutionManager(coarse_space, coarse_entity, localgrid_list);
+    localSolutionManager.load();
+    auto& localSolutions = localSolutionManager.getLocalSolutions();
     const auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] =
-        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), "correction");
+        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolutionManager.space(), "correction");
 
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.vector() *= 0;
@@ -94,8 +94,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
       const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
-      for (const auto& local_entity : DSC::entityRange(localSolManager.space().grid_view())) {
-        const auto& lg_points = localSolManager.space().lagrange_points(local_entity);
+      for (const auto& local_entity : DSC::entityRange(localSolutionManager.space().grid_view())) {
+        const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
         const auto& reference_element = DSG::reference_element(coarse_entity);
         const auto& coarse_geometry = coarse_entity.geometry();
         auto entity_local_correction = local_correction.local_discrete_function(local_entity);
