@@ -8,7 +8,6 @@
 
 #include "dune/multiscale/problems/base.hh"
 
-
 namespace Dune {
 namespace Multiscale {
 

@@ -78,9 +78,9 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   global_matrix_.mv(dirichlet_projection_.vector(), tmp);
   force_functional.vector() -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::DirichletConstraints<typename CommonTraits::GridViewType::Intersection>
-      dirichlet_constraints(boundary_info, coarse_space().mapper().size(), true);
-  this->add(dirichlet_constraints/*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  GDT::Spaces::DirichletConstraints<typename CommonTraits::GridViewType::Intersection> dirichlet_constraints(
+      boundary_info, coarse_space().mapper().size(), true);
+  this->add(dirichlet_constraints /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   if (problem.config().get("threading.smp_constraints", false))
     AssemblerBaseType::assemble(partitioning);
   else
@@ -92,7 +92,8 @@ void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
 
-  MS_LOG_INFO << "Assembling coarse system took " <<  std::lround(DSC_PROFILER.getTiming("msfem.coarse.assemble")/100.)/10. << "s" << std::endl;
+  MS_LOG_INFO << "Assembling coarse system took "
+              << std::lround(DSC_PROFILER.getTiming("msfem.coarse.assemble") / 100.) / 10. << "s" << std::endl;
   DSC::ScopedTiming st("msfem.coarse.solve");
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
@@ -119,7 +120,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
 
   DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
   MS_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
-               << std::endl;
+              << std::endl;
 }
 
 const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
