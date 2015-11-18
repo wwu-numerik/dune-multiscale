@@ -48,11 +48,15 @@ std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
 
   DSC::ScopedTiming algo("msfem.algorithm");
+  DSC_PROFILER.startTiming("msfem.setup.grid");
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
   auto grid = make_coarse_grid(problem);
+  DSC_PROFILER.stopTiming("msfem.setup.grid");
+  DSC_PROFILER.startTiming("msfem.setup.problem");
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
   problem.getMutableModelData().prepare_new_evaluation(problem);
+  DSC_PROFILER.stopTiming("msfem.setup.problem");
 
   const CommonTraits::SpaceType coarseSpace(
       CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
@@ -62,6 +66,7 @@ std::map<std::string, double> msfem_algorithm() {
   Elliptic_MsFEM_Solver().apply(problem, coarseSpace, msfem_solution, localgrid_list);
 
   if (problem.config().get("global.vtk_output", false)) {
+    DSC::ScopedTiming algo("msfem.vtk_output");
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
     coarse_grid_visualization.visualize(
         OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));

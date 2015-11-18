@@ -76,7 +76,8 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& 
                                                    CommonTraits::ConstDiscreteFunctionType* fem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
-  , fem_solution_(fem_solution) {
+  , fem_solution_(fem_solution)
+  , timing_("error.fem+msfem") {
   assert(fem_solution_);
 }
 
@@ -84,7 +85,8 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
                                  const std::unique_ptr<LocalsolutionProxy>& msfem_solution)
   : problem_(problem)
   , msfem_solution_(msfem_solution)
-  , fem_solution_(nullptr) {
+  , fem_solution_(nullptr)
+  , timing_("error.msfem") {
   assert(msfem_solution_);
   if (problem.config().get("msfem.fem_comparison", false)) {
     fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>(problem);

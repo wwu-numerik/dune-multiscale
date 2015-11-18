@@ -27,6 +27,7 @@ namespace Multiscale {
 LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
+  DSC::ScopedTiming algo("msfem.local_grids");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   constexpr auto dim_world = MsFEMTraits::LocalGridType::dimensionworld;
 
