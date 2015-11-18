@@ -107,7 +107,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   auto grids = make_grids(problem_);
   const auto coarse_grid = grids.first;
   const auto fine_grid = grids.second;
-  if (! fem_solution_)
+  if (!fem_solution_)
     assert(fine_grid);
   const auto fine_space =
       fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
@@ -159,7 +159,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
     if (msfem_solution_) {
       const auto name = forward_as_tuple(msfem_exact);
-      const auto& difference = map_emplace(differences, pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
+      const auto& difference =
+          map_emplace(differences, pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
       system_assembler.add(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
@@ -185,9 +186,9 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
-      const auto& difference =
-          map_emplace(discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
-              .first->second;
+      const auto& difference = map_emplace(discrete_differences, pcw, name,
+                                           forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
+                                   .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
       system_assembler.add(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
@@ -195,7 +196,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     if (fem_solution_) {
       const auto name = forward_as_tuple(msfem_fem);
       const auto& difference =
-          map_emplace(discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_)).first->second;
+          map_emplace(discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_))
+              .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
       system_assembler.add(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);

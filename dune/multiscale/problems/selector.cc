@@ -32,10 +32,10 @@ using namespace Dune::Multiscale;
     typedef std::function<ReturnType*()> FF;                                                                           \
     static std::map<std::string, FF> mk_map() {                                                                        \
       std::map<std::string, FF> funcs;                                                                                 \
-      DSC::map_emplace(funcs, "Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                                 \
-      DSC::map_emplace(funcs, "Random", []() { return new DMP::Random::FunctionName(); });                                       \
-      DSC::map_emplace(funcs, "SPE10", []() { return new DMP::SPE10::FunctionName(); });                                         \
-      DSC::map_emplace(funcs, "Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                                     \
+      DSC::map_emplace(funcs, "Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                       \
+      DSC::map_emplace(funcs, "Random", []() { return new DMP::Random::FunctionName(); });                             \
+      DSC::map_emplace(funcs, "SPE10", []() { return new DMP::SPE10::FunctionName(); });                               \
+      DSC::map_emplace(funcs, "Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                           \
       return funcs;                                                                                                    \
     }                                                                                                                  \
   };                                                                                                                   \
