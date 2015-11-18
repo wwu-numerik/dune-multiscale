@@ -24,18 +24,19 @@ struct LocalGridFactory {
   typedef typename GridType::ctype ctype;
 
   static std::shared_ptr<GridType> createLocalGrid(const Dune::FieldVector<ctype, CommonTraits::world_dim>& lowerLeft,
-                                                  const Dune::FieldVector<ctype, CommonTraits::world_dim>& upperRight,
-                                                  const Dune::array<unsigned int, CommonTraits::world_dim>& elements) {
+                                                   const Dune::FieldVector<ctype, CommonTraits::world_dim>& upperRight,
+                                                   const Dune::array<unsigned int, CommonTraits::world_dim>& elements) {
 
     Dune::array<unsigned int, CommonTraits::world_dim> overlap;
     overlap.fill(0u);
     return MyGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap,
-                                                                 Dune::MPIHelper::getLocalCommunicator());
+                                                   Dune::MPIHelper::getLocalCommunicator());
   }
 };
 
 template <class ct, int dim, template <int> class Refinement, class Comm>
-class MyGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>> : public LocalGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>>{
+class MyGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>>
+    : public LocalGridFactory<Dune::SPGrid<ct, dim, Refinement, Comm>> {
   typedef Dune::SPGrid<ct, dim, Refinement, Comm> GridType;
   typedef typename GridType::ctype ctype;
 
@@ -48,7 +49,6 @@ public:
     return Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements, overlap,
                                                                  communicator);
   }
-
 };
 
 template <int dim, class Coord>
@@ -67,11 +67,10 @@ public:
     std::copy(elements_in.begin(), elements_in.end(), elements.begin());
     auto overlap_check = overlap;
     overlap_check.fill(overlap[0]);
-    for(auto i : DSC::valueRange(1,dim))
-      if(overlap[i] != overlap[0])
+    for (auto i : DSC::valueRange(1, dim))
+      if (overlap[i] != overlap[0])
         DUNE_THROW(Dune::InvalidStateException, "YaspGrid only supports uniform overlap");
-    return std::make_shared<GridType>(lowerLeft, upperRight, elements,
-                      no_periodic_direction, overlap[0], communicator);
+    return std::make_shared<GridType>(lowerLeft, upperRight, elements, no_periodic_direction, overlap[0], communicator);
   }
 };
 

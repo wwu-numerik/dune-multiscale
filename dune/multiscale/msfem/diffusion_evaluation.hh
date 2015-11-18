@@ -199,7 +199,7 @@ public:
 
     DMP::JacobianRangeType flux;
     const auto global_point = entity.geometry().global(localPoint);
-    //!TODO make member
+    //! TODO make member
     diffusion_.diffusiveFlux(global_point, direction, flux);
     // evaluate test base
     const std::size_t size = testBase.size();

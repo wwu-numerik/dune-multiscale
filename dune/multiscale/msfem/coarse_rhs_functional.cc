@@ -21,13 +21,12 @@ namespace Multiscale {
 
 size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
-void
-RhsCodim0Integral::apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
-                         LocalSolutionManager& localSolutionManager,
-                         const MsFEMTraits::LocalEntityType& localGridEntity,
-                         const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
-                         Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
-                         std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
+void RhsCodim0Integral::apply(
+    MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension, LocalSolutionManager& localSolutionManager,
+    const MsFEMTraits::LocalEntityType& localGridEntity,
+    const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
+    Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
+    std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& /*tmpLocalVectors*/) const {
   const auto& f = problem_.getSource();
   const auto& diffusion = problem_.getDiffusion();
 

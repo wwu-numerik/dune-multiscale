@@ -54,7 +54,7 @@ Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem,
   const auto sum_elements = coarse_gridptr->comm().sum(actual_elements);
   if (int(expected_elements) != sum_elements)
     DUNE_THROW(InvalidStateException, "Wonky grid distribution");
-  if( (coarse_gridptr->comm().size()>1) && (actual_elements == int(expected_elements)))
+  if ((coarse_gridptr->comm().size() > 1) && (actual_elements == int(expected_elements)))
     DUNE_THROW(InvalidStateException, "Rank 0 fail");
   return coarse_gridptr;
 }
@@ -82,14 +82,15 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
-  auto fine_gridptr = MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements,
-                                                                                    overFine, communicator);
+  auto fine_gridptr =
+      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overFine, communicator);
 
   if (coarse_gridptr && check_partitioning && Dune::MPIHelper::getCollectiveCommunication().size() > 1) {
     // check whether grids match (may not match after load balancing if different refinements in different
     // spatial directions are used)
     MS_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n") %
-                         coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0) << std::endl;
+                        coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0)
+                 << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     //    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim))
