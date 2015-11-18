@@ -1,0 +1,136 @@
+sudo: false
+language: cpp
+
+addons:
+  apt:
+    sources: &commonsources
+    - boost-latest
+    - george-edison55-precise-backports
+    packages: &commonpackages
+    - cmake
+    - cmake-data
+    - doxygen
+    - texlive-base
+    - python-virtualenv
+    - libboost1.55-all-dev
+    - python-pip
+    - libtbb-dev
+    - ccache
+    - libparmetis-dev
+    - libsuitesparse-dev
+    - lcov
+    - curl
+
+before_install:
+  - cmake --version
+  - export PATH=/usr/lib/ccache:$PATH
+  - export CXX=${CXX_COMPILER} CC=${COMPILER}
+  - cd $HOME
+  - test -d src || git clone https://github.com/wwu-numerik/dune-multiscale-super.git src
+  - cd $HOME/src
+  - git submodule update --init --recursive
+  - cp config.opts/travis $HOME/travis.opts
+  - export OPTS=${HOME}/travis.opts
+  - export DCONTROL_ARG="--builddir=${DUNE_BUILD_DIR}  --opts=${OPTS}"
+  - ./local/bin/download_external_libraries.py
+  - ./local/bin/build_external_libraries.py
+  - echo removing modules ${MODULES_TO_DELETE}
+  # ensures ${MY_MODULE} from travis own checkout is used
+  - rm -rf ${MODULES_TO_DELETE} ${MY_MODULE}
+
+# command to install dependencies
+install:
+  - cd $HOME/src
+  - pip install --user cpp-coveralls
+  - ./dune-common/bin/dunecontrol ${DCONTROL_ARG} --only=dune-common all ':' make install ':' bexec "rm -rf *" ':' exec "rm -rf *" > /dev/null
+  - ~/dune/bin/dunecontrol ${DCONTROL_ARG} all ':' make install ':' bexec "rm -rf *" ':' exec "rm -rf *" > /dev/null
+  - rm -rf ${DUNE_BUILD_DIR} $HOME/src
+
+# # command to run tests
+script:
+    - cd ${TRAVIS_BUILD_DIR}
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} configure
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make test_binaries
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make test
+    - ${TRAVIS_BUILD_DIR}/scripts/upload_test_logs.bash
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make headercheck -k
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make install | grep -v "Installing"
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make package_source
+    # reset for ctest
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec make clean
+    - export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
+    # ctest errors on coverage gathering, this should NOT fail our entire build
+    - ~/dune/bin/dunecontrol ${DCONTROL_ARG} --only=${MY_MODULE} bexec ctest ${CTEST_ARG} || echo "CTest Failed"
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  webhooks:
+    - https://buildtimetrend.herokuapp.com/travis
+
+#after_success:
+#- coveralls
+
+branches:
+  except:
+    - gh-pages
+
+cache:
+  directories:
+    - $HOME/.ccache
+
+env:
+  global:
+    - MY_MODULE=dune-multiscale DUNE_BUILD_DIR=${HOME}/dune_build/ INSTALL_DIR=$HOME/dune
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons: &gcc49
+        apt:
+          sources:
+          - *commonsources
+          - 'ubuntu-toolchain-r-test'
+          packages:
+          - *commonpackages
+          - ['g++-4.9', 'gcc-4.9']
+      env: CXX_COMPILER=g++-4.9 COMPILER=gcc-4.9
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+          - *commonsources
+          - 'ubuntu-toolchain-r-test'
+          packages:
+          - *commonpackages
+          - ['g++-5', 'gcc-5']
+      env: CXX_COMPILER=g++-5 COMPILER=gcc-5
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+          - *commonsources
+          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          packages:
+          - *commonpackages
+          - ['clang-3.7']
+      env: CXX_COMPILER=clang++-3.7 COMPILER=clang-3.7
+
+    #- os: linux
+      #compiler: clang
+      #addons:
+        #apt:
+          #sources:
+          #- *commonsources
+          #- ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8']
+          #packages:
+          #- *commonpackages
+          #- ['clang-3.8']
+      #env: CXX_COMPILER=clang++-3.8 COMPILER=clang-3.8

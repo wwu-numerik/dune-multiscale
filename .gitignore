@@ -65,6 +65,7 @@ CMakeLists.txt.user
 Makefile.am.user
 
 .*
+!.travis.yml
 !.gitignore
 *~
 *~
