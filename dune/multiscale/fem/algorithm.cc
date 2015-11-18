@@ -31,6 +31,9 @@ std::map<std::string, double> cgfem_algorithm() {
   Elliptic_FEM_Solver solver(problem);
   auto& solution = solver.solve();
 
+  VirtualRefinedElliptic_FEM_Solver vf_solver(problem);
+  auto& vf_solution = vf_solver.solve();
+
   if (problem.config().get("global.vtk_output", false)) {
     MS_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
     Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));

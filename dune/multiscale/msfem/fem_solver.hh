@@ -41,6 +41,31 @@ private:
   const DMP::ProblemContainer& problem_;
 };
 
+class VirtualRefinedElliptic_FEM_Solver {
+
+  typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
+
+public:
+  VirtualRefinedElliptic_FEM_Solver(const DMP::ProblemContainer& problem);
+  VirtualRefinedElliptic_FEM_Solver(const DMP::ProblemContainer& problem, GridPtrType grid);
+
+  //! - ∇ (A(x,∇u)) + b ∇u + c u = f - divG
+  //! then:
+  //! A --> diffusion operator ('DiffusionOperatorType')
+  //! b --> advective part ('AdvectionTermType')
+  //! c --> reaction part ('ReactionTermType')
+  //! f --> 'first' source term, scalar ('SourceTermType')
+  VRfTraits::ConstDiscreteFunctionType& solve();
+
+private:
+  void apply(VRfTraits::DiscreteFunctionType& solution) const;
+
+  GridPtrType grid_;
+  const VRfTraits::SpaceType space_;
+  VRfTraits::DiscreteFunctionType solution_;
+  const DMP::ProblemContainer& problem_;
+};
+
 } // namespace Multiscale
 } // namespace Dune
 

@@ -54,10 +54,13 @@ struct SpaceChooser {
 
 private:
   typedef GDT::Spaces::CG::PdelabBased<GridLayerType, st_lagrangespace_order, R, r> PdelabType;
+  typedef GDT::Spaces::CG::VirtualRefinedPdelabBased<GridLayerType, st_lagrangespace_order, R, r> VirtualPdelabType;
   typedef GDT::Spaces::CG::FemBased<GridLayerType, st_lagrangespace_order, R, r> FemType;
 
 public:
   typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
+  typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, VirtualPdelabType>::type
+      VirtualType;
   static Type make_space(G& g) { return Type(PartViewType::create(g, 0)); }
   static Type make_space(GridLayerType& p) { return Type(p); }
 };
@@ -121,6 +124,17 @@ struct CommonTraits {
 
   static constexpr int polynomial_order = SpaceType::polOrder;
   static constexpr int quadrature_order = 2 * polynomial_order + 2;
+};
+
+struct VRfTraits {
+  using CT = CommonTraits;
+  typedef typename CT::SpaceChooserType::VirtualType VirtualRefinedSpaceType;
+  using SpaceType = VirtualRefinedSpaceType;
+  typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
+  typedef BackendChooser<SpaceType>::GdtVectorType GdtVectorType;
+  typedef BackendChooser<SpaceType>::DiscreteFunctionDataType DiscreteFunctionDataType;
+  typedef BackendChooser<SpaceType>::DiscreteFunctionType DiscreteFunctionType;
+  typedef BackendChooser<SpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
