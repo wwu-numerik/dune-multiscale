@@ -7,7 +7,7 @@
 #include <dune/stuff/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 
-void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::LocalsolutionProxy& source,
+void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionProxy& source,
                                                 Dune::Multiscale::CommonTraits::DiscreteFunctionType& target) {
   constexpr size_t target_dimRange = CommonTraits::dimRange;
 
@@ -20,7 +20,7 @@ void Dune::Multiscale::MsFEMProjection::project( Dune::Multiscale::Localsolution
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
-  const auto func = [&](const CommonTraits::EntityType& target_entity) {
+  const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& target_entity) {
     auto target_local_function = target.local_discrete_function(target_entity);
     const auto global_quads = global_evaluation_points(space, target_entity);
     auto& search = source.search();
@@ -73,9 +73,8 @@ void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTrai
   return;
 }
 
-void
-Dune::Multiscale::MsFEMProjection::identifySharedNodes(const Dune::Multiscale::CommonTraits::GridViewType& gridPart,
-                                                       std::vector<int>& map) {
+void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
+    const Dune::Multiscale::CommonTraits::GridViewType& gridPart, std::vector<int>& map) {
   const auto& indexSet = gridPart.indexSet();
 
   for (const auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {

@@ -2,6 +2,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/stuff/common/memory.hh>
 #include <dune/stuff/common/parallel/threadstorage.hh>
+#include <dune/stuff/common/misc.hh>
 
 #include <functional>
 #include <unordered_map>
@@ -24,17 +25,17 @@ class Intersection;
 using namespace Dune::Multiscale;
 
 /* to add a new problem add another emplace line below
- * funcs.emplace("NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
+ * DSC::map_emplace(funcs, "NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
 */
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
   struct FunctionName##Mapper {                                                                                        \
     typedef std::function<ReturnType*()> FF;                                                                           \
     static std::map<std::string, FF> mk_map() {                                                                        \
       std::map<std::string, FF> funcs;                                                                                 \
-      funcs.emplace("Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                                 \
-      funcs.emplace("Random", []() { return new DMP::Random::FunctionName(); });                                       \
-      funcs.emplace("SPE10", []() { return new DMP::SPE10::FunctionName(); });                                         \
-      funcs.emplace("Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                                     \
+      DSC::map_emplace(funcs, "Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                       \
+      DSC::map_emplace(funcs, "Random", []() { return new DMP::Random::FunctionName(); });                             \
+      DSC::map_emplace(funcs, "SPE10", []() { return new DMP::SPE10::FunctionName(); });                               \
+      DSC::map_emplace(funcs, "Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                           \
       return funcs;                                                                                                    \
     }                                                                                                                  \
   };                                                                                                                   \

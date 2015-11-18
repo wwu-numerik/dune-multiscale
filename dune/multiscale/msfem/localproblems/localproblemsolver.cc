@@ -86,7 +86,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    //!TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
+    //! TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
     //    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
     //                          .induced_norm(current_rhs);
     //    if (norm < 1e-12) {
@@ -110,7 +110,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
   if (grid.comm().size() > 0)
     MS_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
-                  << " coarse entities!" << std::endl;
+                 << " coarse entities!" << std::endl;
   else {
     MS_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
@@ -125,7 +125,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
-  const auto func = [&](const CommonTraits::EntityType& coarseEntity) {
+  const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
@@ -148,11 +148,11 @@ void LocalProblemSolver::solve_for_all_cells() {
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
   MS_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
-               //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
-               //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
-               //               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
-               << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
-               << coarse_space_->grid_view().grid().comm().rank() << std::endl;
+              //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
+              //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
+              //               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
+              << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
+              << coarse_space_->grid_view().grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace Multiscale {

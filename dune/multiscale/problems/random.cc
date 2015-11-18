@@ -10,14 +10,15 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <math.h>
 #include <sstream>
-#include <mpi.h>
 
 #include "dune/multiscale/problems/base.hh"
 
 #include "random.hh"
 
 #if HAVE_RANDOM_PROBLEM
+#include <mpi.h>
 #include "random_permeability.hh"
+#include <mpi.h>
 #endif
 
 namespace Dune {
@@ -54,6 +55,7 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
   const int log2Seg = std::log2l(cells_per_dim[0]);
   int seed = 0;
+#if HAVE_RANDOM_PROBLEM
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
   const int overlap = problem.config().get("grids.overlap", 1u);
@@ -61,7 +63,6 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   const auto sigma = problem.config().get("mlmc.correlation_sigma", 1.0f);
   correlation_ = DSC::make_unique<Correlation>(corrLen, sigma);
   DSC::ScopedTiming field_tm("msfem.perm_field.init");
-#if HAVE_RANDOM_PROBLEM
   field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
@@ -114,7 +115,7 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   assert(field_);
   const double scalar = field_->operator()(x);
   ret = 0;
-  for(const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
     ret[i][i] = scalar;
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
@@ -126,7 +127,7 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux = 0;
-  for(const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
     flux[0][i] = eval[i][i] * direction[0][i];
 
 } // diffusiveFlux
