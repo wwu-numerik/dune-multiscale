@@ -3,7 +3,7 @@
 """Simple demonstration of solving the Poisson equation in 2D using pyMOR's builtin discretizations.
 
 Usage:
-    speedup.py TEMPLATE STARTNODE POWER MACRO MICRO
+    speedup.py [options] TEMPLATE STARTNODE POWER MACRO MICRO
 
 Arguments:
     TEMPLATE        Which template file to use
@@ -17,12 +17,14 @@ Arguments:
     MICRO           How many micro cells per dimension
 
 Options:
-    -h, --help   Show this message.
+    -h, --help   	 Show this message.
+    --threads=THREADS    Threads per rank [default: 1]
 """
 
 from jinja2 import FileSystemLoader, Environment
 from os.path import dirname, realpath
 from docopt import docopt
+from pprint import pprint
 import math
 
 try:
@@ -31,6 +33,7 @@ except TypeError as t:
     loader = FileSystemLoader(dirname(realpath(__file__)))
 
 inargs = docopt(__doc__)
+inargs['THREADS'] = inargs['--threads']
 tpl_fn = inargs['TEMPLATE']
 tpl = Environment(loader=loader).get_template(tpl_fn)
 
