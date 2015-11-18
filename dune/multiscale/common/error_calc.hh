@@ -52,6 +52,7 @@ private:
   std::unique_ptr<CommonTraits::DiscreteFunctionType> coarse_fem_solution_ptr_;
   CommonTraits::ConstDiscreteFunctionType* fem_solution_;
   std::unique_ptr<Elliptic_FEM_Solver> fem_solver_;
+  DSC::ScopedTiming timing_;
 };
 
 } // namespace Multiscale
