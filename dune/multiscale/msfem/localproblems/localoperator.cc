@@ -90,7 +90,7 @@ LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
   , elliptic_operator_(local_diffusion_operator_, system_matrix_, localSpace_)
   , dirichletConstraints_(problem.getModelData().subBoundaryInfo(), localSpace_.mapper().size(), true)
 #if HAVE_UMFPACK
-  , use_umfpack_(problem.config().get("msfem.localproblemsolver_type", std::string("umfpack")) ==
+  , use_umfpack_(problem.config().get("msfem.local_solver", std::string("umfpack")) ==
                  std::string("umfpack"))
 #else
   , use_umfpack_(false)
@@ -161,7 +161,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
   typedef BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
   const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
 
-  auto options = local_inverse.options(problem_.config().get("msfem.localproblemsolver_type", "umfpack"));
+  auto options = local_inverse.options(problem_.config().get("msfem.local_solver", "umfpack"));
   options["precision"] = problem_.config().get("msfem.localproblemsolver_precision", 1e-5);
   options["verbose"] = problem_.config().get("msfem.localproblemsolver_verbose", "0");
   {
