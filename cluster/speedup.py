@@ -47,6 +47,10 @@ for key, value in args.items():
 nodes = args['STARTNODE']
 for i, n in enumerate([int(nodes * math.pow(2, i)) for i in range(0, args['POWER'])]):
     args['NODES'] = n
+    for p in (12, 28):
+        args['POWER2_{}'.format(p)] = int(math.pow(2, math.floor(math.log2(n*p))))
+        print(args['POWER2_{}'.format(p)])
+
     fn = 'batch_speedup_{0:06}_{1}'.format(n, tpl_fn.replace('/', '_'))
     with open(fn, 'wb') as out:
         out.write(bytes(tpl.render(**args), 'UTF-8'))
