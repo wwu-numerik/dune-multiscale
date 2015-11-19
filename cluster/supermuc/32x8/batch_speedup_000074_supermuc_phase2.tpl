@@ -33,10 +33,10 @@ MPI="-prepend-rank"
 # MPI="-binding pin=1;cell=unit;map=spread"
 
 NODES=74
-PROCS=2072
+PROCS=2048
 OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test \
--global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n2072_32x8_T1 \
+-global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n2048_32x8_T1 \
 -grids.macro_cells_per_dim 32 -grids.micro_cells_per_macrocell_dim 8 -threading.max_count 1 "
-mpiexec ${MPI} -n 2072 $BIN ${OPT}
+mpiexec ${MPI} -n 2048 $BIN ${OPT}
 
 wait
