@@ -8,8 +8,8 @@ DEPENDENCIES=@REQUIRES@
 
 Name: @PACKAGE_NAME@
 Version: @VERSION@
-Description: dune-multiscale module
-URL: http://dune-project.org/
-Requires: dune-grid dune-common dune-stuff dune-istl dune-gdt dune-pdelab dune-localfunctions
-Libs: -L${libdir} -lmultiscale_msfem -lmultiscale_problem -lmultiscale_common 
+Description: dune-multiscale 
+URL: http://github.com/wwu-numerik/dune-multiscale
+Requires: ${DEPENDENCIES}
+Libs: -L${libdir} -ldunecommon
 Cflags: -I${includedir}
