@@ -10,7 +10,7 @@
 #@ island_count=1
 # other example
 #@ tasks_per_node = 28
-#@ wall_clock_limit = 0:1:30
+#@ wall_clock_limit = 0:2:30
 ##                    1 h 20 min 30 secs
 #@ job_name = msfem_{{ MACRO }}x{{ MICRO }}_{{ NODES }}N_{{ THREADS }}C
 #@ network.MPI = sn_all,not_shared,us
