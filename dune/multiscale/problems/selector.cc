@@ -16,6 +16,7 @@
 #include "tarbert.hh"
 #include "random.hh"
 #include "selector.hh"
+#include <dune/stuff/common/misc.hh>
 
 namespace Dune {
 template <class GridImp, class IntersectionImp>

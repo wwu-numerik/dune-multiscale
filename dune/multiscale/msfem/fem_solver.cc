@@ -157,11 +157,11 @@ void VirtualRefinedElliptic_FEM_Solver::apply(VRfTraits::DiscreteFunctionType& s
   const auto& dirichlet = problem_.getDirichletData();
   const auto& space = space_;
 
-  typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, VRfTraits::LinearOperatorType, VRfTraits::SpaceType>
-      EllipticOperatorType;
-  typedef GDT::Operators::VirtualRefinedEllipticCG<EllipticOperatorType> VRfOperatorType;
+  typedef GDT::Operators::VirtualRefinedEllipticCG<Problem::DiffusionBase,
+      VRfTraits::LinearOperatorType, VRfTraits::SpaceType,
+      VRfTraits::SpaceType, GridViewType> VRfOperatorType;
   CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
-                                                 EllipticOperatorType::pattern(space));
+                                                 VRfOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)
