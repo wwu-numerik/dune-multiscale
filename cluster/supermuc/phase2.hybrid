@@ -37,4 +37,4 @@ PROCS={{ 2 * NODES }}
 OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test \
 -global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n${PROCS}_{{ MACRO }}x{{ MICRO }}_T14 \
 -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} -threading.max_count 14 "
-mpiexec ${MPI} -n ${PROCS} $BIN ${OPT}
+likwid-mpirun -pin S0:14_S1:14 -n ${PROCS} $BIN ${OPT}
