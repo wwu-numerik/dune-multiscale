@@ -14,7 +14,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <sstream>
 

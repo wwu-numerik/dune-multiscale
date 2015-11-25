@@ -5,7 +5,7 @@
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/stuff/common/configuration.hh>
 #include <dune/multiscale/common/error_calc.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
