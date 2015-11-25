@@ -101,16 +101,16 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
   const Inverse inverse(global_matrix_, msfem_rhs_.space().communicator());
 
-  const auto type = problem_.config().get("msfem.coarse_solver", "bicgstab.amg.ssor");
+  const auto type = problem_.config().get("msfem.coarse_solver", "bicgstab.ilut");
   auto options = Inverse::options(type);
   constexpr bool overwrite = true;
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
-  options.set("verbose", "2", overwrite);
-  options.set("max_iter", problem_.config().get("msfem.max_coarse_iter", 300u), overwrite);
+  options.set("verbose", problem_.config().get("msfem.coarse_solver.verbose", 2), overwrite);
+  options.set("max_iter", problem_.config().get("msfem.coarse_solver.max_iter", 300u), overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
-  options.set("post_check_solves_system", "0", overwrite);
+  options.set("post_check_solves_system", problem_.config().get("msfem.coarse_solver.check", false), overwrite);
   inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
 
   if (!solution.dofs_valid())
