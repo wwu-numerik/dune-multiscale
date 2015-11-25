@@ -53,6 +53,7 @@ set( COMMON_SOURCES
         dune/multiscale/common/grid_creation.cc
         dune/multiscale/common/main_init.cc
         dune/multiscale/common/traits.cc
+        dune/multiscale/common/df_io.cc
         dune/multiscale/fem/print_info.cc
         # error_calc
         dune/multiscale/common/error_calc.cc
@@ -62,7 +63,6 @@ set( COMMON_SOURCES
         # 
         dune/multiscale/msfem/proxygridview.cc
         dune/multiscale/msfem/localproblems/localgridlist.cc
-        dune/multiscale/tools/discretefunctionwriter.cc
     )
 
 set( PROBLEM_SOURCES
