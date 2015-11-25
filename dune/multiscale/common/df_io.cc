@@ -1,5 +1,5 @@
 #include <config.h>
-#include "discretefunctionwriter.hh"
+#include "df_io.hh"
 #include <dune/stuff/common/string.hh>
 
 Dune::Multiscale::DiskBackend&

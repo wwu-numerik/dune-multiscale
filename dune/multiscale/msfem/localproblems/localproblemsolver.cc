@@ -7,7 +7,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/multiscale/msfem/localproblems/localoperator.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/common/logging.hh>

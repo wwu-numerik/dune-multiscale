@@ -18,7 +18,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 

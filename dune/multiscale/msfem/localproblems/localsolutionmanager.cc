@@ -3,10 +3,10 @@
 
 #include <boost/format.hpp>
 #include <dune/stuff/common/memory.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
-#include <dune/multiscale/tools/discretefunctionwriter.hh>
+#include <dune/multiscale/common/df_io.hh>
 
 namespace Dune {
 namespace Multiscale {
