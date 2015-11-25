@@ -1,16 +1,15 @@
 #!/bin/bash
 ##
 ## optional: energy policy tags
-#@ energy_policy_tag = et_{{ MACRO }}x{{ MICRO }}_{{ NODES }}N_14C
-#@ minimize_time_to_solution = yes
+#@ energy_policy_tag = NONE
 # DO NOT USE environment = COPY_ALL
 #@ job_type = MPICH
-#@ class = {{ 'test' if NODES < 20 else 'general' }}
+#@ class = {{ 'test' if NODES < 4 else 'general' }}
 #@ node = {{ NODES }}
 #@ island_count=1
 # other example
-#@ tasks_per_node = 28
-#@ wall_clock_limit = 0:2:30
+#@ tasks_per_node = 2
+#@ wall_clock_limit = 0:14:30
 ##                    1 h 20 min 30 secs
 #@ job_name = msfem_{{ MACRO }}x{{ MICRO }}_{{ NODES }}N_14C
 #@ network.MPI = sn_all,not_shared,us
@@ -32,9 +31,7 @@ BIN=$HOME/multiscale-build-phase2/dune-multiscale/elliptic_msfem
 # MPI="-prepend-rank"
 # MPI="-binding pin=1;cell=unit;map=spread"
 
-NODES={{ NODES }}
-PROCS={{ 2 * NODES }}
-OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test \
--global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n${PROCS}_{{ MACRO }}x{{ MICRO }}_T14 \
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test.ini \
+-global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n{{ 2 * NODES }}_{{ MACRO }}x{{ MICRO }}_T14 \
 -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} -threading.max_count 14 "
-likwid-mpirun -pin S0:14_S1:14 -n ${PROCS} $BIN ${OPT}
+likwid-mpirun -pin S0:14_S1:14 -np S:1 -g FLOPS_DP:MEM $BIN ${OPT}

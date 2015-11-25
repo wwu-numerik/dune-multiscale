@@ -1,11 +1,10 @@
 #!/bin/bash
 ##
 ## optional: energy policy tags
-#@ energy_policy_tag = et_{{ MACRO }}x{{ MICRO }}_{{ NODES }}N_1C
-#@ minimize_time_to_solution = yes
+#@ energy_policy_tag = NONE
 # DO NOT USE environment = COPY_ALL
 #@ job_type = MPICH
-#@ class = {{ 'test' if NODES < 20 else 'general' }}
+#@ class = {{ 'test' if NODES < 4 else 'general' }}
 #@ node = {{ NODES }}
 #@ island_count=1
 # other example
@@ -28,13 +27,9 @@ source $HOME/.modules
 #module load mpi_pinning/hybrid_blocked
 
 BIN=$HOME/multiscale-build-phase2/dune-multiscale/elliptic_msfem
-# MPI="-check-mpi -prepend-rank"
-# MPI="-prepend-rank"
-# MPI="-binding pin=1;cell=unit;map=spread"
 
-NODES={{ NODES }}
-PROCS={{ POWER2_28 }}
+
 OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test \
 -global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n{{ 28 * NODES }}_{{ MACRO }}x{{ MICRO }}_T1 \
 -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} -threading.max_count 1 "
-mpiexec ${MPI} -n {{ POWER2_28 }} $BIN ${OPT}
+likwid-mpirun -pin S:scatter -g FLOPS_DP:MEM -n {{ POWER2_28 }} $BIN ${OPT}

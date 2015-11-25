@@ -1,0 +1,20 @@
+module unload mpi.ibm
+module load mpi.intel/5.0
+module add fftw/mpi/3.3 gcc/4.8 parmetis/4.0 suitesparse/4.2 git/latest bash_completion/1.1 
+module load lrztools
+module add boost/1.56_icc 
+module unload ccomp
+module rm intel/15.0
+module add intel/16.0
+module load likwid
+
+source /lrz/sys/tools/bash_completion/1.1/etc/bash_completion
+
+export PATH=$HOME/local/bin:$WORK/multiscale/local/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/local/lib:$WORK/multiscale/local/lib
+
+# intel 15
+#source /lrz/sys/intel/compiler/composer_xe_2015.2.164/tbb/bin/tbbvars.sh intel64
+
+# intel 16
+source /lrz/sys/intel/studio_u3/compilers_and_libraries_2016.0.109/linux/tbb/bin/tbbvars.sh intel64
