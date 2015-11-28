@@ -1,0 +1,37 @@
+#!/bin/bash
+##
+## optional: energy policy tags
+#@ energy_policy_tag = NONE
+# DO NOT USE environment = COPY_ALL
+#@ job_type = MPICH
+#@ class = general
+#@ node = 64
+#@ island_count=1
+# other example
+#@ tasks_per_node = 2
+#@ wall_clock_limit = 0:14:30
+##                    1 h 20 min 30 secs
+#@ job_name = msfem_64x16_64N_14C
+#@ network.MPI = sn_all,not_shared,us
+#@ initialdir = $(home)/multiscale-build-phase2/dune-multiscale
+#@ output = job_msfem_64x16_64N_14C_$(jobid).out
+#@ error = job_msfem_64x16_64N_14C_$(jobid).err
+#@ notification=always
+#@ notify_user=rene.milk@wwu.de
+#@ queue
+. /etc/profile
+. /etc/profile.d/modules.sh
+#setup of environment
+source $HOME/.modules
+#optional: 
+#module load mpi_pinning/hybrid_blocked
+
+BIN=$HOME/multiscale-build-phase2/dune-multiscale/elliptic_msfem
+# MPI="-check-mpi -prepend-rank"
+# MPI="-prepend-rank"
+# MPI="-binding pin=1;cell=unit;map=spread"
+
+OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test.ini \
+-global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n128_64x16_T14 \
+-grids.macro_cells_per_dim 64 -grids.micro_cells_per_macrocell_dim 16 -threading.max_count 14 "
+mpirun -n 128 $BIN ${OPT}
