@@ -9,16 +9,16 @@
 #SBATCH --partition=mpi
 #SBATCH --constraint=[inca12*{{ NODES }}]
 #SBATCH --exclusive
-#SBATCH -o out_hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
-#SBATCH -e out_hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
+#SBATCH -o out_mlmc_pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}
+#SBATCH -e out_mlmc_pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }}.err
 #SBATCH --mail-user=rmilk@uni-koeln.de
-#SBATCH --mail-type=end 
+#SBATCH --mail-type=end
 
 source $HOME/.modules
 
-BIN=/scratch/rmilk/multiscale-build/dune-multiscale/elliptic_msfem
-OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops.ini \
-    -global.datadir /scratch/rmilk/dune/hybrid_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }} \
+BIN=/scratch/rmilk/multiscale-build/dune-mlmc/dune_mlmc
+OPT="/home/rmilk/cmake_multiscale/dune-mlmc/parameter_files/cheops.ini \
+    -global.datadir /scratch/rmilk/dune/pure_run_np_{{ NODES }}_out_{{ NODES }}_{{ MACRO }}x{{ MICRO }}_T{{ THREADS }} \
     -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} \
     -threading.max_count 6"
 srun -n {{ NODES * 2 }} -N {{ NODES }} $BIN ${OPT}

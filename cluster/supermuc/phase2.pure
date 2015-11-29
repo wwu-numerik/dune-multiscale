@@ -4,7 +4,7 @@
 #@ energy_policy_tag = NONE
 # DO NOT USE environment = COPY_ALL
 #@ job_type = MPICH
-#@ class = {{ 'test' if NODES < 4 else 'general' }}
+#@ class = {{ 'test' if NODES < 17 else 'general' }}
 #@ node = {{ NODES }}
 #@ island_count=1
 # other example
@@ -30,6 +30,6 @@ BIN=$HOME/multiscale-build-phase2/dune-multiscale/elliptic_msfem
 
 
 OPT="$HOME/dune-multiscale-super/dune-multiscale/parameter_files/supermuc_test \
--global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n{{ 28 * NODES }}_{{ MACRO }}x{{ MICRO }}_T1 \
+-global.datadir $HOME/multiscale-build-phase2/dune-multiscale/speedup_n{{ POWER2_RANKS }}_{{ MACRO }}x{{ MICRO }}_T1 \
 -grids.macro_cells_per_dim {{ MACRO }} -grids.micro_cells_per_macrocell_dim {{ MICRO }} -threading.max_count 1 "
-likwid-mpirun -pin S:scatter -g FLOPS_DP:MEM -n {{ POWER2_28 }} $BIN ${OPT}
+mpirun -n {{ POWER2_RANKS }} $BIN ${OPT}

@@ -12,11 +12,18 @@
 
 #include <dune/stuff/common/configuration.hh>
 #include <dune/stuff/common/logging.hh>
+#include <dune/stuff/common/signals.hh>
 #include <dune/stuff/common/profiler.hh>
 #include <dune/stuff/common/misc.hh>
 #include <dune/stuff/common/parallel/threadmanager.hh>
 
 #include <dune/multiscale/common/traits.hh>
+
+static void handle_sigterm(int) {
+  DSC_PROFILER.stopAll();
+  DSC_PROFILER.outputTimings("profiler");
+  std::exit(5);
+}
 
 void Dune::Multiscale::init(int argc, char** argv) {
 #if DUNE_MULTISCALE_WITH_DUNE_FEM
@@ -37,6 +44,7 @@ void Dune::Multiscale::init(int argc, char** argv) {
   DSC_PROFILER.setOutputdir(DSC_CONFIG_GET("global.datadir", "data"));
   const int threads = DSC_CONFIG_GET("threading.max_count", 1);
   DS::threadManager().set_max_threads(threads);
+  DSC::installSignalHandler(SIGTERM, handle_sigterm);
 #ifdef MS_TIMED_LOGGER
   DSC::TimedLogger().create(20,          // max info level
                             20,          // max debug level
