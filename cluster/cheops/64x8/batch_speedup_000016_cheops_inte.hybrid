@@ -1,0 +1,24 @@
+#!/bin/bash -l 
+#SBATCH --nodes=16
+#SBATCH --ntasks-per-node=2
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=23gb 
+#SBATCH --time=02:00:00 
+#SBATCH --account=UniKoeln 
+#SBATCH --partition=mpi
+#SBATCH --constraint=[inca12*16]
+#SBATCH --exclusive
+#SBATCH -o icc_out_hybrid_run_np_16_out_16_64x8_T6
+#SBATCH -e icc_out_hybrid_run_np_16_out_16_64x8_T6.err
+#SBATCH --mail-user=rmilk@uni-koeln.de
+#SBATCH --mail-type=end 
+
+source $HOME/.modules.icc
+
+BIN=/scratch/rmilk/multiscale-build-intel/dune-multiscale/elliptic_msfem
+OPT="/home/rmilk/cmake_multiscale/dune-multiscale/parameter_files/cheops.ini \
+    -global.datadir /scratch/rmilk/dune/icc_ilut_hybrid_run_np_16_out_16_64x8_T6 \
+    -grids.macro_cells_per_dim 64 -grids.micro_cells_per_macrocell_dim 8 \
+    -threading.max_count 6"
+srun -n 32 -N 16 $BIN ${OPT}
