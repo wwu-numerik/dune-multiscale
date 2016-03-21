@@ -34,7 +34,7 @@ before_install:
   - sudo -E pip install virtualenv cpp-coveralls
   - export PATH=/usr/lib/ccache:$PATH
   - cd $HOME
-  - test -d src || git clone https://github.com/dune-community/dune-xt-super.git src
+  - test -d src || git clone https://github.com/wwu-numerik/dune-multiscale-super.git src
   - cd $HOME/src
   - git submodule update --init --recursive
   - git submodule status
@@ -81,11 +81,6 @@ notifications:
   email:
     on_success: change
     on_failure: change
-  webhooks:
-    - https://buildtimetrend.herokuapp.com/travis
-
-#after_success:
-#- coveralls
 
 branches:
   except:
