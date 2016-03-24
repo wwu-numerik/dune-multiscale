@@ -1,4 +1,3 @@
-
 sudo: required
 dist: trusty
 language: generic
@@ -93,7 +92,7 @@ cache:
 env:
   global:
     - MY_MODULE=dune-multiscale DUNE_BUILD_DIR=${HOME}/dune_build/ INSTALL_DIR=$HOME/dune CTEST_OUTPUT_ON_FAILURE=1 MODULES_TO_DELETE="dune-mlmc"
- MODULES_TO_DELETE="dune-mlmc
+
 matrix:
   include:
     - os: linux
