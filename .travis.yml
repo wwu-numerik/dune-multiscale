@@ -12,6 +12,7 @@ addons:
     - doxygen
     - texlive-base
     - python-virtualenv
+    - python-pytest
     - libboost1.55-all-dev
     - python-pip
     - libtbb-dev
