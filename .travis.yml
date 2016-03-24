@@ -12,7 +12,13 @@ addons:
     - texlive-base
     - python-virtualenv
     - python-pytest
-    - libboost1.55-all-dev
+    # avoid installing fusion
+    - libboost-system1.55-dev
+    - libboost-thread1.55-dev
+    - libboost-filesystem1.55-dev
+    - libboost-date-time1.55-dev
+    - libboost-timer1.55-dev
+    - libboost-chrono1.55-dev
     - python-pip
     - libtbb-dev
     - ccache
