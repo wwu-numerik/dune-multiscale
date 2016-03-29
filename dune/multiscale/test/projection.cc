@@ -7,6 +7,7 @@
 #include <functional>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/common/heterogenous.hh>
+#include <dune/multiscale/common/df_io.hh>
 
 using namespace Dune::GDT;
 
