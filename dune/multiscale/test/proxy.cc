@@ -7,7 +7,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
-
+#include <dune/multiscale/common/df_io.hh>
 
 struct PointsAndStuff : public GridAndSpaces {
 
