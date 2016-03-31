@@ -34,7 +34,7 @@ before_install:
   - |-
     : ${BUILD_CMD:="ninja -k 10000 -j 2"} && export BUILD_CMD
   # workaround for https://github.com/travis-ci/travis-ci/issues/5285
-  - sudo -E apt-get install -y -q libtbb-dev python-pip libmetis-dev python3-pip libfftw3-mpi-dev libfftw3-bin libfftw3-dev libopenmpi-dev
+  - sudo -E apt-get install -y -q libtbb-dev python-pip libmetis-dev python3-pip libfftw3-mpi-dev libfftw3-bin libfftw3-dev libopenmpi-dev openmpi-bin
   - sudo -E pip3 install virtualenv cpp-coveralls
   - sudo -E pip install virtualenv cpp-coveralls
   - export PATH=/usr/lib/ccache:$PATH
@@ -56,9 +56,6 @@ before_install:
 install:
   - cd $HOME/src
   - export SRC_DCTRL=$PWD/dune-common/bin/dunecontrol
-  - ${SRC_DCTRL} ${DCTRL_ARG} --only=dune-common all
-  - cat ${DUNE_BUILD_DIR}/dune-common/CMakeFiles/CMake*log
-  - ${SRC_DCTRL} ${DCTRL_ARG} all
   - ${SRC_DCTRL} ${DCTRL_ARG} all
   # move my travis checkout into this source tree
   - cp -ra ${TRAVIS_BUILD_DIR} .
