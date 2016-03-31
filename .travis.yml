@@ -107,6 +107,7 @@ env:
     - CTEST_OUTPUT_ON_FAILURE=1 
     - MODULES_TO_DELETE="dune-mlmc"
     - GCCDEFAULT=4.9
+    - LIBRARY_PATH=/usr/lib
 
 matrix:
   include:
