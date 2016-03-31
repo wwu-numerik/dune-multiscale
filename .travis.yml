@@ -137,7 +137,7 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['llvm-toolchain-precise-3.7']
+          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
           packages:
           - *commonpackages
           - ['clang-3.7']
@@ -149,7 +149,7 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['llvm-toolchain-precise-3.8']
+          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8']
           packages:
           - *commonpackages
           - ['clang-3.8']
