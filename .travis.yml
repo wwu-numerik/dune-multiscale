@@ -56,6 +56,9 @@ before_install:
 install:
   - cd $HOME/src
   - export SRC_DCTRL=$PWD/dune-common/bin/dunecontrol
+  - ${SRC_DCTRL} ${DCTRL_ARG} --only=dune-common all
+  - cat ${DUNE_BUILD_DIR}/dune-common/CMakeFiles/CMake*log
+  - ${SRC_DCTRL} ${DCTRL_ARG} all
   - ${SRC_DCTRL} ${DCTRL_ARG} all
   # move my travis checkout into this source tree
   - cp -ra ${TRAVIS_BUILD_DIR} .
