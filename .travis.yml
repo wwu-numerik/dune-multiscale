@@ -43,6 +43,7 @@ before_install:
   - cd $HOME/src
   - git submodule update --init --recursive
   - git submodule status
+  - ./scripts/bash/travis_prepare_compiler_setup.sh ${GCCDEFAULT}
   - export DCTRL_ARG="--builddir=${DUNE_BUILD_DIR}  --opts=${OPTS}"
   # our local scripts look for an OPTS env entry
   - ./local/bin/download_external_libraries.py
@@ -102,6 +103,7 @@ env:
     - INSTALL_DIR=$HOME/dune 
     - CTEST_OUTPUT_ON_FAILURE=1 
     - MODULES_TO_DELETE="dune-mlmc"
+    - GCCDEFAULT=4.9
 
 matrix:
   include:
@@ -111,11 +113,9 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - 'ubuntu-toolchain-r-test'
           packages:
           - *commonpackages
-          - ['g++-4.9', 'gcc-4.9']
-      env: CXX=g++-4.9 CC=gcc-4.9
+      env: CXX=g++ CC=gcc
 
     - os: linux
       compiler: gcc
@@ -123,11 +123,9 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - 'ubuntu-toolchain-r-test'
           packages:
           - *commonpackages
-          - ['g++-5', 'gcc-5']
-      env: CXX=g++-5 CC=gcc-5
+      env: CXX=g++ CC=gcc GCCDEFAULT=5
 
     - os: linux
       compiler: clang
@@ -135,7 +133,7 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          - ['llvm-toolchain-precise-3.7']
           packages:
           - *commonpackages
           - ['clang-3.7']
@@ -147,20 +145,21 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          - ['llvm-toolchain-precise-3.8']
+          packages:
+          - *commonpackages
+          - ['clang-3.8']
+      env: CXX=clang++-3.8 CC=clang-3.8
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+          - *commonsources
+          - ['llvm-toolchain-precise-3.7']
           packages:
           - *commonpackages
           - ['clang-3.7']
       env: OPTS=config.opts/travis.make BUILD_CMD="make -k -j2" CXX=clang++-3.7 CC=clang-3.7 
 
-    #- os: linux
-      #compiler: clang
-      #addons:
-        #apt:
-          #sources:
-          #- *commonsources
-          #- ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8']
-          #packages:
-          #- *commonpackages
-          #- ['clang-3.8']
-      #env: CXX_COMPILER=clang++-3.8 COMPILER=clang-3.8
