@@ -47,12 +47,37 @@ struct Projection : public GridAndSpaces {
   }
 };
 
+struct Search : public GridAndSpaces {
+
+  typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
+
+  void lg_search() {
+    LocalGridList localgrid_list(*problem_, coarseSpace);
+    LocalGridSearch lgs(coarseSpace, localgrid_list);
+
+    for(auto&& i : DSC::valueRange(coarseSpace.grid_view().size(0)))
+    {
+      auto&& lg = localgrid_list.getSubGrid(i);
+      const auto lg_view = lg.leafGridView();
+      for(auto&& lg_ent : DSC::entityRange(lg_view))
+      {
+        auto center = lg_ent.geometry().center();
+        lgs({center});
+      }
+    }
+  }
+};
+
+
 TEST_P(Projection, Project) {
   this->project();
 }
+//TEST_P(Search, Project) {
+//  this->lg_search();
+//}
 
 static const auto common_values = default_common_values;
 
-//INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
-INSTANTIATE_TEST_CASE_P( TestNameB, Search, common_values);
+INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
+//INSTANTIATE_TEST_CASE_P( TestNameB, Search, common_values);
 
