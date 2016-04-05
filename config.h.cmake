@@ -63,6 +63,6 @@
     #define HAVE_DUNE_MULTISCALE_STATIC_DATA
 #endif
 
-#include <dune/stuff/common/timedlogging.hh>
+#include <dune/xt/common/timedlogging.hh>
 
 /* end dune-multiscale */

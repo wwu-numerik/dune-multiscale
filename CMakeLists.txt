@@ -6,7 +6,7 @@ endif( NOT CMAKE_BUILD_TYPE )
 PROJECT(dune-multiscale CXX)
 
 #set minimum cmake version
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 3.1)
 
 # mac-specific settings
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -125,7 +125,7 @@ add_subdirectory(doc)
 add_subdirectory(dune)
 
 #disable most warnings from dependent modules, except gdt,stuff
-list(APPEND module_exceptions "dune-stuff" "dune-gdt")
+list(APPEND module_exceptions "dune-stuff" "dune-xt-common" "dune-xt-la" "dune-xt-grid" "dune-xt-functions" "dune-gdt")
 foreach(_mod ${ALL_DEPENDENCIES})
   list (FIND module_exceptions "${_mod}" _index)
   if (_index LESS 0)
