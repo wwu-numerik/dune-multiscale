@@ -55,6 +55,11 @@ public:
     problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DSC_CONFIG);
     grids_ = make_grids(*problem_);
     DSC_LOG_DEBUG << "Instantiating tests for dimension " << CommonTraits::world_dim << std::endl;
+    constexpr bool sp_grid = std::is_same<CommonTraits::GridType,
+        Dune::SPGrid<double, CommonTraits::world_dim, Dune::SPIsotropicRefinement>>::value;
+    if (sp_grid && DSC_CONFIG_GET("threading.max_count", 1) > 1) {
+      DUNE_THROW(Dune::InvalidStateException, "SPGRID currently fails with > 1 threads");
+    }
   }
  virtual ~GridTestBase() {
  }
