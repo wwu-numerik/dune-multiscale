@@ -17,14 +17,14 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/common/df_io.hh>
 
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/ranges.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/provider.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/timings.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
 #include <cmath>
@@ -47,16 +47,16 @@ namespace Multiscale {
 std::map<std::string, double> msfem_algorithm() {
   using namespace Dune;
 
-  DSC::ScopedTiming algo("msfem.algorithm");
-  DSC_PROFILER.startTiming("msfem.setup.grid");
+  Dune::XT::Common::ScopedTiming algo("msfem.algorithm");
+  DXTC_TIMINGS.start("msfem.setup.grid");
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
   DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
   auto grid = make_coarse_grid(problem);
-  DSC_PROFILER.stopTiming("msfem.setup.grid");
-  DSC_PROFILER.startTiming("msfem.setup.problem");
+  DXTC_TIMINGS.stop("msfem.setup.grid");
+  DXTC_TIMINGS.start("msfem.setup.problem");
   DSC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
   problem.getMutableModelData().prepare_new_evaluation(problem);
-  DSC_PROFILER.stopTiming("msfem.setup.problem");
+  DXTC_TIMINGS.stop("msfem.setup.problem");
 
   const CommonTraits::SpaceType coarseSpace(
       CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
@@ -66,7 +66,7 @@ std::map<std::string, double> msfem_algorithm() {
   Elliptic_MsFEM_Solver().apply(problem, coarseSpace, msfem_solution, localgrid_list);
 
   if (problem.config().get("global.vtk_output", false)) {
-    DSC::ScopedTiming algo("msfem.vtk_output");
+    Dune::XT::Common::ScopedTiming algo("msfem.vtk_output");
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
     coarse_grid_visualization.visualize(
         OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));

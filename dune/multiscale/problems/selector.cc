@@ -1,8 +1,8 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/parallel/threadstorage.hh>
-#include <dune/stuff/common/misc.hh>
+#include <dune/xt/common/memory.hh>
+#include <dune/xt/common/parallel/threadstorage.hh>
+#include <dune/xt/common/misc.hh>
 
 #include <functional>
 #include <unordered_map>
@@ -25,17 +25,17 @@ class Intersection;
 using namespace Dune::Multiscale;
 
 /* to add a new problem add another emplace line below
- * DSC::map_emplace(funcs, "NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
+ * Dune::XT::Common::map_emplace(funcs, "NAME", std::unique_ptr<const ReturnType>(new DMP::NAME::FunctionName())); \
 */
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
   struct FunctionName##Mapper {                                                                                        \
     typedef std::function<ReturnType*()> FF;                                                                           \
     static std::map<std::string, FF> mk_map() {                                                                        \
       std::map<std::string, FF> funcs;                                                                                 \
-      DSC::map_emplace(funcs, "Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                       \
-      DSC::map_emplace(funcs, "Random", []() { return new DMP::Random::FunctionName(); });                             \
-      DSC::map_emplace(funcs, "SPE10", []() { return new DMP::SPE10::FunctionName(); });                               \
-      DSC::map_emplace(funcs, "Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                           \
+      Dune::XT::Common::map_emplace(funcs, "Synthetic", []() { return new DMP::Synthetic::FunctionName(); });                       \
+      Dune::XT::Common::map_emplace(funcs, "Random", []() { return new DMP::Random::FunctionName(); });                             \
+      Dune::XT::Common::map_emplace(funcs, "SPE10", []() { return new DMP::SPE10::FunctionName(); });                               \
+      Dune::XT::Common::map_emplace(funcs, "Tarbert", []() { return new DMP::Tarbert::FunctionName(); });                           \
       return funcs;                                                                                                    \
     }                                                                                                                  \
   };                                                                                                                   \
@@ -58,7 +58,7 @@ FunctionType* make_f(const std::map<std::string, std::function<FunctionType*()>>
 }
 
 Problem::ProblemContainer::ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
-                                            DSC::Configuration config_in)
+                                            Dune::XT::Common::Configuration config_in)
   : config_(config_in)
   , name_(config_.get("problem.name", "Synthetic"))
   , data_(make_f(ModelProblemData_map, name_))
@@ -91,6 +91,6 @@ const Problem::NeumannDataBase& DMP::ProblemContainer::getNeumannData() const { 
 
 const std::string DMP::ProblemContainer::name() const { return name_; }
 
-const Dune::Stuff::Common::Configuration& Problem::ProblemContainer::config() const { return config_; }
+const Dune::XT::Common::Configuration& Problem::ProblemContainer::config() const { return config_; }
 
-Dune::Stuff::Common::Configuration& Problem::ProblemContainer::config() { return config_; }
+Dune::XT::Common::Configuration& Problem::ProblemContainer::config() { return config_; }

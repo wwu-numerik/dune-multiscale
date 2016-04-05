@@ -38,22 +38,22 @@
 #endif
 
 #ifdef MS_TIMED_LOGGER
-    #define MS_LOG         Dune::Stuff::Common::TimedLogger().get("msfem")
+    #define MS_LOG         Dune::XT::Common::TimedLogger().get("msfem")
     #define MS_LOG_ERROR   MS_LOG.warn()
 #else
-    #define MS_LOG         Dune::Stuff::Common::Logger()
+    #define MS_LOG         Dune::XT::Common::Logger()
     #define MS_LOG_ERROR   MS_LOG.error()
 #endif
 
 #define MS_LOG_INFO    MS_LOG.info()
 #define MS_LOG_DEBUG   MS_LOG.debug()
-#define MS_LOG_DEVNULL DSC_LOG.devnull()
+#define MS_LOG_DEVNULL DXTC_LOG_DEVNULL
 #define MS_LOG_INFO_0  \
-    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_INFO  : DSC_LOG.devnull())
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_INFO  : DXTC_LOG_DEVNULL)
 #define MS_LOG_DEBUG_0 \
-    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_DEBUG : DSC_LOG.devnull())
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_DEBUG : DXTC_LOG_DEVNULL)
 #define MS_LOG_ERROR_0 \
-    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_ERROR : DSC_LOG.devnull())
+    (Dune::MPIHelper::getCollectiveCommunication().rank() == 0 ? MS_LOG_ERROR : DXTC_LOG_DEVNULL)
 
 #ifndef HAVE_DUNE_MULTISCALE_STATIC_DATA
     #include <string>

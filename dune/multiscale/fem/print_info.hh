@@ -4,7 +4,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/ranges.hh>
 #include <iosfwd>
 #include <string>
 

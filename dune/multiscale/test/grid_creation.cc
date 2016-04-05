@@ -1,9 +1,11 @@
 #include <dune/multiscale/test/test_common.hxx>
 
 #include <unordered_set>
-#include <dune/stuff/common/float_cmp.hh>
+#include <dune/xt/common/float_cmp.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/stuff/common/ranges.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
@@ -12,7 +14,7 @@
 template <typename T>
 std::vector<typename T::GlobalCoordinate> corners(const T& geo) {
   std::vector<typename T::GlobalCoordinate> ret;
-  for (auto c : DSC::valueRange(geo.corners())) {
+  for (auto c : Dune::XT::Common::value_range(geo.corners())) {
     auto co = geo.corner(c);
     ret.push_back(co);
   }
@@ -38,7 +40,7 @@ struct PointsAndStuff : public GridAndSpaces {
       auto& grid = *grid_ptr;
       const CommonTraits::SpaceType space = CommonTraits::SpaceChooserType::make_space(grid);
 
-      for (const auto& ent : DSC::entityRange(grid.leafGridView())) {
+      for (const auto& ent : Dune::elements(grid.leafGridView())) {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
         const auto lp = global_evaluation_points(space, ent);
@@ -55,7 +57,7 @@ struct PointsAndStuff : public GridAndSpaces {
       const auto lg_points = global_evaluation_points(fineSpace, ent);
       for(auto  lg : lg_points) {
         bool found = false;
-        for (const auto& coarse_ent : DSC::entityRange(grids_.first->leafGridView())) {
+        for (const auto& coarse_ent : Dune::elements(grids_.first->leafGridView())) {
           found = found || DSG::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
         }
         EXPECT_TRUE(found);
@@ -87,7 +89,7 @@ struct GridMatch : public GridTestBase {
     const auto dimensions = make_pair(DSG::dimensions(grids_.first->leafGridView()),
                                            DSG::dimensions(grids_.second->leafGridView()));
     const auto limits = make_pair(dimensions.first.coord_limits, dimensions.second.coord_limits);
-    for ( auto d : DSC::valueRange(CommonTraits::dimDomain)) {
+    for ( auto d : Dune::XT::Common::value_range(CommonTraits::dimDomain)) {
       EXPECT_DOUBLE_EQ(limits.first[d].min(), limits.second[d].min());
       EXPECT_DOUBLE_EQ(limits.first[d].max(), limits.second[d].max());
     }
@@ -103,10 +105,10 @@ struct GridMatch : public GridTestBase {
     for(auto c: microPerMacro)
       EXPECT_GT(c, 0);
     long expected_coarse = 1;
-    for(auto i : DSC::valueRange(dim_world))
+    for(auto i : Dune::XT::Common::value_range(dim_world))
       expected_coarse *= coarse_cells[i];
     auto expected_fine = expected_coarse;
-    for(auto i : DSC::valueRange(dim_world))
+    for(auto i : Dune::XT::Common::value_range(dim_world))
       expected_fine *= microPerMacro[i];
     EXPECT_EQ(grids_.first->leafGridView().size(0), expected_coarse);
     EXPECT_EQ(grids_.second->leafGridView().size(0), expected_fine);
@@ -114,19 +116,19 @@ struct GridMatch : public GridTestBase {
 
   void check_unique_corners() {
     for(auto& grid : {grids_.first, grids_.second}) {
-      for (const auto& ent : DSC::entityRange(grid->leafGridView())) {
+      for (const auto& ent : Dune::elements(grid->leafGridView())) {
         const auto& geo = ent.geometry();
         const auto cor = corners(geo);
         EXPECT_EQ(cor.size(), geo.corners());
         EXPECT_EQ(cor.size(), std::pow(2, CommonTraits::world_dim));
 //        EXPECT_EQ(cor, cornersA(geo));
-         for (auto i : DSC::valueRange(geo.corners())) {
-           for (auto j : DSC::valueRange(geo.corners())) {
+         for (auto i : Dune::XT::Common::value_range(geo.corners())) {
+           for (auto j : Dune::XT::Common::value_range(geo.corners())) {
              if (i!=j) {
-               EXPECT_TRUE(DSC::FloatCmp::ne(geo.corner(i), geo.corner(j)));
+               EXPECT_TRUE(Dune::XT::Common::FloatCmp::ne(geo.corner(i), geo.corner(j)));
                EXPECT_NE(geo.corner(i), geo.corner(j));
              } else {
-               EXPECT_TRUE(DSC::FloatCmp::eq(geo.corner(i), geo.corner(j)));
+               EXPECT_TRUE(Dune::XT::Common::FloatCmp::eq(geo.corner(i), geo.corner(j)));
                EXPECT_EQ(geo.corner(i), geo.corner(j));
              }
           }
@@ -136,10 +138,10 @@ struct GridMatch : public GridTestBase {
   }
 
   void check_inside() {
-    for (const auto& ent : DSC::entityRange(grids_.second->leafGridView())) {
+    for (const auto& ent : Dune::elements(grids_.second->leafGridView())) {
       for(auto corner : corners(ent.geometry())) {
         bool found = false;
-        for (const auto& coarse_ent : DSC::entityRange(grids_.first->leafGridView())) {
+        for (const auto& coarse_ent : Dune::elements(grids_.first->leafGridView())) {
           found = found || DSG::reference_element(coarse_ent).checkInside(coarse_ent.geometry().local(corner));
         }
         EXPECT_TRUE(found);

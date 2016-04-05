@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
 
 namespace Dune {
 namespace Multiscale {

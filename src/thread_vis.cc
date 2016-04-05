@@ -12,8 +12,8 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/parallel/threadmanager.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/parallel/threadmanager.hh>
 #include <dune/stuff/grid/output/entity_visualization.hh>
 
 #include <dune/gdt/spaces/fv/default.hh>
@@ -31,12 +31,12 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
     vtkio.addCellData(adapter);
   }
   const std::string datadir = DSC_CONFIG_GET("global.datadir", "./data/");
-  DSC::testCreateDirectory(datadir + "/piecefiles/" + name);
+  Dune::XT::Common::test_create_directory(datadir + "/piecefiles/" + name);
   vtkio.pwrite(name, datadir, "piecefiles");
 }
 
 void partition_vis_single(CommonTraits::GridType& grid, std::string function_name) {
-  const auto threadnum = DS::threadManager().max_threads();
+  const auto threadnum = Dune::XT::CommonthreadManager().max_threads();
   // Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
   auto view_ptr = grid.leafGridView();
   typedef GDT::Spaces::FV::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
@@ -47,12 +47,12 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
 
   //  Dune::Fem::DomainDecomposedIteratorStorage< CommonTraits::GridPartType > iterators(gridPart);
   //  iterators.update();
-  for (auto thread : DSC::valueRange(threadnum)) {
-    const auto fn = function_name + "_thread_" + DSC::toString(thread);
-    functions[thread] = DSC::make_unique<FVFunc>(fv_space, fn);
+  for (auto thread : Dune::XT::Common::value_range(threadnum)) {
+    const auto fn = function_name + "_thread_" + Dune::XT::Common::to_string(thread);
+    functions[thread] = Dune::XT::Common::make_unique<FVFunc>(fv_space, fn);
   }
   auto& combined = functions.back();
-  combined = DSC::make_unique<FVFunc>(fv_space, function_name + "_combined");
+  combined = Dune::XT::Common::make_unique<FVFunc>(fv_space, function_name + "_combined");
   combined->vector() *= 0;
 
   //  #ifdef _OPENMP
@@ -66,7 +66,7 @@ void partition_vis_single(CommonTraits::GridType& grid, std::string function_nam
   //    {
   //      auto local_function = function->localFunction(entity);
   //      auto local_combined = combined->localFunction(entity);
-  //      for (const auto idx : DSC::valueRange(local_function.size())) {
+  //      for (const auto idx : Dune::XT::Common::value_range(local_function.size())) {
   //        local_function[idx] = thread+1;
   //        local_combined[idx] = thread+1;
   //      }
@@ -112,22 +112,22 @@ void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_
     const auto& id_set = coarse_grid.globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
-    oversampled_function = DSC::make_unique<FVFunc>(fv_space, DSC::toString(coarse_id) + "_subgrid");
+    oversampled_function = Dune::XT::Common::make_unique<FVFunc>(fv_space, Dune::XT::Common::to_string(coarse_id) + "_subgrid");
     oversampled_function->vector() *= 0;
     auto& function = (*function_it++);
-    function = DSC::make_unique<FVFunc>(fv_space, DSC::toString(coarse_id) + "_coarse_cell");
+    function = Dune::XT::Common::make_unique<FVFunc>(fv_space, Dune::XT::Common::to_string(coarse_id) + "_coarse_cell");
     function->vector() *= 0;
 
     for (const auto& fine_entity : fineSpace) {
       if (localgrid_list.covers_strict(coarse_entity, fine_entity.geometry())) {
         auto oversampled_local_function = oversampled_function->local_discrete_function(fine_entity);
-        for (const auto idx : DSC::valueRange(oversampled_local_function->vector().size())) {
+        for (const auto idx : Dune::XT::Common::value_range(oversampled_local_function->vector().size())) {
           oversampled_local_function->vector().set(idx, id_to_ulong(coarse_id + 1));
         }
         //        if (coarse_id == localgrid_list.getEnclosingMacroCellId(CommonTraits::EntityPointerType(fine_entity)))
         //        {
         //          auto local_function = function->local_discrete_function(fine_entity);
-        //          for (const auto idx : DSC::valueRange(local_function.size())) {
+        //          for (const auto idx : Dune::XT::Common::value_range(local_function.size())) {
         //            local_function.vector().set(idx, coarse_id+1);
         //          }
         //        }
@@ -152,11 +152,11 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    assert(DS::threadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1u));
+    assert(Dune::XT::CommonthreadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1u));
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
-    DSC::testCreateDirectory(datadir);
+    Dune::XT::Common::test_create_directory(datadir);
 
     switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
       case 1:

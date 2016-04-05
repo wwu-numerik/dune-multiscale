@@ -10,7 +10,7 @@
 #include <mpi.h>
 #include <fftw3-mpi.h>
 
-#include <dune/stuff/common/exceptions.hh>
+#include <dune/xt/common/exceptions.hh>
 
 /// \brief Class for generating random scalar permeability fields on
 /// d-dimensional unit cubes with given correlation function.

@@ -2,8 +2,8 @@
 
 #include "coarse_scale_assembler.hh"
 
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/timings.hh>
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
@@ -58,7 +58,7 @@ void MsFEMCodim0Integral::apply(
   // evaluate the jacobians of all local solutions in all quadrature points
   std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
       numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, RangeType(0.0)));
-  for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
+  for (auto lsNum : Dune::XT::Common::value_range(numLocalSolutions)) {
     const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
     //      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
     localFunction->jacobian(volumeQuadrature, allLocalSolutionEvaluations[lsNum]);
@@ -128,7 +128,7 @@ void MsFemCodim0Matrix::assembleLocal(
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  for (const auto& localGridEntity : DSC::entityRange(localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : Dune::elements(localSolutionManager.space().grid_view())) {
     // ignore overlay elements
     if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
       continue;

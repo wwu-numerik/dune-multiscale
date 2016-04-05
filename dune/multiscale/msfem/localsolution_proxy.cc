@@ -2,7 +2,7 @@
 
 #include "localsolution_proxy.hh"
 
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/timings.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
@@ -30,11 +30,11 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
 
 void Dune::Multiscale::LocalsolutionProxy::add(
     const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func) {
-  DSC::ScopedTiming st("proxy.add");
+  Dune::XT::Common::ScopedTiming st("proxy.add");
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
     targets[cr.first] =
-        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
+        Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
   }
   for (auto& range_pr : targets) {
     auto id = range_pr.first;
@@ -49,7 +49,7 @@ void Dune::Multiscale::LocalsolutionProxy::add(
 
 Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() { return *search_; }
 
-void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const DSC::Configuration& config) const {
+void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const Dune::XT::Common::Configuration& config) const {
   boost::format name("msfemsolution_parts_%08i");
   boost::filesystem::path base(config.get("global.datadir", "data/"));
   for (const auto& part_pair : corrections_) {

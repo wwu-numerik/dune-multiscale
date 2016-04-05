@@ -2,9 +2,9 @@
 
 #include "coarse_scale_operator.hh"
 
-#include <dune/stuff/common/exceptions.hh>
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/exceptions.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/timings.hh>
 #include <dune/stuff/grid/walker.hh>
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/operators/prolongations.hh>
@@ -19,7 +19,7 @@
 #include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/coarse_rhs_functional.hh>
-#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 #include <sstream>
 
@@ -47,11 +47,11 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   , problem_(problem) {
 
   MS_LOG_INFO << "Assembling coarse system" << std::endl;
-  DSC::ScopedTiming st("msfem.coarse.assemble");
+  Dune::XT::Common::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
   const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
-  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
   CoarseRhsFunctional force_functional(problem_, msfem_rhs_.vector(), coarse_space(), localGridList, interior);
 
@@ -93,11 +93,11 @@ void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
 
   MS_LOG_INFO << "Assembling coarse system took "
-              << std::lround(DSC_PROFILER.getTiming("msfem.coarse.assemble") / 100.) / 10. << "s" << std::endl;
-  DSC::ScopedTiming st("msfem.coarse.solve");
+              << std::lround(DXTC_TIMINGS.walltime("msfem.coarse.assemble") / 100.) / 10. << "s" << std::endl;
+  Dune::XT::Common::ScopedTiming st("msfem.coarse.solve");
 
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
-  DSC_PROFILER.startTiming("msfem.coarse.linearSolver");
+  DXTC_TIMINGS.start("msfem.coarse.linearSolver");
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
   const Inverse inverse(global_matrix_, msfem_rhs_.space().communicator());
 
@@ -118,8 +118,8 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
 
   solution.vector() += dirichlet_projection_.vector();
 
-  DSC_PROFILER.stopTiming("msfem.coarse.linearSolver");
-  MS_LOG_INFO << "Time to solve coarse MsFEM problem: " << DSC_PROFILER.getTiming("msfem.coarse.linearSolver") << "ms."
+  DXTC_TIMINGS.stop("msfem.coarse.linearSolver");
+  MS_LOG_INFO << "Time to solve coarse MsFEM problem: " << DXTC_TIMINGS.walltime("msfem.coarse.linearSolver") << "ms."
               << std::endl;
 }
 

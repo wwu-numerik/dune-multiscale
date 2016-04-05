@@ -25,10 +25,10 @@
 #include <dune/multiscale/msfem/fem_solver.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
-#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/filesystem.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
 
@@ -89,7 +89,7 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
   , timing_("error.msfem") {
   assert(msfem_solution_);
   if (problem.config().get("msfem.fem_comparison", false)) {
-    fem_solver_ = DSC::make_unique<Elliptic_FEM_Solver>(problem);
+    fem_solver_ = Dune::XT::Common::make_unique<Elliptic_FEM_Solver>(problem);
     try {
       fem_solution_ = &fem_solver_->solve();
     } catch (Dune::Exception& e) {
@@ -114,7 +114,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   const auto fine_space =
       fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
   const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
-  Stuff::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
+  Dune::XT::Common::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(
       fine_space, fine_interior_view);
@@ -184,7 +184,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
 
   if (msfem_solution_) {
-    l2_msfem = DSC::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
+    l2_msfem = Dune::XT::Common::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
     system_assembler.add(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
@@ -277,7 +277,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
 
   std::unique_ptr<boost::filesystem::ofstream> csvfile(
-      DSC::make_ofstream(std::string(problem_.config().get("global.datadir", "data/")) + std::string("/errors.csv")));
+      Dune::XT::Common::make_ofstream(std::string(problem_.config().get("global.datadir", "data/")) + std::string("/errors.csv")));
   const std::string sep(",");
   for (const auto& key_val : csv) {
     *csvfile << key_val.first << sep;

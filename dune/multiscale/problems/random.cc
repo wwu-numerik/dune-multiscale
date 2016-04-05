@@ -2,11 +2,11 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/parallel/collectivecommunication.hh>
-#include <dune/stuff/common/validation.hh>
-#include <dune/stuff/common/float_cmp.hh>
+#include <dune/xt/common/validation.hh>
+#include <dune/xt/common/float_cmp.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <math.h>
 #include <sstream>
@@ -61,16 +61,16 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   const int overlap = problem.config().get("grids.overlap", 1u);
   const auto corrLen = problem.config().get("mlmc.correlation_length", 0.2f);
   const auto sigma = problem.config().get("mlmc.correlation_sigma", 1.0f);
-  correlation_ = DSC::make_unique<Correlation>(corrLen, sigma);
-  DSC::ScopedTiming field_tm("msfem.perm_field.init");
-  field_ = DSC::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
+  correlation_ = Dune::XT::Common::make_unique<Correlation>(corrLen, sigma);
+  Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.init");
+  field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
 #endif
 }
 
 void Diffusion::prepare_new_evaluation() {
-  DSC::ScopedTiming field_tm("msfem.perm_field.create");
+  Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.create");
 #if HAVE_RANDOM_PROBLEM
   assert(field_);
   field_->create();
@@ -115,7 +115,7 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
   assert(field_);
   const double scalar = field_->operator()(x);
   ret = 0;
-  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim))
     ret[i][i] = scalar;
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
@@ -127,7 +127,7 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux = 0;
-  for (const auto i : DSC::valueRange(CommonTraits::world_dim))
+  for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim))
     flux[0][i] = eval[i][i] * direction[0][i];
 
 } // diffusiveFlux

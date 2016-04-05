@@ -20,12 +20,12 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/filesystem.hh>
+#include <dune/xt/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/type_utils.hh>
+#include <dune/xt/common/memory.hh>
+#include <dune/xt/common/type_traits.hh>
 
 #include <boost/filesystem/path.hpp>
 
@@ -43,7 +43,7 @@ struct IOTraits {
 class DiskBackend : public boost::noncopyable {
 
   void load_disk_functions() {
-    DSC::testCreateDirectory(dir_.string());
+    Dune::XT::Common::test_create_directory(dir_.string());
     // if functions present, load em
   }
 
@@ -54,18 +54,18 @@ public:
    *  filename may include additional path components
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
-  DiskBackend(const DSC::Configuration& config, const std::string filename = "nonsense_default_for_map")
+  DiskBackend(const Dune::XT::Common::Configuration& config, const std::string filename = "nonsense_default_for_map")
     : dir_(boost::filesystem::path(config.get("global.datadir", "data")) / filename)
     , index_(0) {}
 
   void append(const IOTraits::DiscreteFunction_ptr& /*df*/) {
-    const std::string fn = (dir_ / DSC::toString(index_++)).string();
-    DSC::testCreateDirectory(fn);
+    const std::string fn = (dir_ / Dune::XT::Common::to_string(index_++)).string();
+    Dune::XT::Common::test_create_directory(fn);
     DUNE_THROW(NotImplemented, "");
   }
 
   void read(const unsigned long index, IOTraits::DiscreteFunction_ptr& /*df*/) {
-    const std::string fn = (dir_ / DSC::toString(index)).string();
+    const std::string fn = (dir_ / Dune::XT::Common::to_string(index)).string();
     DUNE_THROW(NotImplemented, "");
   }
 
@@ -130,12 +130,12 @@ private:
       return it->second;
     std::lock_guard<std::mutex> lock(mutex_);
     auto ptr = std::make_shared<typename IOMapType::mapped_type::element_type>(ctor_args...);
-    auto ret = DSC::map_emplace(map, key, std::move(ptr));
+    auto ret = Dune::XT::Common::map_emplace(map, key, std::move(ptr));
     assert(ret.second);
     return ret.first->second;
   }
 
-  DiskBackend& get_disk(const DSC::Configuration& config, std::string filename);
+  DiskBackend& get_disk(const Dune::XT::Common::Configuration& config, std::string filename);
   MemoryBackend& get_memory(std::string filename, IOTraits::GridViewType& grid_view);
 
   //! this needs to be called before global de-init or else dune fem fails
@@ -143,7 +143,7 @@ private:
 
 public:
   static MemoryBackend& memory(std::string filename, IOTraits::GridViewType& grid_view);
-  static DiskBackend& disk(const Stuff::Common::Configuration& config, std::string filename);
+  static DiskBackend& disk(const XT::Common::Configuration& config, std::string filename);
 
   static ClearGuard clear_guard() { return ClearGuard(); }
 

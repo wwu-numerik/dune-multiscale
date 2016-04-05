@@ -4,7 +4,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
-#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 
 void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionProxy& source,
@@ -17,7 +17,7 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
   const auto interior = space.grid_view().grid().template leafGridView<Interior_Partition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(space, interior);
-  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& target_entity) {
@@ -77,9 +77,9 @@ void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
     const Dune::Multiscale::CommonTraits::GridViewType& gridPart, std::vector<int>& map) {
   const auto& indexSet = gridPart.indexSet();
 
-  for (const auto& entity : DSC::entityRange(gridPart.grid().leafGridView())) {
+  for (const auto& entity : Dune::elements(gridPart.grid().leafGridView())) {
     const auto number_of_nodes_in_entity = entity.template count<CommonTraits::world_dim>();
-    for (auto i : DSC::valueRange(number_of_nodes_in_entity)) {
+    for (auto i : Dune::XT::Common::value_range(number_of_nodes_in_entity)) {
       const auto node = entity.template subEntity<CommonTraits::world_dim>(i);
       const auto global_index_node = indexSet.index(*node);
 

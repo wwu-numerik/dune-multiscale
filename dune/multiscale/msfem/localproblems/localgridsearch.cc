@@ -3,8 +3,8 @@
 #include "localgridsearch.hh"
 
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
-#include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/algorithm.hh>
+#include <dune/xt/common/memory.hh>
+#include <dune/xt/common/algorithm.hh>
 #include <dune/grid/common/gridenums.hh>
 
 Dune::Multiscale::LocalGridSearch::EntityVectorType Dune::Multiscale::LocalGridSearch::
@@ -17,7 +17,7 @@ operator()(const PointContainerType& points) {
   const auto& view = static_view_;
 
   if (!static_iterator_)
-    static_iterator_ = DSC::make_unique<InteriorIteratorType>(view.begin<0>());
+    static_iterator_ = Dune::XT::Common::make_unique<InteriorIteratorType>(view.begin<0>());
   auto& it = *static_iterator_;
   const auto end = view.end<0>();
 
@@ -31,15 +31,15 @@ operator()(const PointContainerType& points) {
     const auto& localgrid = gridlist_.getSubGrid(coarse_entity);
     const auto& index_set = view.grid().leafIndexSet();
     const auto index = index_set.index(coarse_entity);
-    current_coarse_entity_ = DSC::make_unique<MsFEMTraits::CoarseEntityType>(coarse_entity);
+    current_coarse_entity_ = Dune::XT::Common::make_unique<MsFEMTraits::CoarseEntityType>(coarse_entity);
     auto& current_search_ptr = coarse_searches_[index];
     if (current_search_ptr == nullptr)
-      current_search_ptr = DSC::make_unique<PerGridSearchType>(localgrid.leafGridView());
+      current_search_ptr = Dune::XT::Common::make_unique<PerGridSearchType>(localgrid.leafGridView());
     did_cover = covers_strict(coarse_entity, points.begin(), points.end());
     if (did_cover) {
       auto first_null = std::find(ret_entities.begin(), ret_entities.end(), nullptr);
       auto entity_ptrs = current_search_ptr->operator()(points);
-      DSC::move_if(entity_ptrs.begin(), entity_ptrs.end(), first_null, not_null);
+      Dune::XT::Common::move_if(entity_ptrs.begin(), entity_ptrs.end(), first_null, not_null);
       null_count = std::count_if(ret_entities.begin(), ret_entities.end(), is_null);
     }
     if (++it == end) {

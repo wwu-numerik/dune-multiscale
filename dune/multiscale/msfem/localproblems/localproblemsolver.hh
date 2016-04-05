@@ -8,6 +8,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/common/la_backend.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/xt/common/parallel/threadstorage.hh>
 
 namespace Dune {
 template <class K, int SIZE>
@@ -31,7 +32,7 @@ private:
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType InverseOperatorType;
 
   LocalGridList& localgrid_list_;
-  const DS::PerThreadValue<CommonTraits::SpaceType> coarse_space_;
+  const Dune::XT::Common::PerThreadValue<CommonTraits::SpaceType> coarse_space_;
 
 public:
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::LinearOperatorType LinearOperatorType;

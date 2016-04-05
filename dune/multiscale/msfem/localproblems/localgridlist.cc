@@ -4,10 +4,10 @@
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/float_cmp.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/float_cmp.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
 #include <algorithm>
@@ -27,7 +27,7 @@ namespace Multiscale {
 LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
-  DSC::ScopedTiming algo("msfem.local_grids");
+  Dune::XT::Common::ScopedTiming algo("msfem.local_grids");
   BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   constexpr auto dim_world = MsFEMTraits::LocalGridType::dimensionworld;
 
@@ -42,7 +42,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
   auto globalUpperRight = gridCorners.second;
 
   const auto interior = coarseSpace_.grid_view().grid().leafGridView<InteriorBorder_Partition>();
-  for (const auto& coarse_entity : DSC::entityRange(interior)) {
+  for (const auto& coarse_entity : elements(interior)) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements
     assert(coarse_entity.partitionType() == Dune::InteriorEntity);
@@ -55,7 +55,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
     CoordType lowerLeft(0);
     CoordType upperRight(0);
     array<unsigned int, dim_world> elemens;
-    for (const auto i : DSC::valueRange(dim_world)) {
+    for (const auto i : Dune::XT::Common::value_range(dim_world)) {
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
 

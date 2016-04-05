@@ -3,7 +3,7 @@
 #include "grid_creation.hh"
 
 #include <dune/grid/common/gridenums.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/ranges.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/multiscale/problems/selector.hh>
@@ -33,7 +33,7 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
 
   array<unsigned int, world_dim> elements, overCoarse, overFine;
 
-  for (const auto i : DSC::valueRange(world_dim)) {
+  for (const auto i : Dune::XT::Common::value_range(world_dim)) {
     elements[i] = coarse_cells[i];
     overCoarse[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
     overFine[i] = problem.config().get("grids.overlap", 1);
@@ -79,7 +79,7 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim",
                                                                             CommonTraits::DomainType(8), world_dim);
 
-  for (const auto i : DSC::valueRange(CommonTraits::world_dim)) {
+  for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
   }
   auto fine_gridptr =
@@ -98,10 +98,10 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
     //          << " | " << coarse_view.size(0) << '\n');
     const auto coarse_dimensions = DSG::dimensions(coarse_view);
     const auto fine_dimensions = DSG::dimensions(fine_view);
-    for (const auto i : DSC::valueRange(world_dim)) {
+    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
       const bool match =
-          DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
-          DSC::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
+          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
+          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
       if (!match)
         DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
                        you use different refinements in different spatial dimensions?");

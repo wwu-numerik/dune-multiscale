@@ -10,13 +10,13 @@
 #include <dune/multiscale/common/df_io.hh>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/math.hh>
-#include <dune/stuff/common/memory.hh>
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/parallel/partitioner.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/math.hh>
+#include <dune/xt/common/memory.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/gdt/products/l2.hh>
 #include <dune/stuff/grid/walker.hh>
@@ -73,12 +73,12 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
-    it = DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
+    it = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
                                                                       "rhs of local MsFEM problem");
 
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
 
-  for (auto i : DSC::valueRange(allLocalSolutions.size())) {
+  for (auto i : Dune::XT::Common::value_range(allLocalSolutions.size())) {
     auto& current_rhs = *allLocalRHS[i];
     auto& current_solution = *allLocalSolutions[i];
 
@@ -114,15 +114,15 @@ void LocalProblemSolver::solve_for_all_cells() {
   else {
     MS_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
   }
-  DSC_PROFILER.startTiming("msfem.local.solve_for_all_cells");
+  DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
-  DSC::MinMaxAvg<double> solveTime;
+  Dune::XT::Common::MinMaxAvg<double> solveTime;
 
   const auto interior = coarse_space_->grid_view().grid().template leafGridView<InteriorBorder_Partition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(*coarse_space_, interior);
-  Stuff::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
+  Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
 
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
@@ -130,23 +130,23 @@ void LocalProblemSolver::solve_for_all_cells() {
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
-    //    DSC_PROFILER.startTiming("msfem.local.solve_all_on_single_cell");
+    //    DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
     LocalSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-    //    solveTime(DSC_PROFILER.stopTiming("msfem.local.solve_all_on_single_cell") / 1000.f);
+    //    solveTime(DXTC_TIMINGS.stop("msfem.local.solve_all_on_single_cell") / 1000.f);
 
     // save the local solutions to disk/mem
     localSolutionManager.save();
 
-    //    DSC_PROFILER.resetTiming("msfem.local.solve_all_on_single_cell");
+    //    DXTC_TIMINGS.resetTiming("msfem.local.solve_all_on_single_cell");
   };
 
   walker.add(func);
   walker.assemble(partitioning);
 
   //! @todo The following debug-output is wrong (number of local problems may be different)
-  const auto totalTime = DSC_PROFILER.stopTiming("msfem.local.solve_for_all_cells") / 1000.f;
+  const auto totalTime = DXTC_TIMINGS.stop("msfem.local.solve_for_all_cells") / 1000.f;
   MS_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
               //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
               //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"

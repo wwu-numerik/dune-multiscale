@@ -3,8 +3,8 @@
 
 #include <config.h>
 
-#include <dune/stuff/test/main.hxx>
-#include <dune/stuff/test/gtest/gtest.h>
+#include <dune/xt/common/test/main.hxx>
+#include <dune/xt/common/test/gtest/gtest.h>
 
 #include <string>
 #include <array>

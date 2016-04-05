@@ -7,7 +7,7 @@
 
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/multiscale/common/df_io.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>

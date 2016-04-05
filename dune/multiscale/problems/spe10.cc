@@ -1,9 +1,9 @@
 #include <config.h>
 #include <assert.h>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/validation.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/validation.hh>
+#include <dune/xt/common/configuration.hh>
 #include <sstream>
 
 #include "dune/multiscale/problems/base.hh"

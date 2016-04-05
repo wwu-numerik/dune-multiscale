@@ -1,19 +1,19 @@
 #include <dune/multiscale/test/test_common.hxx>
 
-#include <dune/stuff/common/fixed_map.hh>
-#include <dune/stuff/common/string.hh>
-#include <dune/stuff/common/ranges.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/fixed_map.hh>
+#include <dune/xt/common/string.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/configuration.hh>
 
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/common/fixed_map.hh>
+#include <dune/xt/common/fixed_map.hh>
 
 #include <boost/filesystem.hpp>
 
 //          (Config key -> value, error name -> max value)
-typedef pair< map<string,string>, FixedMap<string,double,2>> TestArgs;
+typedef pair< map<string,string>,  Dune::XT::Common::FixedMap<string,double,2>> TestArgs;
 
 
 const TestArgs m_small{p_small, {{"msfem_exact_L2", 0.251}, {"msfem_exact_H1s", 2.67}}};
@@ -46,7 +46,7 @@ TEST_P(MsFemCompare, All) {
 
   auto second_run = msfem_algorithm();
   for(auto error_pair : errorsMap) {
-    EXPECT_TRUE(DSC::FloatCmp::eq(error_pair.second, second_run[error_pair.first] ))
+    EXPECT_TRUE(Dune::XT::Common::FloatCmp::eq(error_pair.second, second_run[error_pair.first] ))
         << "FloatCmp " << error_pair.second << "\n      != " << second_run[error_pair.first];
   }
 }

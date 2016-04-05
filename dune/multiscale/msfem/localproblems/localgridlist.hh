@@ -7,6 +7,7 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
+#include <dune/xt/common/ranges.hh>
 
 #include <boost/noncopyable.hpp>
 #include <dune/common/exceptions.hh>
@@ -74,7 +75,7 @@ bool LocalGridList::covers_strict(
     const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry) {
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
-  for (const auto i : DSC::valueRange(local_geometry.corners())) {
+  for (const auto i : Dune::XT::Common::value_range(local_geometry.corners())) {
     if (!reference_element.checkInside(coarse_geometry.local(local_geometry.corner(i))))
       return false;
   }

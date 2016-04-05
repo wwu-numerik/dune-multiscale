@@ -7,7 +7,7 @@
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/problems/base.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
 #include <memory>
 #include <string>
 
@@ -22,7 +22,7 @@ namespace Multiscale {
 namespace Problem {
 
 struct ProblemContainer {
-  ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local, DSC::Configuration config_in);
+  ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local, Dune::XT::Common::Configuration config_in);
 
   typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;
   const CommonTraits::FunctionBaseType& getSource() const;
@@ -36,11 +36,11 @@ struct ProblemContainer {
 
   const std::string name() const;
 
-  const DSC::Configuration& config() const;
-  DSC::Configuration& config();
+  const Dune::XT::Common::Configuration& config() const;
+  Dune::XT::Common::Configuration& config();
 
 private:
-  DSC::Configuration config_;
+  Dune::XT::Common::Configuration config_;
   const std::string name_;
   const std::unique_ptr<Problem::IModelProblemData> data_;
   const std::unique_ptr<const CommonTraits::FunctionBaseType> source_;

@@ -5,9 +5,9 @@
 #include <assert.h>
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/ranges.hh>
 #include <dune/stuff/functions/femadapter.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/timings.hh>
 #include <memory>
 
 #include <dune/stuff/functions/femadapter.hh>
@@ -53,7 +53,7 @@ void RhsCodim0Integral::apply(
       numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, JacobianRangeType(0.0)));
   std::vector<std::vector<RangeType>> allLocalSolutionEvaluations(
       numLocalSolutions, std::vector<RangeType>(numQuadraturePoints, RangeType(0.0)));
-  for (auto lsNum : DSC::valueRange(numLocalSolutions)) {
+  for (auto lsNum : Dune::XT::Common::value_range(numLocalSolutions)) {
     const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
     //      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
     localFunction->jacobian(volumeQuadrature, allLocalSolutionJacobians[lsNum]);
@@ -130,7 +130,7 @@ void RhsCodim0Vector::assembleLocal(
   MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(), "Dirichlet Extension");
   //! \todo fill with actual values
 
-  for (const auto& localGridEntity : DSC::entityRange(localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : Dune::elements(localSolutionManager.space().grid_view())) {
     // ignore overlay elements
     if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
       continue;

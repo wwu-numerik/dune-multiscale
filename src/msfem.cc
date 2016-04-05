@@ -7,8 +7,8 @@
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/msfem/algorithm.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/stuff/common/parallel/helper.hh>
-#include <dune/stuff/common/profiler.hh>
+#include <dune/xt/common/parallel/helper.hh>
+#include <dune/xt/common/timings.hh>
 
 #include <tbb/task_scheduler_init.h>
 
@@ -18,22 +18,22 @@ int main(int argc, char** argv) {
     init(argc, argv);
 
     //! TODO include base in config
-    DSC_PROFILER.startTiming("msfem.all");
+    DXTC_TIMINGS.start("msfem.all");
 
     const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
-    DSC::testCreateDirectory(datadir);
+    Dune::XT::Common::test_create_directory(datadir);
     MS_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
                          datadir % datadir % DSC_CONFIG_GET("logging.dir", "log");
 
     msfem_algorithm();
 
     auto comm = Dune::MPIHelper::getCollectiveCommunication();
-    auto cpu_time = DSC_PROFILER.stopTiming("msfem.all");
+    auto cpu_time = DXTC_TIMINGS.stop("msfem.all");
     auto max_cpu_time = comm.max(cpu_time);
     MS_LOG_INFO_0 << "Maximum total runtime of the program over all processes: " << max_cpu_time << "ms" << std::endl;
-    DSC_PROFILER.outputTimings("profiler");
+    DXTC_TIMINGS.outputTimings("profiler");
     mem_usage();
     dump_environment();
   } catch (Dune::Exception& e) {

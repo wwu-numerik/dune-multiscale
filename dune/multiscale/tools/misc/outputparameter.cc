@@ -3,7 +3,7 @@
 #include "outputparameter.hh"
 
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/common/filesystem.hh>
+#include <dune/xt/common/filesystem.hh>
 #include <memory>
 
 #include "dune/multiscale/problems/base.hh"
@@ -16,12 +16,12 @@ namespace Multiscale {
 OutputParameters::OutputParameters(const std::string path_in)
   : my_prefix_("solutions")
   , my_path_(path_in) {
-  DSC::testCreateDirectory(my_path_);
+  Dune::XT::Common::test_create_directory(my_path_);
 }
 
 void OutputParameters::set_prefix(std::string my_prefix) {
   my_prefix_ = my_prefix;
-  DSC::testCreateDirectory(my_prefix_);
+  Dune::XT::Common::test_create_directory(my_prefix_);
   // std :: cout << "Set prefix. my_prefix_ = " << my_prefix_ << std :: endl;
 }
 

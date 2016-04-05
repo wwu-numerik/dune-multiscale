@@ -1,6 +1,7 @@
 #ifndef ERROR_CALC_HH
 #define ERROR_CALC_HH
 
+#include <dune/xt/common/timings.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
@@ -52,7 +53,7 @@ private:
   std::unique_ptr<CommonTraits::DiscreteFunctionType> coarse_fem_solution_ptr_;
   CommonTraits::ConstDiscreteFunctionType* fem_solution_;
   std::unique_ptr<Elliptic_FEM_Solver> fem_solver_;
-  DSC::ScopedTiming timing_;
+  Dune::XT::Common::ScopedTiming timing_;
 };
 
 } // namespace Multiscale

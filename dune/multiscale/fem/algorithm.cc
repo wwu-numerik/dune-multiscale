@@ -14,8 +14,8 @@
 #include <dune/multiscale/problems/base.hh>
 #include <dune/multiscale/problems/selector.hh>
 
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/stuff/grid/provider.hh>
 
 namespace Dune {

@@ -1,9 +1,9 @@
 #include <config.h>
 #include <assert.h>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/validation.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/validation.hh>
+#include <dune/xt/common/configuration.hh>
 #include <sstream>
 
 #include "dune/multiscale/problems/base.hh"
@@ -173,11 +173,11 @@ void Diffusion::readPermeability() {
 ////    Eigen::VectorXd perm_z(grid.size(0));
 //    JacobianRangeType permeability(0.0);
 //
-//    for (const auto& entity : DSC::viewRange(grid.leafView())) {
+//    for (const auto& entity : Dune::XT::Common::viewRange(grid.leafView())) {
 //      // get the barycenter
 //      auto center = entity.geometry().center();
 //      int index = grid.leafView().indexSet().index(entity);
-//      for (const auto& dim : DSC::valueRange(dimDomain)) {
+//      for (const auto& dim : Dune::XT::Common::value_range(dimDomain)) {
 //        JacobianRangeType dir(0.0);
 //        dir[0][dim] = 1.0;
 //        diffusiveFlux(center, dir, permeability);
@@ -189,8 +189,8 @@ void Diffusion::readPermeability() {
 //    }
 //
 //    VTKWriter< typename CommonTraits::GridType::LeafGridView > vtkwriter(grid.leafView());
-//    for (const auto& dim : DSC::valueRange(dimDomain))
-//      vtkwriter.addCellData(perm.col(dim), "perm_" + DSC::toString(dim));
+//    for (const auto& dim : Dune::XT::Common::value_range(dimDomain))
+//      vtkwriter.addCellData(perm.col(dim), "perm_" + Dune::XT::Common::to_string(dim));
 ////    vtkwriter.addCellData(perm_y, "perm_y");
 ////    vtkwriter.addCellData(perm_z, "perm_z");
 //    vtkwriter.write("data/Permeability");

@@ -5,9 +5,9 @@
 #include <config.h>
 #include <dune/multiscale/common/main_init.hh>
 #include <dune/multiscale/fem/algorithm.hh>
-#include <dune/stuff/common/parallel/helper.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/parallel/threadmanager.hh>
+#include <dune/xt/common/parallel/helper.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/parallel/threadmanager.hh>
 #include <thread>
 
 #include <tbb/blocked_range.h>
@@ -31,7 +31,7 @@ public:
 };
 void NumberPrinter::develop(size_t i)
 {
-  const auto mm = DS::threadManager().thread();
+  const auto mm = Dune::XT::CommonthreadManager().thread();
   cout << "Thread " << mm << ": " << i << std::endl;
 
 }
@@ -59,16 +59,16 @@ int main(int argc, char** argv) {
     init(argc, argv);
 
     //!TODO include base in config
-    DSC_PROFILER.startTiming("msfem.all");
+    DXTC_TIMINGS.start("msfem.all");
 
     printNumbers(10000);
 
 //    cgfem_algorithm();
 
 //    const auto cpu_time =
-//        DSC_PROFILER.stopTiming("total_cpu") / 1000.f;
+//        DXTC_TIMINGS.stop("total_cpu") / 1000.f;
 //    MS_LOG_INFO_0 << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-//    DSC_PROFILER.outputTimings("profiler");
+//    DXTC_TIMINGS.outputTimings("profiler");
 //    mem_usage();
 //    dump_environment();
   } catch (Dune::Exception& e) {

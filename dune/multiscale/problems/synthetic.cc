@@ -1,8 +1,8 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/validation.hh>
+#include <dune/xt/common/validation.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
 #include <math.h>
 #include <sstream>
 

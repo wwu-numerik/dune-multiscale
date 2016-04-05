@@ -22,10 +22,10 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
 
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/configuration.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/ranges.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/ranges.hh>
 
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/cg.hh>
@@ -45,20 +45,20 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
                                                      const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                                      const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
-  DSC::ScopedTiming st("msfem.idFine");
+  Dune::XT::Common::ScopedTiming st("msfem.idFine");
 
   auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
   const auto interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
-  for (const auto& coarse_entity : DSC::entityRange(interior)) {
+  for (const auto& coarse_entity : Dune::elements(interior)) {
     LocalSolutionManager localSolutionManager(coarse_space, coarse_entity, localgrid_list);
     localSolutionManager.load();
     auto& localSolutions = localSolutionManager.getLocalSolutions();
     const auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] =
-        DSC::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolutionManager.space(), "correction");
+        Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolutionManager.space(), "correction");
 
     auto& local_correction = *local_corrections[coarse_index];
     local_correction.vector() *= 0;
@@ -94,13 +94,13 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
       const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
-      for (const auto& local_entity : DSC::entityRange(localSolutionManager.space().grid_view())) {
+      for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
         const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
         const auto& reference_element = DSG::reference_element(coarse_entity);
         const auto& coarse_geometry = coarse_entity.geometry();
         auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 
-        for (const auto lg_i : DSC::valueRange(int(lg_points.size()))) {
+        for (const auto lg_i : Dune::XT::Common::value_range(int(lg_points.size()))) {
           const auto local_point = lg_points[lg_i];
           const auto global_lg_point = local_entity.geometry().global(local_point);
           const auto local_coarse_point = coarse_geometry.local(global_lg_point);
@@ -128,12 +128,12 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   }
 
   MS_LOG_INFO_0 << "Dirichlet correctors are broken and disabled\n";
-  msfem_solution = DSC::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
+  msfem_solution = Dune::XT::Common::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 
 void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
                                   std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& localgrid_list) const {
-  DSC::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
+  Dune::XT::Common::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   const auto clearGuard = DiscreteFunctionIO::clear_guard();
 
   CommonTraits::DiscreteFunctionType coarse_msfem_solution(coarse_space, "Coarse Part MsFEM Solution");

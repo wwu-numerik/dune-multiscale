@@ -1,9 +1,9 @@
 #include <dune/multiscale/test/test_common.hxx>
 
 #include <unordered_set>
-#include <dune/stuff/common/float_cmp.hh>
+#include <dune/xt/common/float_cmp.hh>
 #include <dune/multiscale/msfem/msfem_solver.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>

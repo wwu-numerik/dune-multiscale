@@ -6,9 +6,9 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/common/grid_creation.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/common/logging.hh>
-#include <dune/stuff/common/profiler.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/timings.hh>
+#include <dune/xt/common/configuration.hh>
 
 #include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
@@ -44,7 +44,7 @@ CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
 void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const {
   MS_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
-  DSC_PROFILER.startTiming("fem.apply");
+  DXTC_TIMINGS.start("fem.apply");
 
   typedef CommonTraits::GridViewType GridViewType;
 
@@ -71,7 +71,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   GDT::Operators::DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
       dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet, dirichlet_projection);
-  DSC_PROFILER.startTiming("fem.assemble");
+  DXTC_TIMINGS.start("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);
   system_assembler.add(elliptic_operator);
@@ -79,9 +79,9 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
   system_assembler.add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(true);
-  DSC_PROFILER.stopTiming("fem.assemble");
+  DXTC_TIMINGS.stop("fem.assemble");
 
-  DSC_PROFILER.startTiming("fem.constraints");
+  DXTC_TIMINGS.start("fem.constraints");
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(space.mapper().size());
   system_matrix.mv(dirichlet_projection.vector(), tmp);
@@ -92,10 +92,10 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_assembler.add(dirichlet_constraints /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
   system_assembler.assemble(problem_.config().get("threading.smp_constraints", false));
   dirichlet_constraints.apply(system_matrix, rhs_vector);
-  DSC_PROFILER.stopTiming("fem.constraints");
+  DXTC_TIMINGS.stop("fem.constraints");
 
   // solve the system
-  DSC_PROFILER.startTiming("fem.solve");
+  DXTC_TIMINGS.start("fem.solve");
   const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::CommunicatorType>
       linear_solver(system_matrix, space.communicator());
   auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
@@ -116,11 +116,11 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
   // add the dirichlet shift to obtain the solution in H^1
-  DSC_PROFILER.stopTiming("fem.solve");
+  DXTC_TIMINGS.stop("fem.solve");
 
   solution_vector += dirichlet_projection.vector();
 
-  DSC_PROFILER.stopTiming("fem.apply");
+  DXTC_TIMINGS.stop("fem.apply");
 }
 
 } // namespace Multiscale

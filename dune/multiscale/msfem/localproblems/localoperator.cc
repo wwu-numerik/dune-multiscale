@@ -9,9 +9,9 @@
 #include <boost/assert.hpp>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/common/filesystem.hh>
-#include <dune/stuff/common/exceptions.hh>
-#include <dune/stuff/common/configuration.hh>
+#include <dune/xt/common/filesystem.hh>
+#include <dune/xt/common/exceptions.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/problems/selector.hh>
@@ -113,7 +113,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   std::unique_ptr<BVHelper> bv_helper(nullptr);
   if (coarseEntity.hasBoundaryIntersections()) {
     bv_helper =
-        DSC::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
+        Dune::XT::Common::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
 
@@ -129,7 +129,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
         problem_.getDiffusion(), coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
     rhs_functionals[coarseBaseFunc] =
-        DSC::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
+        Dune::XT::Common::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
@@ -147,7 +147,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
     dirichletConstraints_.apply(rhs->vector());
 #if HAVE_UMFPACK
   if (use_umfpack_)
-    local_direct_inverse_ = DSC::make_unique<LocalDirectInverseType>(
+    local_direct_inverse_ = Dune::XT::Common::make_unique<LocalDirectInverseType>(
         system_matrix_.backend(), problem_.config().get("msfem.local_solver_verbose", 0));
 #endif
 }

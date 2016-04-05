@@ -6,7 +6,8 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 
-#include <dune/stuff/common/parallel/threadstorage.hh>
+#include <dune/xt/common/parallel/threadstorage.hh>
+#include <dune/xt/common/configuration.hh>
 #include <unordered_map>
 
 namespace Dune {
@@ -37,13 +38,13 @@ public:
   void add(const CommonTraits::DiscreteFunctionType& coarse_func);
 
   LocalGridSearch& search();
-  void visualize_parts(const Stuff::Common::Configuration& config) const;
+  void visualize_parts(const XT::Common::Configuration& config) const;
 
 private:
   CorrectionsMapType corrections_;
   const CommonTraits::GridViewType view_;
   const LeafIndexSetType& index_set_;
-  DS::PerThreadValue<LocalGridSearch> search_;
+  Dune::XT::Common::PerThreadValue<LocalGridSearch> search_;
 };
 
 } // namespace Multiscale {

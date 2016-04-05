@@ -67,7 +67,7 @@ public:
     std::copy(elements_in.begin(), elements_in.end(), elements.begin());
     auto overlap_check = overlap;
     overlap_check.fill(overlap[0]);
-    for (auto i : DSC::valueRange(1, dim))
+    for (auto i : Dune::XT::Common::value_range(1, dim))
       if (overlap[i] != overlap[0])
         DUNE_THROW(Dune::InvalidStateException, "YaspGrid only supports uniform overlap");
     return std::make_shared<GridType>(lowerLeft, upperRight, elements, no_periodic_direction, overlap[0], communicator);
