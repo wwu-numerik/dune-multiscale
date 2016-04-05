@@ -51,11 +51,8 @@ TEST_P(Projection, Project) {
   this->project();
 }
 
+static const auto common_values = default_common_values;
 
-static const auto common_values = CommonTraits::world_dim < 3
-                                  // Values need to have number of elements
-                                  ? testing::Values(p_small, p_large/*, p_aniso, p_wover, p_fail*/)
-                                  : testing::Values(p_small, p_minimal/*, p_minimal, p_minimal, p_minimal*/);
-
-INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
+//INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
+INSTANTIATE_TEST_CASE_P( TestNameB, Search, common_values);
 

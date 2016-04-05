@@ -41,10 +41,7 @@ TEST_P(ErrorCheck, LP) {
   this->run_error_calc();
 }
 
-static const auto common_values = CommonTraits::world_dim < 3
-                                  // Values need to have same number of elements
-                                  ? testing::Values(p_small, p_large, p_aniso, p_wover /*, p_fail*/)
-                                  : testing::Values(p_small, p_minimal, p_minimal, p_minimal /*, *p_minimal*/);
+static const auto common_values = default_common_values;
 
 INSTANTIATE_TEST_CASE_P( TestNameB, ErrorCheck, common_values);
 
