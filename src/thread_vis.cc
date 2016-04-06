@@ -30,7 +30,7 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
     auto adapter = std::make_shared<DSFu::VisualizationAdapter<CommonTraits::GridViewType, 1, 1>>(*f);
     vtkio.addCellData(adapter);
   }
-  const std::string datadir = DSC_CONFIG_GET("global.datadir", "./data/");
+  const std::string datadir = DXTC_CONFIG_GET("global.datadir", "./data/");
   Dune::XT::Common::test_create_directory(datadir + "/piecefiles/" + name);
   vtkio.pwrite(name, datadir, "piecefiles");
 }
@@ -152,13 +152,13 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    assert(Dune::XT::CommonthreadManager().max_threads() == DSC_CONFIG_GET("threading.max_count", 1u));
-    const std::string datadir = DSC_CONFIG_GET("global.datadir", "data/");
+    assert(Dune::XT::CommonthreadManager().max_threads() == DXTC_CONFIG_GET("threading.max_count", 1u));
+    const std::string datadir = DXTC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
     Dune::XT::Common::test_create_directory(datadir);
 
-    switch (DSC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
+    switch (DXTC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
       case 1:
         break;
       case 2:
@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
     const auto& coarse_grid = *grids.first;
     problem.getMutableModelData().prepare_new_evaluation(problem);
 
-    if (DSC_CONFIG_GET("global.vtk_output", false)) {
+    if (DXTC_CONFIG_GET("global.vtk_output", false)) {
       problem.getDiffusion().visualize(
           coarse_grid.leafGridView(),
           OutputParameters(problem.config().get("global.datadir", "data")).fullpath("diffusion"));

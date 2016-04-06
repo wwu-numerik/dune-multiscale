@@ -35,15 +35,15 @@ void Dune::Multiscale::init(int argc, char** argv) {
     DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
   }
   Dune::XT::Common::Config().read_command_line(argc, argv);
-  Dune::XT::Common::test_create_directory(DSC_CONFIG_GET("global.datadir", "data/"));
+  Dune::XT::Common::test_create_directory(DXTC_CONFIG_GET("global.datadir", "data/"));
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
   // --> LOG_ERROR | LOG_INFO | LOG_DEBUG | LOG_CONSOLE | LOG_FILE = 62
   Dune::XT::Common::Logger().create(
-      DSC_CONFIG_GET("logging.level", 62), DSC_CONFIG_GET("logging.file", std::string(argv[0]) + ".log"),
-      DSC_CONFIG_GET("global.datadir", "data"), DSC_CONFIG_GET("logging.dir", "log" /*path below datadir*/));
-  DXTC_TIMINGS.set_outputdir(DSC_CONFIG_GET("global.datadir", "data"));
-  const int threads = DSC_CONFIG_GET("threading.max_count", 1);
+      DXTC_CONFIG_GET("logging.level", 62), DXTC_CONFIG_GET("logging.file", std::string(argv[0]) + ".log"),
+      DXTC_CONFIG_GET("global.datadir", "data"), DXTC_CONFIG_GET("logging.dir", "log" /*path below datadir*/));
+  DXTC_TIMINGS.set_outputdir(DXTC_CONFIG_GET("global.datadir", "data"));
+  const int threads = DXTC_CONFIG_GET("threading.max_count", 1);
   DS::threadManager().set_max_threads(threads);
   Dune::XT::Common::install_signal_handler(SIGTERM, handle_sigterm);
 #ifdef MS_TIMED_LOGGER
@@ -93,7 +93,7 @@ void Dune::Multiscale::mem_usage() {
   // write output on rank zero
   if (comm.rank() == 0) {
     std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
-        Dune::XT::Common::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
+        Dune::XT::Common::make_ofstream(std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
     *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                     << "," << meanPeakMemConsumption << std::endl;
   }
@@ -101,6 +101,6 @@ void Dune::Multiscale::mem_usage() {
 
 void Dune::Multiscale::dump_environment() {
   std::unique_ptr<boost::filesystem::ofstream> of(
-      Dune::XT::Common::make_ofstream(std::string(DSC_CONFIG_GET("global.datadir", "data/")) + std::string("/env.txt")));
+      Dune::XT::Common::make_ofstream(std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/env.txt")));
   Dune::XT::Common::dump_environment(*of);
 }

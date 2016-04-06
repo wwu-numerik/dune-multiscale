@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
     const auto cpu_time = DXTC_TIMINGS.stop("total_cpu") / 1000.f;
     MS_LOG_INFO_0 << "Total runtime of the program: " << cpu_time << "s" << std::endl;
-    DXTC_TIMINGS.outputTimings("profiler");
+    DXTC_TIMINGS.output_per_rank("profiler");
     mem_usage();
     dump_environment();
   } catch (Dune::Exception& e) {
