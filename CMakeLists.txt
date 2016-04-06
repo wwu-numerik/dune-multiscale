@@ -1,12 +1,13 @@
-if( NOT CMAKE_BUILD_TYPE )
-	message( STATUS "No build type selected, setting default build type 'RELWITHDEBINFO'" )
-	set( CMAKE_BUILD_TYPE "RELWITHDEBINFO" CACHE STRING "DEBUG/RELEASE")
-endif( NOT CMAKE_BUILD_TYPE )
-
 PROJECT(dune-multiscale CXX)
+
+# local environment
+set( ENV{PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../local/bin:$ENV{PATH}" )
+set( ENV{LD_LIBRARY_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../local/lib:$ENV{LD_LIBRARY_PATH}" )
+set( ENV{PKG_CONFIG_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../local/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}" )
 
 #set minimum cmake version
 cmake_minimum_required(VERSION 3.1)
+set( CMAKE_COLOR_MAKEFILE ON)
 
 # mac-specific settings
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -34,6 +35,7 @@ include(DuneMacros)
 
 # start a dune project with information from dune.module
 dune_project()
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules )
 
 foreach(_dep ${ALL_DEPENDENCIES})
   FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/../${_dep}/dune/*.hh" )
@@ -46,6 +48,13 @@ FILE( GLOB_RECURSE dune "${CMAKE_CURRENT_SOURCE_DIR}/dune/*.hh" )
 set( COMMON_HEADER ${header} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
+dune_enable_all_packages(
+   INCLUDE_DIRS ${dune-multiscale}/dune
+   COMPILE_DEFINITIONS 
+   COMPILE_OPTIONS 
+   MODULE_LIBRARIES multiscale_msfem multiscale_cgfem multiscale_problem multiscale_common 
+   VERBOSE
+                         )
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
@@ -94,10 +103,11 @@ set( CGFEM_SOURCES
         dune/multiscale/fem/algorithm.cc
     )
 
-dune_add_library(multiscale_common ${COMMON_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-dune_add_library(multiscale_problem ${PROBLEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-dune_add_library(multiscale_msfem ${MSFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
-dune_add_library(multiscale_cgfem ${CGFEM_SOURCES} ADD_LIBS ${DUNE_LIBS} ${COMMON_LIBS})
+dune_library_add_sources(multiscale_common SOURCES ${COMMON_SOURCES})
+dune_library_add_sources(multiscale_problem SOURCES ${PROBLEM_SOURCES})
+dune_library_add_sources(multiscale_msfem SOURCES ${MSFEM_SOURCES}) 
+dune_library_add_sources(multiscale_cgfem SOURCES ${CGFEM_SOURCES}) 
+
 
 ADD_EXECUTABLE(elliptic_msfem src/msfem.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
