@@ -7,6 +7,7 @@
 #include <dune/multiscale/fem/algorithm.hh>
 #include <dune/xt/common/parallel/helper.hh>
 #include <dune/xt/common/timings.hh>
+#include <dune/xt/common/logging.hh>
 #include <thread>
 
 #include <tbb/task_scheduler_init.h>
