@@ -100,6 +100,7 @@ cache:
 
 env:
   global:
+    - secure: "BcuIJYZ6//P3W6yGkjlqxUZhvWA2NZ7lvCQLtsdB7wXpIDBnp9AKsuvtPBEOgRrqNyy6wKIPtjcK5GejulbcUQFg2XagHHdTstlFwn2JxoWCpxsi3TlJaMdbo4qrE9hd+crokaL7nrtLXQ8+aGT8Z19JPFIEwdgzRIxPTTkdXkY="
     - MY_MODULE=dune-multiscale 
     - DUNE_BUILD_DIR=${HOME}/dune_build/ 
     - INSTALL_DIR=$HOME/dune 
@@ -107,12 +108,10 @@ env:
     - MODULES_TO_DELETE="dune-mlmc"
     - GCCDEFAULT=4.9
     - LIBRARY_PATH=/usr/lib
-    secure: "BcuIJYZ6//P3W6yGkjlqxUZhvWA2NZ7lvCQLtsdB7wXpIDBnp9AKsuvtPBEOgRrqNyy6wKIPtjcK5GejulbcUQFg2XagHHdTstlFwn2JxoWCpxsi3TlJaMdbo4qrE9hd+crokaL7nrtLXQ8+aGT8Z19JPFIEwdgzRIxPTTkdXkY="
 
 matrix:
   include:
     - os: linux
-      compiler: gcc
       addons: &gcc49
         apt:
           sources:
@@ -122,7 +121,6 @@ matrix:
       env: CXX=g++ CC=gcc
 
     - os: linux
-      compiler: gcc
       addons:
         apt:
           sources:
@@ -132,7 +130,6 @@ matrix:
       env: CXX=g++ CC=gcc GCCDEFAULT=5
 
     - os: linux
-      compiler: clang
       addons:
         apt:
           sources:
@@ -144,7 +141,6 @@ matrix:
       env: CXX=clang++-3.7 CC=clang-3.7
 
     - os: linux
-      compiler: clang
       addons:
         apt:
           sources:
