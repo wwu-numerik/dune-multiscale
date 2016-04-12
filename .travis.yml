@@ -77,14 +77,17 @@ script:
 
 # runs independent of 'script' failure/success
 after_script:
-- "${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec make clean"
-- |
-  if [ $TRAVIS_JOB_NUMBER == *.1 ] ; then
-    ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} doc
-    ./.travis/init_sshkey.sh wwu-numerik.github.io.rsa ${wwu-numerik.github.io.key} "none" 
-    ./.travis/deploy_docs.sh ${MY_MODULE} ${DUNE_BUILD_DIR}
-  fi
-- export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
+  - |
+    #if [ $TRAVIS_JOB_NUMBER == *.1 ] ; then
+      ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} doc
+      ./.travis/init_sshkey.sh wwu-numerik.github.io.rsa ${wwu-numerik.github.io.key} "none" 
+      ./.travis/deploy_docs.sh ${MY_MODULE} ${DUNE_BUILD_DIR}
+      #fi
+      echo $TRAVIS_JOB_NUMBER
+      test [ [ $TRAVIS_JOB_NUMBER == *.1 ] && echo yay
+  - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec make clean
+  - export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
+
 notifications:
   email:
     on_success: change
