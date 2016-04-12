@@ -53,8 +53,8 @@ dune_enable_all_packages(
    COMPILE_DEFINITIONS 
    COMPILE_OPTIONS 
    MODULE_LIBRARIES multiscale_msfem multiscale_cgfem multiscale_problem multiscale_common 
-   VERBOSE
-                         )
+)
+
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc

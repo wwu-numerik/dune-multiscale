@@ -77,12 +77,14 @@ script:
 
 # runs independent of 'script' failure/success
 after_script:
-    # reset for ctest
-    - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec make clean
-    - export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
-    # ctest errors on coverage gathering, this should NOT fail our entire build
-    #- ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ctest ${CTEST_ARG} || echo "CTest Failed"
-
+- "${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec make clean"
+- |
+  if [ $TRAVIS_JOB_NUMBER == *.1 ] ; then
+    ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} doc
+    ./.travis/init_sshkey.sh wwu-numerik.github.io.rsa ${wwu-numerik.github.io.key} "none" 
+    ./.travis/deploy_docs.sh ${MY_MODULE} ${DUNE_BUILD_DIR}
+  fi
+- export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
 notifications:
   email:
     on_success: change
@@ -105,6 +107,7 @@ env:
     - MODULES_TO_DELETE="dune-mlmc"
     - GCCDEFAULT=4.9
     - LIBRARY_PATH=/usr/lib
+    secure: "BcuIJYZ6//P3W6yGkjlqxUZhvWA2NZ7lvCQLtsdB7wXpIDBnp9AKsuvtPBEOgRrqNyy6wKIPtjcK5GejulbcUQFg2XagHHdTstlFwn2JxoWCpxsi3TlJaMdbo4qrE9hd+crokaL7nrtLXQ8+aGT8Z19JPFIEwdgzRIxPTTkdXkY="
 
 matrix:
   include:
