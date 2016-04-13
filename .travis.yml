@@ -66,7 +66,15 @@ before_script:
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} test_binaries
 
 script:
-    - PYTHONPATH=$HOME/src/scripts/python/ python3 -c "import travis_report as tp; tp.clang_format_status(\"${TRAVIS_BUILD_DIR}\")"
+    - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} test
+    # retry this step becuase of the implicated race condition in cloning an pushing with multiple builder running in parallel
+    - travis_retry $HOME/src/scripts/bash/travis_upload_test_logs.bash ${DUNE_BUILD_DIR}/${MY_MODULE}/dune/multiscale/*/test/
+
+    - |
+     if [ "x${CLANG_FORMAT}" != "x" ] ; then
+        git config --global hooks.clangformat ${CLANG_FORMAT}
+        PYTHONPATH=$HOME/src/scripts/python/ python3 -c "import travis_report as tp; tp.clang_format_status(\"${TRAVIS_BUILD_DIR}\")"
+     fi
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} headercheck
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} install | grep -v "Installing"
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} package_source
@@ -136,8 +144,8 @@ matrix:
           - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
           packages:
           - *commonpackages
-          - ['clang-3.7']
-      env: CXX=clang++-3.7 CC=clang-3.7
+          - ['clang-3.7', 'CLANG_FORMAT=clang-format-3.7']
+      env: CXX=clang++-3.7 CC=clang-3.7 CLANG_FORMAT=clang-format-3.7
 
     - os: linux
       addons:
