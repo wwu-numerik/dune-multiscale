@@ -52,7 +52,7 @@ dune_enable_all_packages(
    INCLUDE_DIRS ${dune-multiscale}/dune
    COMPILE_DEFINITIONS 
    COMPILE_OPTIONS 
-   MODULE_LIBRARIES multiscale_msfem multiscale_cgfem multiscale_problem multiscale_common 
+   MODULE_LIBRARIES multiscale_common multiscale_problem multiscale_cgfem multiscale_msfem 
 )
 
 #these should be split into all+hmm+msfem parts
@@ -78,13 +78,12 @@ set( PROBLEM_SOURCES
     dune/multiscale/problems/synthetic.cc
     dune/multiscale/problems/spe10.cc
     dune/multiscale/problems/tarbert.cc
-    dune/multiscale/problems/random.cc
     dune/multiscale/problems/selector.cc
     dune/multiscale/problems/base.cc
 )
-if(HAVE_RANDOM_PROBLEM)
-    set( PROBLEM_SOURCES ${PROBLEM_SOURCES} )
-endif(HAVE_RANDOM_PROBLEM)
+if(FFTW_FOUND)
+  set( PROBLEM_SOURCES ${PROBLEM_SOURCES} dune/multiscale/problems/random.cc )
+endif(FFTW_FOUND)
 
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
@@ -110,25 +109,11 @@ dune_library_add_sources(multiscale_cgfem SOURCES ${CGFEM_SOURCES})
 
 
 ADD_EXECUTABLE(elliptic_msfem src/msfem.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_msfem multiscale_msfem ${MULTISCALE_LIBS} )
-
 ADD_EXECUTABLE(elliptic_fem src/cgfem.cc ${CGFEM_SOURCES} ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(elliptic_fem ${MULTISCALE_LIBS} )
-
 ADD_EXECUTABLE(fail EXCLUDE_FROM_ALL src/fail.cc ${COMMON_HEADER})
-# TARGET_LINK_LIBRARIES(fail ${MULTISCALE_LIBS} )
-
 ADD_EXECUTABLE(minimal EXCLUDE_FROM_ALL src/minimal.cc ${COMMON_HEADER})
-TARGET_LINK_LIBRARIES(minimal ${MULTISCALE_LIBS} )
-
 ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
-TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${MULTISCALE_LIBS} )
 
-foreach(target multiscale_common multiscale_problem multiscale_msfem multiscale_cgfem elliptic_msfem elliptic_fem thread_vis minimal)
-  add_dune_all_flags(${target})
-endforeach()
-
-# HEADERCHECK( ${header} ${dune} )
 DEPENDENCYCHECK( ${header} ${dune} )
 
 add_subdirectory(doc)

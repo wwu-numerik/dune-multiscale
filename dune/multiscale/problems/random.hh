@@ -117,7 +117,7 @@ private:
   typedef Permeability<CommonTraits::world_dim, DomainType, CommonTraits::DomainFieldType, Correlation>
       PermeabilityType;
   std::unique_ptr<Correlation> correlation_;
-#if HAVE_RANDOM_PROBLEM
+#if HAVE_FFTW
   std::unique_ptr<PermeabilityType> field_;
 #endif
 };

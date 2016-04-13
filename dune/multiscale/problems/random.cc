@@ -15,7 +15,7 @@
 
 #include "random.hh"
 
-#if HAVE_RANDOM_PROBLEM
+#if HAVE_FFTW
 #include <mpi.h>
 #include "random_permeability.hh"
 #include <mpi.h>
@@ -55,7 +55,7 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
   const int log2Seg = std::log2l(cells_per_dim[0]);
   int seed = 0;
-#if HAVE_RANDOM_PROBLEM
+#if HAVE_FFTW
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
   const int overlap = problem.config().get("grids.overlap", 1u);
@@ -71,7 +71,7 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
 
 void Diffusion::prepare_new_evaluation() {
   Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.create");
-#if HAVE_RANDOM_PROBLEM
+#if HAVE_FFTW
   assert(field_);
   field_->create();
 #else
@@ -111,7 +111,7 @@ ParameterTree ModelProblemData::boundary_settings() const {
 Diffusion::Diffusion() {}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
-#if HAVE_RANDOM_PROBLEM
+#if HAVE_FFTW
   assert(field_);
   const double scalar = field_->operator()(x);
   ret = 0;
