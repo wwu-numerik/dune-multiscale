@@ -84,7 +84,7 @@ after_script:
   - |
     #if [ $TRAVIS_JOB_NUMBER == *.1 ] ; then
       ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} doc
-      ./.travis/init_sshkey.sh wwu-numerik.github.io.rsa ${wwu-numerik.github.io.key} "none" 
+      ./.travis/init_sshkey.sh ${wwu-numerik.github.io.key} "none" wwu-numerik.github.io.rsa 
       ./.travis/deploy_docs.sh ${MY_MODULE} ${DUNE_BUILD_DIR}
       #fi
       echo $TRAVIS_JOB_NUMBER
