@@ -85,7 +85,7 @@ after_script:
   - |
     #if [ $TRAVIS_JOB_NUMBER == *.1 ] ; then
       ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} doc
-      ./.travis/init_sshkey.sh ${wwu-numerik.github.io.key} ${wwu-numerik.github.io.key} wwu-numerik.github.io
+      ./.travis/init_sshkey.sh $encrypted_6207618e9fa1_key $encrypted_6207618e9fa1_iv wwu-numerik.github.io
       ./.travis/deploy_docs.sh ${MY_MODULE} ${DUNE_BUILD_DIR}
       #fi
       echo $TRAVIS_JOB_NUMBER
@@ -108,8 +108,6 @@ cache:
 
 env:
   global:
-    - secure: "BcuIJYZ6//P3W6yGkjlqxUZhvWA2NZ7lvCQLtsdB7wXpIDBnp9AKsuvtPBEOgRrqNyy6wKIPtjcK5GejulbcUQFg2XagHHdTstlFwn2JxoWCpxsi3TlJaMdbo4qrE9hd+crokaL7nrtLXQ8+aGT8Z19JPFIEwdgzRIxPTTkdXkY="
-    - secure: "panaP+t70swUzhaAt/Kc6ALErScyg21XQn3qqyPMCcZs2E6zep95sDt+y70d+cCt++3yNkWKjALkhditjQ7RFbSn4k0bPi+LMLBMMcT5HxX1Me+AkFaAufjmPbiKSS4W6odGQNeFzNnkxJxAmqWOU5hw8o+iUlF0WUfiOtX+kKY="
     - MY_MODULE=dune-multiscale 
     - DUNE_BUILD_DIR=${HOME}/dune_build/ 
     - INSTALL_DIR=$HOME/dune 
