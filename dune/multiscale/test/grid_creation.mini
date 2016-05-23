@@ -1,0 +1,7 @@
+include common_grids.mini
+
+setups = p_wover, p_small | expand
+
+grids.macro_cells_per_dim = {setups}.grids.macro_cells_per_dim
+grids.micro_cells_per_macrocell_dim = {setups}.grids.micro_cells_per_macrocell_dim
+msfem.oversampling_layers = {setups}.msfem.oversampling_layers

@@ -1,0 +1,44 @@
+[p_small]
+grids.macro_cells_per_dim = [4 4 4]
+grids.micro_cells_per_macrocell_dim = [8 8 8]
+msfem.oversampling_layers = 0
+
+[p_large]
+grids.macro_cells_per_dim = [20 20 20]
+grids.micro_cells_per_macrocell_dim = [40 40 40]
+msfem.oversampling_layers = 0
+
+[p_aniso]
+grids.macro_cells_per_dim = [14 4 6]
+grids.micro_cells_per_macrocell_dim = [3 32 8]
+msfem.oversampling_layers = 0
+
+[p_wover]
+grids.macro_cells_per_dim = [14 14 14]
+grids.micro_cells_per_macrocell_dim = [18 18 18]
+msfem.oversampling_layers = 6
+
+[p_huge]
+grids.macro_cells_per_dim = [40 40 40]
+grids.micro_cells_per_macrocell_dim = [120 120 120]
+msfem.oversampling_layers = 0
+
+[p_fail]
+grids.macro_cells_per_dim = [12 15 10]
+grids.micro_cells_per_macrocell_dim = [6 7 10]
+msfem.oversampling_layers = 0
+
+[p_minimal]
+grids.macro_cells_per_dim = [1 1 1]
+grids.micro_cells_per_macrocell_dim = [1 1 1]
+msfem.oversampling_layers = 0
+
+[p_small_aniso]
+grids.macro_cells_per_dim = [4 2 1]                                           
+grids.micro_cells_per_macrocell_dim = [8 2 1]
+msfem.oversampling_layers = 0
+
+[p_small_wover]
+grids.macro_cells_per_dim = [4 4 4]
+grids.micro_cells_per_macrocell_dim = [8 8 8]
+msfem.oversampling_layers = 1

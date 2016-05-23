@@ -55,6 +55,9 @@ dune_enable_all_packages(
    MODULE_LIBRARIES multiscale_common multiscale_problem multiscale_cgfem multiscale_msfem 
 )
 
+# macros from dune-xt
+include(DuneUtils)
+
 #these should be split into all+hmm+msfem parts
 set( COMMON_SOURCES 
         dune/multiscale/tools/misc/outputparameter.cc
