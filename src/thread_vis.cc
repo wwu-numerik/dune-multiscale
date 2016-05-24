@@ -168,8 +168,8 @@ int main(int argc, char** argv) {
     }
 
     const auto& comm = Dune::MPIHelper::getCommunicator();
-    DSC_CONFIG.set("grids.dim", CommonTraits::world_dim);
-    DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+    DXTC_CONFIG.set("grids.dim", CommonTraits::world_dim);
+    DMP::ProblemContainer problem(comm, comm, DXTC_CONFIG);
 
     auto grids = Dune::Multiscale::make_grids(problem, false);
     const auto& coarse_grid = *grids.first;

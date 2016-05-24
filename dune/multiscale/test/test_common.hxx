@@ -42,7 +42,7 @@ string prepend_test_dir(string fn)
 
 void set_param(map<string, string> params) {
   for( auto vp : params) {
-    DSC_CONFIG.set(vp.first, vp.second, true);
+    DXTC_CONFIG.set(vp.first, vp.second, true);
   }
 }
 
@@ -51,12 +51,12 @@ class GridTestBase : public ::testing::Test {
 public:
 
  GridTestBase() {
-    problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DSC_CONFIG);
+    problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DXTC_CONFIG);
     grids_ = make_grids(*problem_);
-    DSC_LOG_DEBUG << "Instantiating tests for dimension " << CommonTraits::world_dim << std::endl;
+    DXTC_LOG_DEBUG << "Instantiating tests for dimension " << CommonTraits::world_dim << std::endl;
     constexpr bool sp_grid = std::is_same<CommonTraits::GridType,
         Dune::SPGrid<double, CommonTraits::world_dim, Dune::SPIsotropicRefinement>>::value;
-    if (sp_grid && DSC_CONFIG_GET("threading.max_count", 1) > 1) {
+    if (sp_grid && DXTC_CONFIG_GET("threading.max_count", 1) > 1) {
       DUNE_THROW(Dune::InvalidStateException, "SPGRID currently fails with > 1 threads");
     }
   }

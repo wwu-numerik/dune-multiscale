@@ -50,11 +50,11 @@ std::map<std::string, double> msfem_algorithm() {
   Dune::XT::Common::ScopedTiming algo("msfem.algorithm");
   DXTC_TIMINGS.start("msfem.setup.grid");
   const MPIHelper::MPICommunicator& comm = Dune::MPIHelper::getCommunicator();
-  DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+  DMP::ProblemContainer problem(comm, comm, DXTC_CONFIG);
   auto grid = make_coarse_grid(problem);
   DXTC_TIMINGS.stop("msfem.setup.grid");
   DXTC_TIMINGS.start("msfem.setup.problem");
-  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
+  DXTC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
   problem.getMutableModelData().prepare_new_evaluation(problem);
   DXTC_TIMINGS.stop("msfem.setup.problem");
 

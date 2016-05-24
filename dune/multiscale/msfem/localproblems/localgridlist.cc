@@ -28,10 +28,10 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
   : coarseSpace_(coarseSpace)
   , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet()) {
   Dune::XT::Common::ScopedTiming algo("msfem.local_grids");
-  BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  BOOST_ASSERT_MSG(DXTC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
   constexpr auto dim_world = MsFEMTraits::LocalGridType::dimensionworld;
 
-  const auto gridParameterTree = DSC_CONFIG.sub("grids");
+  const auto gridParameterTree = DXTC_CONFIG.sub("grids");
   const auto micro_per_macro = gridParameterTree.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim",
                                                                                CommonTraits::DomainType(8), dim_world);
   const auto oversampling_layer = problem.config().get("msfem.oversampling_layers", 0);

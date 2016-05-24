@@ -97,7 +97,7 @@ struct GridMatch : public GridTestBase {
     // second max not a typo
     EXPECT_GT(dimensions.first.entity_volume.min(), dimensions.second.entity_volume.max());
     const auto dim_world = CommonTraits::GridType::dimensionworld;
-    const auto sub = DSC_CONFIG.sub("grids");
+    const auto sub = DXTC_CONFIG.sub("grids");
     const auto microPerMacro = sub.get<CommonTraits::DomainType>("micro_cells_per_macrocell_dim", CommonTraits::DomainType(-1), dim_world);
     const auto coarse_cells = sub.get<CommonTraits::DomainType>("macro_cells_per_dim", CommonTraits::DomainType(-1), dim_world);
     for(auto c: coarse_cells)

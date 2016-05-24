@@ -24,8 +24,8 @@ namespace Multiscale {
 //! the main FEM computation
 std::map<std::string, double> cgfem_algorithm() {
   const auto& comm = Dune::MPIHelper::getCommunicator();
-  DSC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
-  DMP::ProblemContainer problem(comm, comm, DSC_CONFIG);
+  DXTC_CONFIG.set("grids.dim", CommonTraits::world_dim, true);
+  DMP::ProblemContainer problem(comm, comm, DXTC_CONFIG);
   problem.getMutableModelData().prepare_new_evaluation(problem);
 
   Elliptic_FEM_Solver solver(problem);
