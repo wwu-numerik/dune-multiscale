@@ -5,7 +5,7 @@ msfem.fem_comparison = 0
 global.vtk_output = 0
 problem.name = Synthetic
 
-setup = p_small, p_large, p_minimal | expand
+setup = p_small, p_minimal | expand
 
 [grids]
 macro_cells_per_dim = {{setup}.grids.macro_cells_per_dim}
