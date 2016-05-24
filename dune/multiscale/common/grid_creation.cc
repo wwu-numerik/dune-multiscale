@@ -18,7 +18,7 @@ typedef tuple<CommonTraits::DomainType, CommonTraits::DomainType, array<unsigned
               array<unsigned int, CommonTraits::world_dim>> SetupReturnType;
 
 SetupReturnType setup(const DMP::ProblemContainer& problem) {
-  BOOST_ASSERT_MSG(DSC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  BOOST_ASSERT_MSG(DXTC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
   const auto world_dim = CommonTraits::world_dim;
   typedef CommonTraits::DomainType CoordType;

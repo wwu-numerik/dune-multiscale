@@ -46,12 +46,11 @@ void set_param(map<string, string> params) {
   }
 }
 
-class GridTestBase : public ::testing::TestWithParam<map<string,string>> {
+class GridTestBase : public ::testing::Test {
 
 public:
 
  GridTestBase() {
-    set_param(GetParam());
     problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DSC_CONFIG);
     grids_ = make_grids(*problem_);
     DSC_LOG_DEBUG << "Instantiating tests for dimension " << CommonTraits::world_dim << std::endl;
@@ -85,51 +84,16 @@ protected:
   const CommonTraits::SpaceType fineSpace;
 };
 
-static const map<string, string> p_small = {{"grids.macro_cells_per_dim", "[4 4 4]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[8 8 8]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_large = {{"grids.macro_cells_per_dim", "[20 20 20]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[40 40 40]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_aniso = {{"grids.macro_cells_per_dim", "[14 4 6]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[3 32 8]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_wover = {{"grids.macro_cells_per_dim", "[14 14 14]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[18 18 18]"}
-                                           ,{"msfem.oversampling_layers", "6"}
-                                           };
-static const map<string, string> p_huge  = {{"grids.macro_cells_per_dim", "[40 40 40]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[120 120 120]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_fail  = {{"grids.macro_cells_per_dim", "[12 15 10]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[6 7 10]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_minimal  = {{"grids.macro_cells_per_dim", "[1 1 1]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[1 1 1]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_small_aniso = {{"grids.macro_cells_per_dim", "[4 2 1]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[8 2 1]"}
-                                           ,{"msfem.oversampling_layers", "0"}
-                                           };
-static const map<string, string> p_small_wover = {{"grids.macro_cells_per_dim", "[4 4 4]"}
-                                           ,{"grids.micro_cells_per_macrocell_dim", "[8 8 8]"}
-                                           ,{"msfem.oversampling_layers", "1"}
-                                           };
 
-static const auto default_common_values = CommonTraits::world_dim < 3
-                                  // Values need to have number of elements
-#ifndef NDEBUG
-                                  ? testing::Values(p_small, p_small_aniso, p_small_wover)
-                                  : testing::Values(p_small, p_small_aniso, p_small_wover);
-#else
-                                  ? testing::Values(p_large, p_aniso, p_wover)
-                                  : testing::Values(p_small, p_aniso, p_wover);
-#endif
+
+//static const auto default_common_values = CommonTraits::world_dim < 3
+//                                  // Values need to have number of elements
+//#ifndef NDEBUG
+//                                  ? testing::Values(p_small, p_small_aniso, p_small_wover)
+//                                  : testing::Values(p_small, p_small_aniso, p_small_wover);
+//#else
+//                                  ? testing::Values(p_large, p_aniso, p_wover)
+//                                  : testing::Values(p_small, p_aniso, p_wover);
+//#endif
 
 #endif // DUNE_MULTISCALE_TEST_COMMON_HH

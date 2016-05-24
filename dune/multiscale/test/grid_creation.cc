@@ -151,22 +151,18 @@ struct GridMatch : public GridTestBase {
 
 };
 
-TEST_P(GridMatch, Match) {
+TEST_F(GridMatch, Match) {
   this->check_dimensions();
   this->check_unique_corners();
   this->check_inside();
 }
 
-TEST_P(PointsAndStuff, LP) {
+TEST_F(PointsAndStuff, LP) {
   this->check_lagrange_points();
   this->check_fine_lp_in_coarse();
   this->check_local_grids();
   this->check_search();
 }
 
-static const auto common_values = default_common_values;
-
-INSTANTIATE_TEST_CASE_P( TestNameA, GridMatch, common_values);
-INSTANTIATE_TEST_CASE_P( TestNameB, PointsAndStuff, common_values);
 
 

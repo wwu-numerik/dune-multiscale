@@ -42,3 +42,6 @@ msfem.oversampling_layers = 0
 grids.macro_cells_per_dim = [4 4 4]
 grids.micro_cells_per_macrocell_dim = [8 8 8]
 msfem.oversampling_layers = 1
+
+[threading]
+max_count = 1

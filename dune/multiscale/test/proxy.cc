@@ -20,13 +20,7 @@ struct PointsAndStuff : public GridAndSpaces {
 
 };
 
-TEST_P(PointsAndStuff, LP) {
+TEST_F(PointsAndStuff, LP) {
   this->check_fine_lp_in_coarse();
 }
-
-static const auto common_values = default_common_values;
-
-INSTANTIATE_TEST_CASE_P( TestNameB, PointsAndStuff, common_values);
-
-
 

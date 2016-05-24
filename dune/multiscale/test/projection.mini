@@ -1,7 +1,7 @@
-__name = grid_creation
+__name = projection
 include common_grids.mini
 
-setup = p_aniso, p_wover, p_small | expand
+setup = p_small, p_large, p_minimal | expand
 
 [grids]
 macro_cells_per_dim = {{setup}.grids.macro_cells_per_dim}

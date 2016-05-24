@@ -69,15 +69,11 @@ struct Search : public GridAndSpaces {
 };
 
 
-TEST_P(Projection, Project) {
+TEST_F(Projection, Project) {
   this->project();
 }
 //TEST_P(Search, Project) {
 //  this->lg_search();
 //}
 
-static const auto common_values = default_common_values;
-
-INSTANTIATE_TEST_CASE_P( TestNameB, Projection, common_values);
-//INSTANTIATE_TEST_CASE_P( TestNameB, Search, common_values);
 

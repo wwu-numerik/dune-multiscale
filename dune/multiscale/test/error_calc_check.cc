@@ -37,14 +37,7 @@ struct ErrorCheck : public GridAndSpaces {
 
 };
 
-TEST_P(ErrorCheck, LP) {
+TEST_F(ErrorCheck, LP) {
   this->run_error_calc();
 }
-
-static const auto common_values = default_common_values;
-
-INSTANTIATE_TEST_CASE_P( TestNameB, ErrorCheck, common_values);
-
-
-
 

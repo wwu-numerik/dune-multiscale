@@ -1,0 +1,31 @@
+__name = compare_cgfem
+include common_grids.mini
+
+msfem.fem_comparison = 0
+global.vtk_output = 0
+problem.name = Synthetic
+
+setup = p_small, p_large, p_minimal | expand
+
+[grids]
+macro_cells_per_dim = {{setup}.grids.macro_cells_per_dim}
+micro_cells_per_macrocell_dim = {{setup}.grids.micro_cells_per_macrocell_dim}
+
+[msfem]
+oversampling_layers = {{setup}.msfem.oversampling_layers}
+
+[p_small]
+fem_exact_L2 = 0.251
+fem_exact_H1s = 2.67
+
+[p_large]
+fem_exact_L2 = 0.07
+fem_exact_H1s = 1.15
+
+[p_minimal]
+fem_exact_L2 = 0.57
+fem_exact_H1s = 2.3
+
+[expected_errors]
+fem_exact_L2 = {{setup}.fem_exact_L2}
+fem_exact_H1s = {{setup}.fem_exact_H1s}
