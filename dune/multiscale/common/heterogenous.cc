@@ -81,7 +81,7 @@ void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
     const auto number_of_nodes_in_entity = entity.template count<CommonTraits::world_dim>();
     for (auto i : Dune::XT::Common::value_range(number_of_nodes_in_entity)) {
       const auto node = entity.template subEntity<CommonTraits::world_dim>(i);
-      const auto global_index_node = indexSet.index(*node);
+      const auto global_index_node = indexSet.index(node);
 
       // make sure we don't access non-existing elements
       assert(map.size() > global_index_node);
