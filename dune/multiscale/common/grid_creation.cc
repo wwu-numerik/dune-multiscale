@@ -4,6 +4,7 @@
 
 #include <dune/grid/common/gridenums.hh>
 #include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/float_cmp.hh>
 #include <dune/stuff/grid/structuredgridfactory.hh>
 #include <dune/stuff/grid/information.hh>
 #include <dune/multiscale/problems/selector.hh>
@@ -27,7 +28,7 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
   CoordType upperRight = gridCorners.second;
 
   const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
-  const auto validator = Dune::XT::Common::ValidateGreater<CommonTraits::DomainType>(CommonTraits::DomainType(1));
+  const auto validator = Dune::XT::Common::ValidateLess<CommonTraits::DomainType>(CommonTraits::DomainType(1));
   const auto coarse_cells = problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
   const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
 
@@ -75,7 +76,7 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, world_dim> elements, overFine;
   std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup(problem);
-  const auto validator = Dune::XT::Common::ValidateGreater<CommonTraits::DomainType>(CommonTraits::DomainType(1));
+  const auto validator = Dune::XT::Common::ValidateLess<CommonTraits::DomainType>(CommonTraits::DomainType(1));
   const auto coarse_cells = problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
   const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
 

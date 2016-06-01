@@ -1,7 +1,7 @@
 __name = error_calc_check
 include common_grids.mini
 
-setup = p_small, p_large, p_minimal | expand
+setup = p_small, p_wover, p_minimal | expand
 
 [grids]
 macro_cells_per_dim = {{setup}.grids.macro_cells_per_dim}
@@ -14,7 +14,7 @@ oversampling_layers = {{setup}.msfem.oversampling_layers}
 fem_exact_L2 = 0.251
 fem_exact_H1s = 2.67
 
-[p_large]
+[p_wover]
 fem_exact_L2 = 0.07
 fem_exact_H1s = 1.15
 
