@@ -68,6 +68,13 @@ Dune::Multiscale::make_grids(const DMP::ProblemContainer& problem, const bool ch
   return {coarse_grid, make_fine_grid(problem, coarse_grid, check_partitioning)};
 }
 
+template <class T>
+inline std::ostream& operator<<(std::ostream& s, const Dune::Stuff::Common::MinMaxAvg<T>& d)
+{
+  d.output(s);
+  return s;
+}
+
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
 Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
                                  std::shared_ptr<Dune::Multiscale::CommonTraits::GridType> coarse_gridptr,
@@ -99,14 +106,19 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
     //          << " | " << coarse_view.size(0) << '\n');
     const auto coarse_dimensions = DSG::dimensions(coarse_view);
     const auto fine_dimensions = DSG::dimensions(fine_view);
-    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
-      const bool match =
-          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
-          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
-      if (!match)
-        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
-                       you use different refinements in different spatial dimensions?");
-    }
+    DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl ;
+    // no idea why this check was here itfp
+//    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
+//      const bool match =
+//          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
+//          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
+//      if (!match) {
+//        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
+//                       you use different refinements in different spatial dimensions?\n"
+//                                                                                      << coarse_dimensions.coord_limits[i]
+//                                                                                      << " | " << fine_dimensions.coord_limits[i]);
+//      }
+//    }
   }
   return fine_gridptr;
 }
