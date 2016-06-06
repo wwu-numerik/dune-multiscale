@@ -30,8 +30,8 @@ using namespace Dune::Multiscale;
 */
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
   struct FunctionName##Mapper {                                                                                        \
-    typedef std::function<ReturnType*(Dune::MPIHelper::MPICommunicator, Dune::MPIHelper::MPICommunicator, \
-  Dune::XT::Common::Configuration )> FF;                                                                           \
+    typedef std::function<ReturnType*(Dune::MPIHelper::MPICommunicator, Dune::MPIHelper::MPICommunicator,              \
+                                      Dune::XT::Common::Configuration)> FF;                                            \
     static std::map<std::string, FF> mk_map() {                                                                        \
       std::map<std::string, FF> funcs;                                                                                 \
       Dune::XT::Common::map_emplace(funcs, "Synthetic", [](Dune::MPIHelper::MPICommunicator global,                    \
@@ -67,10 +67,12 @@ FUNCTION_MAP(Problem::DirichletDataBase, DirichletData)
 FUNCTION_MAP(Problem::NeumannDataBase, NeumannData)
 
 template <class FunctionType>
-FunctionType* make_f(const std::map<std::string, std::function<FunctionType*(Dune::MPIHelper::MPICommunicator, Dune::MPIHelper::MPICommunicator,
-                                                                             Dune::XT::Common::Configuration)>>& rets, std::string name,
-                     Dune::MPIHelper::MPICommunicator global, Dune::MPIHelper::MPICommunicator local,
-                     Dune::XT::Common::Configuration config_in) {
+FunctionType*
+make_f(const std::map<std::string,
+                      std::function<FunctionType*(Dune::MPIHelper::MPICommunicator, Dune::MPIHelper::MPICommunicator,
+                                                  Dune::XT::Common::Configuration)>>& rets,
+       std::string name, Dune::MPIHelper::MPICommunicator global, Dune::MPIHelper::MPICommunicator local,
+       Dune::XT::Common::Configuration config_in) {
   const auto it = rets.find(name);
   if (it == rets.end())
     DUNE_THROW(Dune::InvalidStateException, "no data for Problem. (toggle PROBLEM_NINE_ONLY?)");

@@ -112,8 +112,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   typedef BoundaryValueHelper<decltype(problem_.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())> BVHelper;
   std::unique_ptr<BVHelper> bv_helper(nullptr);
   if (coarseEntity.hasBoundaryIntersections()) {
-    bv_helper =
-        Dune::XT::Common::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
+    bv_helper = Dune::XT::Common::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS,
+                                                        numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
 
@@ -128,8 +128,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
     GDT::LocalFunctional::Codim0Integral<CoarseBasisProduct> local_rhs_functional(
         problem_.getDiffusion(), coarseBaseFunctionSet, local_diffusion_operator_, coarseBaseFunc);
     auto& rhs_vector = allLocalRHS[coarseBaseFunc]->vector();
-    rhs_functionals[coarseBaseFunc] =
-        Dune::XT::Common::make_unique<RhsFunctionalType>(local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
+    rhs_functionals[coarseBaseFunc] = Dune::XT::Common::make_unique<RhsFunctionalType>(
+        local_diffusion_operator_, rhs_vector, localSpace_, local_rhs_functional);
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 

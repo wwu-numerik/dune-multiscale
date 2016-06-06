@@ -112,7 +112,8 @@ void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_
     const auto& id_set = coarse_grid.globalIdSet();
     const auto coarse_id = id_set.id(coarse_entity);
     auto& oversampled_function = (*oversampled_function_it++);
-    oversampled_function = Dune::XT::Common::make_unique<FVFunc>(fv_space, Dune::XT::Common::to_string(coarse_id) + "_subgrid");
+    oversampled_function =
+        Dune::XT::Common::make_unique<FVFunc>(fv_space, Dune::XT::Common::to_string(coarse_id) + "_subgrid");
     oversampled_function->vector() *= 0;
     auto& function = (*function_it++);
     function = Dune::XT::Common::make_unique<FVFunc>(fv_space, Dune::XT::Common::to_string(coarse_id) + "_coarse_cell");

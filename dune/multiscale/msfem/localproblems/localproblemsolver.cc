@@ -74,7 +74,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
   for (auto& it : allLocalRHS)
     it = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
-                                                                      "rhs of local MsFEM problem");
+                                                                                   "rhs of local MsFEM problem");
 
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
 

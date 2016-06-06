@@ -33,7 +33,7 @@ struct Projection : public GridAndSpaces {
     const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalGridList localgrid_list(*problem_, coarseSpace);
     const double constant(1);
-    Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant;}, 0 );
+    Lambda lambda([&](CommonTraits::DomainType /*x*/) { return constant; }, 0);
     auto local_corrections = fill_local_corrections(lambda, localgrid_list);
 
     LocalsolutionProxy proxy(std::move(local_corrections), coarseSpace, localgrid_list);
@@ -41,8 +41,8 @@ struct Projection : public GridAndSpaces {
     CommonTraits::DiscreteFunctionType fine_scale_part(fineSpace);
     MsFEMProjection::project(proxy, fine_scale_part);
 
-    const auto norm = std::sqrt(Dune::GDT::Products::L2< CommonTraits::GridViewType >(fineSpace.grid_view())
-                                    .induced_norm(fine_scale_part));
+    const auto norm = std::sqrt(
+        Dune::GDT::Products::L2<CommonTraits::GridViewType>(fineSpace.grid_view()).induced_norm(fine_scale_part));
     EXPECT_DOUBLE_EQ(norm, constant);
   }
 };
@@ -55,12 +55,10 @@ struct Search : public GridAndSpaces {
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch lgs(coarseSpace, localgrid_list);
 
-    for(auto&& i : Dune::XT::Common::value_range(coarseSpace.grid_view().size(0)))
-    {
+    for (auto&& i : Dune::XT::Common::value_range(coarseSpace.grid_view().size(0))) {
       auto&& lg = localgrid_list.getSubGrid(i);
       const auto lg_view = lg.leafGridView();
-      for(auto&& lg_ent : Dune::elements(lg_view))
-      {
+      for (auto&& lg_ent : Dune::elements(lg_view)) {
         auto center = lg_ent.geometry().center();
         lgs({center});
       }
@@ -68,12 +66,7 @@ struct Search : public GridAndSpaces {
   }
 };
 
-
-TEST_F(Projection, Project) {
-  this->project();
-}
-//TEST_P(Search, Project) {
+TEST_F(Projection, Project) { this->project(); }
+// TEST_P(Search, Project) {
 //  this->lg_search();
 //}
-
-

@@ -15,12 +15,8 @@ struct PointsAndStuff : public GridAndSpaces {
     const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
-//    auto proxy_view = msfem_solution_->grid_view();
+    //    auto proxy_view = msfem_solution_->grid_view();
   }
-
 };
 
-TEST_F(PointsAndStuff, LP) {
-  this->check_fine_lp_in_coarse();
-}
-
+TEST_F(PointsAndStuff, LP) { this->check_fine_lp_in_coarse(); }

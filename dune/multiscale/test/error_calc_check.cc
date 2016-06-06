@@ -20,24 +20,22 @@ struct ErrorCheck : public GridAndSpaces {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     auto& coarse_space = this->coarseSpace;
     LocalGridList localgrid_list(*problem_, coarse_space);
-    const CommonTraits::InteriorGridViewType interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+    const CommonTraits::InteriorGridViewType interior =
+        coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
     const auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
     for (const auto& coarse_entity : Dune::elements(interior)) {
       LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
 
       const auto coarse_index = coarse_indexset.index(coarse_entity);
-      local_corrections[coarse_index] =
-          Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), "correction");
+      local_corrections[coarse_index] = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(
+          localSolManager.space(), "correction");
     }
-      const auto msfem_solution = Dune::XT::Common::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
+    const auto msfem_solution =
+        Dune::XT::Common::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
     ErrorCalculator ec(*problem_, msfem_solution);
     auto errors = ec.print(DSC_LOG_INFO_0);
     return;
   }
-
 };
 
-TEST_F(ErrorCheck, LP) {
-  this->run_error_calc();
-}
-
+TEST_F(ErrorCheck, LP) { this->run_error_calc(); }

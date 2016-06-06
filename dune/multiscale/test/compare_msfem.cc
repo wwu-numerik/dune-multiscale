@@ -20,8 +20,8 @@ TEST(MsFemCompare, All) {
   EXPECT_GT(DXTC_CONFIG.get("expected_errors.msfem_exact_H1s", -1.), errorsMap["msfem_exact_H1s"]);
 
   auto second_run = msfem_algorithm();
-  for(auto error_pair : errorsMap) {
-    EXPECT_TRUE(Dune::XT::Common::FloatCmp::eq(error_pair.second, second_run[error_pair.first] ))
+  for (auto error_pair : errorsMap) {
+    EXPECT_TRUE(Dune::XT::Common::FloatCmp::eq(error_pair.second, second_run[error_pair.first]))
         << "FloatCmp " << error_pair.second << "\n      != " << second_run[error_pair.first];
   }
 }

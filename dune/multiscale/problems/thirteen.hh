@@ -29,7 +29,7 @@ struct ModelProblemData : public IModelProblemData {
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
   Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-            Dune::XT::Common::Configuration /*config_in*/);
+         Dune::XT::Common::Configuration /*config_in*/);
 
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };

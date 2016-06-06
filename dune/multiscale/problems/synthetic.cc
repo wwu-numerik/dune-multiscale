@@ -63,16 +63,13 @@ static double get_eps(const Dune::XT::Common::Configuration& config_in) {
 
 Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                Dune::XT::Common::Configuration config_in)
-: epsilon_(get_eps(config_in))
-{}
+  : epsilon_(get_eps(config_in)) {}
 Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration config_in)
- : epsilon_(get_eps(config_in))
-{}
+  : epsilon_(get_eps(config_in)) {}
 ExactSolution::ExactSolution(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                              Dune::XT::Common::Configuration config_in)
-: epsilon_(get_eps(config_in))
-{}
+  : epsilon_(get_eps(config_in)) {}
 
 PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   constexpr double pi_square = M_PI * M_PI;
@@ -92,9 +89,10 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
                       ((-1.0) * epsilon_ * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
                       (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
-  const auto d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-                         (2.0 * pi_square * (epsilon_ + (1.0 / epsilon_)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
-                         (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
+  const auto d_x0_x0_u =
+      -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
+      (2.0 * pi_square * (epsilon_ + (1.0 / epsilon_)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
+      (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
   const auto d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
                          (2.0 * pi_square * epsilon_ * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);

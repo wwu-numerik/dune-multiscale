@@ -59,6 +59,7 @@ public:
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
   virtual size_t order() const final override;
+
 private:
   const double epsilon_;
 };
@@ -74,6 +75,7 @@ public:
                               Problem::JacobianRangeType& flux) const final override;
 
   virtual size_t order() const final override;
+
 private:
   const double epsilon_;
 };
@@ -87,6 +89,7 @@ public:
   PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const final override;
   virtual size_t order() const final override;
   virtual std::string name() const final override;
+
 private:
   const double epsilon_;
 };
@@ -94,7 +97,8 @@ private:
 class DirichletData : public DirichletDataBase {
 public:
   DirichletData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
-                Dune::XT::Common::Configuration config_in) : solution_(global, local, config_in) {}
+                Dune::XT::Common::Configuration config_in)
+    : solution_(global, local, config_in) {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
   PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;

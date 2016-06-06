@@ -48,13 +48,13 @@ void Dune::Multiscale::init(int argc, char** argv) {
   Dune::XT::Common::install_signal_handler(SIGTERM, handle_sigterm);
 #ifdef MS_TIMED_LOGGER
   Dune::XT::Common::TimedLogger().create(20,          // max info level
-                            20,          // max debug level
-                            true,        // warnings are enabled (the default)
-                            true,        // colors are enabled (the default)
-                            "white",     // info color (the default)
-                            "lightgrey", // debug color (the default)
-                            "red"        // warning color (the default)
-                            );
+                                         20,          // max debug level
+                                         true,        // warnings are enabled (the default)
+                                         true,        // colors are enabled (the default)
+                                         "white",     // info color (the default)
+                                         "lightgrey", // debug color (the default)
+                                         "red"        // warning color (the default)
+                                         );
 #endif
 }
 
@@ -92,15 +92,15 @@ void Dune::Multiscale::mem_usage() {
   long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
   // write output on rank zero
   if (comm.rank() == 0) {
-    std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(
-        Dune::XT::Common::make_ofstream(std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
+    std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(Dune::XT::Common::make_ofstream(
+        std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/memory.csv")));
     *memoryConsFile << "global.maxPeakMemoryConsumption,global.meanPeakMemoryConsumption\n" << maxPeakMemConsumption
                     << "," << meanPeakMemConsumption << std::endl;
   }
 }
 
 void Dune::Multiscale::dump_environment() {
-  std::unique_ptr<boost::filesystem::ofstream> of(
-      Dune::XT::Common::make_ofstream(std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/env.txt")));
+  std::unique_ptr<boost::filesystem::ofstream> of(Dune::XT::Common::make_ofstream(
+      std::string(DXTC_CONFIG_GET("global.datadir", "data/")) + std::string("/env.txt")));
   Dune::XT::Common::dump_environment(*of);
 }

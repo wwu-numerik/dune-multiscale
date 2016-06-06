@@ -2,8 +2,8 @@
 #include "df_io.hh"
 #include <dune/xt/common/string.hh>
 
-Dune::Multiscale::DiskBackend&
-Dune::Multiscale::DiscreteFunctionIO::get_disk(const XT::Common::Configuration& config, std::string filename) {
+Dune::Multiscale::DiskBackend& Dune::Multiscale::DiscreteFunctionIO::get_disk(const XT::Common::Configuration& config,
+                                                                              std::string filename) {
   return *get(disk_, filename, config, filename);
 }
 

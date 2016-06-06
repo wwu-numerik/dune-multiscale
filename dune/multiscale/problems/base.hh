@@ -215,16 +215,16 @@ namespace DMP = Dune::Multiscale::Problem;
 #define MSCONSTANTFUNCTION(classname, constant)                                                                        \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,\
-Dune::XT::Common::Configuration /*config_in*/)                                                                                                        \
+    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+              Dune::XT::Common::Configuration /*config_in*/)                                                           \
       : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant) {}                                          \
   };
 
 #define MSNULLFUNCTION(classname)                                                                                      \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,\
-Dune::XT::Common::Configuration /*config_in*/)                                                                                                        \
+    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+              Dune::XT::Common::Configuration /*config_in*/)                                                           \
       : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
   };
 

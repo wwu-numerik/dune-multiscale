@@ -29,9 +29,10 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
 
   const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
   const auto validator = Dune::XT::Common::ValidateLess<CommonTraits::DomainType>(CommonTraits::DomainType(1));
-  const auto coarse_cells = problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
-  const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
-
+  const auto coarse_cells =
+      problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
+  const auto microPerMacro =
+      problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
 
   array<unsigned int, world_dim> elements, overCoarse, overFine;
 
@@ -69,8 +70,7 @@ Dune::Multiscale::make_grids(const DMP::ProblemContainer& problem, const bool ch
 }
 
 template <class T>
-inline std::ostream& operator<<(std::ostream& s, const Dune::Stuff::Common::MinMaxAvg<T>& d)
-{
+inline std::ostream& operator<<(std::ostream& s, const Dune::Stuff::Common::MinMaxAvg<T>& d) {
   d.output(s);
   return s;
 }
@@ -84,8 +84,10 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
   array<unsigned int, world_dim> elements, overFine;
   std::tie(lowerLeft, upperRight, elements, std::ignore, overFine) = setup(problem);
   const auto validator = Dune::XT::Common::ValidateLess<CommonTraits::DomainType>(CommonTraits::DomainType(1));
-  const auto coarse_cells = problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
-  const auto microPerMacro = problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
+  const auto coarse_cells =
+      problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
+  const auto microPerMacro =
+      problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
 
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
     elements[i] = coarse_cells[i] * microPerMacro[i];
@@ -106,19 +108,22 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
     //          << " | " << coarse_view.size(0) << '\n');
     const auto coarse_dimensions = DSG::dimensions(coarse_view);
     const auto fine_dimensions = DSG::dimensions(fine_view);
-    DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl ;
-    // no idea why this check was here itfp
-//    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
-//      const bool match =
-//          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min()) &&
-//          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
-//      if (!match) {
-//        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
+    DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl;
+    //    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
+    //      const bool match =
+    //          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
+    //          fine_dimensions.coord_limits[i].min()) &&
+    //          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(),
+    //          fine_dimensions.coord_limits[i].max());
+    //      if (!match) {
+    //        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
 //                       you use different refinements in different spatial dimensions?\n"
-//                                                                                      << coarse_dimensions.coord_limits[i]
-//                                                                                      << " | " << fine_dimensions.coord_limits[i]);
-//      }
-//    }
+    //                                                                                      <<
+    //                                                                                      coarse_dimensions.coord_limits[i]
+    //                                                                                      << " | " <<
+    //                                                                                      fine_dimensions.coord_limits[i]);
+    //      }
+    //    }
   }
   return fine_gridptr;
 }

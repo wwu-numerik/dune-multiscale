@@ -276,8 +276,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       solution_output(problem_, *fem_solution_, "fine-cg-fem_solution_");
   }
 
-  std::unique_ptr<boost::filesystem::ofstream> csvfile(
-      Dune::XT::Common::make_ofstream(std::string(problem_.config().get("global.datadir", "data/")) + std::string("/errors.csv")));
+  std::unique_ptr<boost::filesystem::ofstream> csvfile(Dune::XT::Common::make_ofstream(
+      std::string(problem_.config().get("global.datadir", "data/")) + std::string("/errors.csv")));
   const std::string sep(",");
   for (const auto& key_val : csv) {
     *csvfile << key_val.first << sep;
