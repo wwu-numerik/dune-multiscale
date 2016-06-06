@@ -14,11 +14,12 @@ namespace Multiscale {
 namespace Problem {
 namespace Synthetic {
 
-static constexpr double epsilon = 0.05;
+static constexpr double epsilon_ = 0.05;
 static constexpr double M_TWOPI = M_PI * 2.0;
 
-ModelProblemData::ModelProblemData()
-  : IModelProblemData()
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+                                   Dune::XT::Common::Configuration config_in)
+  : IModelProblemData(global, local, config_in)
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_() {}
 
@@ -56,13 +57,26 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-Source::Source() {}
-Diffusion::Diffusion() {}
-ExactSolution::ExactSolution() {}
+static double get_eps(const Dune::XT::Common::Configuration& config_in) {
+  return config_in.get<double>("problem.epsilon", 0.05);
+}
+
+Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+               Dune::XT::Common::Configuration config_in)
+: epsilon_(get_eps(config_in))
+{}
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration config_in)
+ : epsilon_(get_eps(config_in))
+{}
+ExactSolution::ExactSolution(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                             Dune::XT::Common::Configuration config_in)
+: epsilon_(get_eps(config_in))
+{}
 
 PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   constexpr double pi_square = M_PI * M_PI;
-  const double x0_eps = (x[0] / epsilon);
+  const double x0_eps = (x[0] / epsilon_);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
   const double coefficient_0 = 2.0 * (1.0 / (8.0 * M_PI * M_PI)) * (1.0 / (2.0 + cos_2_pi_x0_eps));
@@ -72,24 +86,24 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const {
   const double sin_2_pi_x1 = sin(M_TWOPI * x[1]);
 
   const double d_x0_coefficient_0 =
-      pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (M_TWOPI)) * (1.0 / epsilon) * sin_2_pi_x0_eps;
+      pow(2.0 + cos_2_pi_x0_eps, -2.0) * (1.0 / (M_TWOPI)) * (1.0 / epsilon_) * sin_2_pi_x0_eps;
 
   const auto grad_u = (M_TWOPI * cos_2_pi_x0 * sin_2_pi_x1) +
-                      ((-1.0) * epsilon * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
+                      ((-1.0) * epsilon_ * M_PI * (sin_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps)) +
                       (M_PI * (cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps));
 
   const auto d_x0_x0_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-                         (2.0 * pi_square * (epsilon + (1.0 / epsilon)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
+                         (2.0 * pi_square * (epsilon_ + (1.0 / epsilon_)) * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps) -
                          (4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 
   const auto d_x1_x1_u = -(4.0 * pi_square * sin_2_pi_x0 * sin_2_pi_x1) -
-                         (2.0 * pi_square * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+                         (2.0 * pi_square * epsilon_ * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 }
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
-  const double x0_eps = (x[0] / epsilon);
+  const double x0_eps = (x[0] / epsilon_);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
   const double cos_eval = cos(M_TWOPI * x0_eps);
   ret[0][0] = 2.0 * inv_pi8pi * (1.0 / (2.0 + cos_eval));
@@ -113,7 +127,7 @@ std::string ExactSolution::name() const { return "synthetic.exact"; }
 PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   // approximation obtained by homogenized solution + first corrector
 
-  const double x0_eps = (x[0] / epsilon);
+  const double x0_eps = (x[0] / epsilon_);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
   const double x0_2_pi = M_TWOPI * x[0];
   const double x1_2_pi = M_TWOPI * x[1];
@@ -121,11 +135,11 @@ PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const {
   const double cos_2_pi_x0 = cos(x0_2_pi);
   const double sin_2_pi_x1 = sin(x1_2_pi);
 
-  y = sin_2_pi_x0 * sin_2_pi_x1 + (0.5 * epsilon * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
+  y = sin_2_pi_x0 * sin_2_pi_x1 + (0.5 * epsilon_ * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 } // evaluate
 
 PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const {
-  const double x0_eps = (x[0] / epsilon);
+  const double x0_eps = (x[0] / epsilon_);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
   const double sin_2_pi_x0_eps = sin(M_TWOPI * x0_eps);
   const double x0_2_pi = M_TWOPI * x[0];
@@ -134,7 +148,7 @@ PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& gr
   const double cos_2_pi_x0 = cos(x0_2_pi);
   const double sin_2_pi_x1 = sin(x1_2_pi);
   const double cos_2_pi_x1 = cos(x1_2_pi);
-  const double eps_pi_sin_2_pi_x0_eps = epsilon * M_PI * sin_2_pi_x0_eps;
+  const double eps_pi_sin_2_pi_x0_eps = epsilon_ * M_PI * sin_2_pi_x0_eps;
 
   grad_u[0][1] = (M_TWOPI * sin_2_pi_x0 * cos_2_pi_x1) + (eps_pi_sin_2_pi_x0_eps * cos_2_pi_x0 * cos_2_pi_x1);
 

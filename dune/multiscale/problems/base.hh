@@ -8,6 +8,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/xt/common/memory.hh>
+#include <dune/xt/common/configuration.hh>
 #include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
@@ -170,7 +171,8 @@ protected:
 
 public:
   //! Constructor for ModelProblemData
-  inline IModelProblemData() {}
+  inline IModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                           Dune::XT::Common::Configuration /*config_in*/) {}
   virtual ~IModelProblemData() {}
 
   /**
@@ -213,14 +215,16 @@ namespace DMP = Dune::Multiscale::Problem;
 #define MSCONSTANTFUNCTION(classname, constant)                                                                        \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname()                                                                                                        \
+    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,\
+Dune::XT::Common::Configuration /*config_in*/)                                                                                                        \
       : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant) {}                                          \
   };
 
 #define MSNULLFUNCTION(classname)                                                                                      \
   class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
   public:                                                                                                              \
-    classname()                                                                                                        \
+    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,\
+Dune::XT::Common::Configuration /*config_in*/)                                                                                                        \
       : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
   };
 

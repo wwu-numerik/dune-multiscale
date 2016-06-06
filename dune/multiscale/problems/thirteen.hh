@@ -28,12 +28,16 @@ struct ModelProblemData : public IModelProblemData {
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
+  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+            Dune::XT::Common::Configuration /*config_in*/);
+
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
 class Diffusion : public DiffusionBase {
 public:
-  Diffusion();
+  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+            Dune::XT::Common::Configuration /*config_in*/);
 
   void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;

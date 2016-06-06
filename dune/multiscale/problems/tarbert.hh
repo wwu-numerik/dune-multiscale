@@ -24,7 +24,8 @@ namespace Tarbert {
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const final override { return false; }
 
-  ModelProblemData();
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                   Dune::XT::Common::Configuration /*config_in*/);
 
   std::string getMacroGridFile() const final override;
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -39,7 +40,8 @@ private:
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-  Source();
+  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+         Dune::XT::Common::Configuration /*config_in*/);
 
   void evaluate(const DomainType& x, RangeType& y) const final override;
   virtual size_t order() const final override { return 3; }
@@ -47,7 +49,8 @@ public:
 
 class Diffusion : public DiffusionBase {
 public:
-  Diffusion();
+  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+            Dune::XT::Common::Configuration /*config_in*/);
   ~Diffusion();
 
   //! currently used in gdt assembler
@@ -70,7 +73,8 @@ class DirichletData : public DirichletDataBase {
 private:
 public:
 public:
-  DirichletData() {}
+  DirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                Dune::XT::Common::Configuration /*config_in*/) {}
 
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
@@ -79,7 +83,8 @@ class NeumannData : public NeumannDataBase {
 private:
 public:
 public:
-  NeumannData() {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration /*config_in*/) {}
 
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };

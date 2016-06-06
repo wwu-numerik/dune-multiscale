@@ -14,8 +14,9 @@ namespace Multiscale {
 namespace Problem {
 namespace Tarbert {
 
-ModelProblemData::ModelProblemData()
-  : IModelProblemData()
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+                                   Dune::XT::Common::Configuration config_in)
+  : IModelProblemData(global, local, config_in)
   , subBoundaryInfo_() {
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
       DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
@@ -81,13 +82,15 @@ void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
     y = 0.0;
 } // evaluate
 
-Source::Source() {}
+Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+               Dune::XT::Common::Configuration /*config_in*/) {}
 
 void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
   y = typename CommonTraits::RangeType(0.0);
 } // evaluate
 
-Diffusion::Diffusion()
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration /*config_in*/)
   : deltas_{6.096, 3.048, 0.6096}
   , permeability_(nullptr)
   , permMatrix_(0.0) {

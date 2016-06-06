@@ -81,7 +81,8 @@ private:
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const final override { return false; }
 
-  ModelProblemData();
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                   Dune::XT::Common::Configuration /*config_in*/);
 
   std::string getMacroGridFile() const final override;
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -100,7 +101,8 @@ private:
 
 class Diffusion : public DiffusionBase {
 public:
-  Diffusion();
+  Diffusion(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+            Dune::XT::Common::Configuration config_in);
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
@@ -124,7 +126,8 @@ private:
 
 class DirichletData : public DirichletDataBase {
 public:
-  DirichletData() {}
+  DirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                Dune::XT::Common::Configuration /*config_in*/) {}
   virtual ~DirichletData() {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
@@ -132,7 +135,8 @@ public:
 
 class NeumannData : public NeumannDataBase {
 public:
-  NeumannData() {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration /*config_in*/) {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };

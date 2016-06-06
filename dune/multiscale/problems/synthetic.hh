@@ -38,7 +38,8 @@ namespace Synthetic {
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const final override { return true; }
 
-  ModelProblemData();
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                   Dune::XT::Common::Configuration /*config_in*/);
 
   std::string getMacroGridFile() const final override;
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -53,15 +54,19 @@ private:
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-  Source();
+  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+         Dune::XT::Common::Configuration config_in);
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
   virtual size_t order() const final override;
+private:
+  const double epsilon_;
 };
 
 class Diffusion : public DiffusionBase {
 public:
-  Diffusion();
+  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+            Dune::XT::Common::Configuration config_in);
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
@@ -69,21 +74,27 @@ public:
                               Problem::JacobianRangeType& flux) const final override;
 
   virtual size_t order() const final override;
+private:
+  const double epsilon_;
 };
 
 class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
 public:
-  ExactSolution();
+  ExactSolution(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator /*local*/,
+                Dune::XT::Common::Configuration config_in);
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
   PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const final override;
   virtual size_t order() const final override;
   virtual std::string name() const final override;
+private:
+  const double epsilon_;
 };
 
 class DirichletData : public DirichletDataBase {
 public:
-  DirichletData() {}
+  DirichletData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+                Dune::XT::Common::Configuration config_in) : solution_(global, local, config_in) {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
   PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
@@ -94,7 +105,8 @@ private:
 
 class NeumannData : public NeumannDataBase {
 public:
-  NeumannData() {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration config_in) {}
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };

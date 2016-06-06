@@ -31,7 +31,8 @@ void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.
 
 void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
 
-Diffusion::Diffusion() {}
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration /*config_in*/) {}
 
 void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
 

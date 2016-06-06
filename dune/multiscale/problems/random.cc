@@ -26,8 +26,9 @@ namespace Multiscale {
 namespace Problem {
 namespace Random {
 
-ModelProblemData::ModelProblemData()
-  : IModelProblemData()
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+                                   Dune::XT::Common::Configuration config_in)
+  : IModelProblemData(global, local, config_in)
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_() {}
 
@@ -108,7 +109,8 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-Diffusion::Diffusion() {}
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration /*config_in*/) {}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
 #if HAVE_FFTW
