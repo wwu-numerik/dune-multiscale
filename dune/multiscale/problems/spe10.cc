@@ -14,6 +14,16 @@ namespace Multiscale {
 namespace Problem {
 namespace SPE10 {
 
+static const std::string model2_filename = "spe10_permeability.dat";
+static const size_t model2_x_elements = 60;
+static const size_t model2_y_elements = 220;
+static const size_t model2_z_elements = 85;
+static const double model_2_length_x = 365.76;
+static const double model_2_length_y = 670.56;
+static const double model_2_length_z = 51.816;
+static const double model_2_min_value = 6.65e-8; // isotropic: 0.000665
+static const double model_2_max_value = 20000;
+
 ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
@@ -87,16 +97,34 @@ void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y
 
 Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration /*config_in*/)
-  : deltas_{6.096, 3.048, 0.6096}
-  , permeability_(nullptr)
-  , permMatrix_(0.0) {
+  : permeability_(nullptr)
+{
   readPermeability();
 }
 
 Diffusion::~Diffusion() {
-  delete permeability_;
-  permeability_ = nullptr;
 }
+
+Dune::XT::Common::Configuration default_config(const std::string sub_name = "")
+{
+  Dune::XT::Common::Configuration config;
+  config["filename"] = model2_filename;
+  config["name"] = "Spe10Diffusion";
+  config["lower_left"] = "[0 0 0]";
+  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x)
+                          + " " + Dune::XT::Common::to_string(model_2_length_y)
+                          + " " + Dune::XT::Common::to_string(model_2_length_z)+ "]";
+  config["anisotropic"] = "true";
+  config["min"] = Dune::XT::Common::to_string(model_2_min_value);
+  config["max"] = Dune::XT::Common::to_string(model_2_max_value);
+  if (sub_name.empty())
+    return config;
+  else {
+    Dune::XT::Common::Configuration tmp;
+    tmp.add(config, sub_name);
+    return tmp;
+  }
+} // ... default_config(...)
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
@@ -111,28 +139,35 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
     DUNE_THROW(IOError, "Data file for Groundwaterflow permeability could not be opened!");
   }
   // 3 is the maximum space dimension
-  for (int dim = 0; dim < DomainType::dimension; ++dim)
-    permIntervalls_[dim] = std::floor(x[dim] / deltas_[dim]);
 
-  int offset = 0;
-  switch (DomainType::dimension) {
-    case 1:
-      DUNE_THROW(NotImplemented, "SPE10 is not implemented for 1D!");
-    case 2:
-      offset = permIntervalls_[0] + permIntervalls_[1] * 60;
-      permMatrix_[0][0] = permeability_[offset];
-      permMatrix_[1][1] = permeability_[offset + 1122000];
-      break;
-    case 3:
-      offset = permIntervalls_[0] + permIntervalls_[1] * 60 + permIntervalls_[2] * 220 * 60;
-      permMatrix_[0][0] = permeability_[offset];
-      permMatrix_[1][1] = permeability_[offset + 1122000];
-      permMatrix_[2][2] = permeability_[offset + 2244000];
-      break;
+  const auto center = x;
+  std::vector<size_t> whichPartition(dimDomain, 0);
+  const Dune::XT::Common::FieldVector< CommonTraits::DomainFieldType, CommonTraits::world_dim > ll = default_config().get< CommonTraits::DomainType >("lower_left");
+  const Dune::XT::Common::FieldVector< CommonTraits::DomainFieldType, CommonTraits::world_dim > ur = default_config().get< CommonTraits::DomainType >("upper_right");
+  std::array<size_t, CommonTraits::world_dim> ne{{model2_x_elements, model2_y_elements, model2_z_elements}};
+
+  for (size_t dd = 0; dd < dimDomain; ++dd) {
+    // for points that are on upperRight_[d], this selects one partition too much
+    // so we need to cap this
+    whichPartition[dd] =
+        std::min(size_t(std::floor(ne[dd] * ((center[dd] - ll[dd]) / (ur[dd] - ll[dd])))), ne[dd] - 1);
   }
-
-  y = permMatrix_;
+  size_t subdomain = 0;
+  if (dimDomain == 1)
+    subdomain = whichPartition[0];
+  else if (dimDomain == 2)
+    subdomain = whichPartition[0] + whichPartition[1] * ne[0];
+  else
+    subdomain = whichPartition[0] + whichPartition[1] * ne[0] + whichPartition[2] * ne[1] * ne[0];
+  const auto ii = subdomain;
+  const size_t entries_per_dim = model2_x_elements*model2_y_elements*model2_z_elements;
+  const bool anisotropic = true;
+  y[0][0] = permeability_[ii];
+  y[1][1] = permeability_[anisotropic ?   entries_per_dim + ii : ii];
+  y[2][2] = permeability_[anisotropic ? 2*entries_per_dim + ii : ii];
 }
+
+
 
 void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const {
@@ -142,22 +177,31 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
 } // diffusiveFlux
 
 void Diffusion::readPermeability() {
-
-  std::string filename = "spe10_permeability.dat";
-  std::ifstream file(filename.c_str());
-  double val;
-  if (!file) { // file couldn't be opened
-    return;
+auto min = default_config().get< RangeFieldType >("min");
+auto max = default_config().get< RangeFieldType >("max");
+  std::ifstream datafile(model2_filename);
+  if (!datafile.is_open())
+    DUNE_THROW(spe10_model2_data_file_missing, "could not open '" << model2_filename << "'!");
+  if (!(max > min))
+    DUNE_THROW(Dune::RangeError,
+               "max (is " << max << ") has to be larger than min (is " << min << ")!");
+  const RangeFieldType scale = (max - min) / (model_2_max_value - model_2_min_value);
+  const RangeFieldType shift = min - scale*model_2_min_value;
+  // read all the data from the file
+  const size_t entries_per_dim = model2_x_elements*model2_y_elements*model2_z_elements;
+//  std::vector< double > data(3*entries_per_dim);
+  const size_t data_size = 3*entries_per_dim;
+  permeability_ = std::unique_ptr<double[]>(new double[data_size]());
+  double tmp = 0;
+  size_t counter = 0;
+  while (datafile >> tmp) {
+    permeability_[counter++] = (tmp*scale) + shift;
   }
-  file >> val;
-  int counter = 0;
-  permeability_ = new double[3366000];
-  while (!file.eof()) {
-    // keep reading until end-of-file
-    permeability_[counter++] = val;
-    file >> val; // sets EOF flag if no value found
-  }
-  file.close();
+  datafile.close();
+  if (counter != data_size)
+    DUNE_THROW(Dune::IOError,
+               "wrong number of entries in '" << model2_filename << "' (are " << counter << ", should be "
+               << data_size << ")!");
   return;
 } /* readPermeability */
 

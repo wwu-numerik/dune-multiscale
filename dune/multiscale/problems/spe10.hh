@@ -21,6 +21,8 @@ namespace Problem {
 
 namespace SPE10 {
 
+class spe10_model2_data_file_missing : public Dune::IOError {};
+
 struct ModelProblemData : public IModelProblemData {
   virtual bool hasExactSolution() const final override { return false; }
 
@@ -60,11 +62,7 @@ public:
 
 private:
   void readPermeability();
-
-  std::vector<double> deltas_;
-  double* permeability_; //! TODO automatic memory
-  mutable DomainType permIntervalls_;
-  mutable Dune::FieldMatrix<double, DomainType::dimension, DomainType::dimension> permMatrix_;
+  std::unique_ptr<double[]> permeability_;
 };
 
 class DirichletData : public DirichletDataBase {
