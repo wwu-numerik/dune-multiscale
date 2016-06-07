@@ -86,7 +86,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
     // this situation, which is why we do not solve local msfem problems for zero-right-hand-side, since we already know
     // the result.
-    //! TODO calculating the norm seems to have a bad perf impact, is the instability actually still there?
+    //! TODO calculating the norm has really bad performance impact, is the instability actually still there?
     //    const auto norm = GDT::Products::L2<typename MsFEMTraits::LocalGridViewType>(current_rhs.space().grid_view())
     //                          .induced_norm(current_rhs);
     //    if (norm < 1e-12) {
@@ -94,6 +94,7 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
     //      MS_LOG_DEBUG << boost::format("Local MsFEM problem with solution zero. (corrector %d)") % i << std::endl;
     //      continue;
     //    }
+
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
     if (i >= numInnerCorrectors && !hasBoundary) {
       current_solution.vector() *= 0;
@@ -108,12 +109,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
-  if (grid.comm().size() > 0)
-    MS_LOG_DEBUG << "Rank " << grid.comm().rank() << " will solve local problems for " << coarseGridSize
-                 << " coarse entities!" << std::endl;
-  else {
-    MS_LOG_DEBUG << "Will solve local problems for " << coarseGridSize << " coarse entities!" << std::endl;
-  }
+  MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n")
+                  % grid.comm().rank() % coarseGridSize;
   DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
@@ -128,6 +125,7 @@ void LocalProblemSolver::solve_for_all_cells() {
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
+
 
     // take time
     //    DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
