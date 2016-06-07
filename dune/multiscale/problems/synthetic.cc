@@ -23,9 +23,6 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper:
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_() {}
 
-std::string ModelProblemData::getMacroGridFile() const {
-  return ("../dune/multiscale/grids/macro_grids/elliptic/msfem_cube_three.dgf");
-}
 
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);

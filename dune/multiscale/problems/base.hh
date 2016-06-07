@@ -175,13 +175,6 @@ public:
                            Dune::XT::Common::Configuration /*config_in*/) {}
   virtual ~IModelProblemData() {}
 
-  /**
-   * @brief getMacroGridFile returns a path to a Dune::Grid loadable file (dgf)
-   * @return macroGridName is set to said path
-   * \todo paths need to be relative to binary
-   */
-  virtual std::string getMacroGridFile() const = 0;
-
   //! does the problem implement an exact solution?
   virtual bool hasExactSolution() const { return false; }
 

@@ -84,7 +84,6 @@ struct ModelProblemData : public IModelProblemData {
   ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                    Dune::XT::Common::Configuration /*config_in*/);
 
-  std::string getMacroGridFile() const final override;
   const BoundaryInfoType& boundaryInfo() const final override;
   const SubBoundaryInfoType& subBoundaryInfo() const final override;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;

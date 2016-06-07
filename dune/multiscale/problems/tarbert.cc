@@ -24,10 +24,6 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper:
       DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
-std::string ModelProblemData::getMacroGridFile() const {
-  return ("../dune/multiscale/grids/macro_grids/elliptic/spe10.dgf");
-}
-
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
