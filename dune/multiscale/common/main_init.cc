@@ -73,7 +73,7 @@ int Dune::Multiscale::handle_exception(const std::exception& exp) {
 }
 
 int Dune::Multiscale::handle_exception(const tbb::tbb_exception& exp) {
-  std::cerr << "Failed with " << exp.name() << ": " << exp.what();
+  std::cerr << "Failed with tbb::exception" << exp.name() << ": " << exp.what();
   DXTC_TIMINGS.output_per_rank("profiler");
   mem_usage();
   return Dune::Stuff::abort_all_mpi_processes();
