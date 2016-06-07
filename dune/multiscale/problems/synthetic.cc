@@ -63,7 +63,9 @@ Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator
   : epsilon_(get_eps(config_in)) {}
 Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration config_in)
-  : epsilon_(get_eps(config_in)) {}
+  : epsilon_(get_eps(config_in)) {
+  MS_LOG_INFO_0 << "Using synthetic diffusion with epsilon = " << epsilon_ << std::endl;
+}
 ExactSolution::ExactSolution(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                              Dune::XT::Common::Configuration config_in)
   : epsilon_(get_eps(config_in)) {}
