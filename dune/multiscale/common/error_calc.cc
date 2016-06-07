@@ -105,7 +105,6 @@ void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::
   const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorPartition>();
   const auto coarse_dimensions = DSG::dimensions(coarse_view);
   const auto fine_dimensions = DSG::dimensions(fine_view);
-  DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl;
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
     const bool match =
         Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
