@@ -111,7 +111,14 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);
   options.set("post_check_solves_system", problem_.config().get("msfem.coarse_solver.check", false), overwrite);
-  inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
+  try {
+    inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
+  }
+  catch (Dune::Stuff::Exceptions::linear_solver_failed& f) {
+    // prevents all ranks from outputting the same detailed error message
+    MS_LOG_ERROR_0 << f.what();
+    DUNE_THROW(InvalidStateException, "Coarse solve failed.");
+  }
 
   if (!solution.dofs_valid())
     DUNE_THROW(InvalidStateException, "Degrees of freedom of coarse solution are not valid!");

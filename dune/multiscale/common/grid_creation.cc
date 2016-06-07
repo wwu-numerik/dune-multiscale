@@ -103,27 +103,10 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
                  << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
-    //    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim))
-    //      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
-    //          << " | " << coarse_view.size(0) << '\n');
-    const auto coarse_dimensions = DSG::dimensions(coarse_view);
-    const auto fine_dimensions = DSG::dimensions(fine_view);
-    DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl;
-    //    for (const auto i : Dune::XT::Common::value_range(world_dim)) {
-    //      const bool match =
-    //          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
-    //          fine_dimensions.coord_limits[i].min()) &&
-    //          Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(),
-    //          fine_dimensions.coord_limits[i].max());
-    //      if (!match) {
-    //        DUNE_THROW(InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
-//                       you use different refinements in different spatial dimensions?\n"
-    //                                                                                      <<
-    //                                                                                      coarse_dimensions.coord_limits[i]
-    //                                                                                      << " | " <<
-    //                                                                                      fine_dimensions.coord_limits[i]);
-    //      }
-    //    }
+    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
+      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
+          << " | " << coarse_view.size(0) << '\n');
+    }
   }
   return fine_gridptr;
 }

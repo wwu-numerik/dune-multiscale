@@ -27,6 +27,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
+#include <dune/stuff/grid/information.hh>
 #include <dune/xt/common/filesystem.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
@@ -99,6 +100,29 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
   }
 }
 
+void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::GridType& fine_grid) {
+  const auto fine_view = fine_grid.leafGridView<CommonTraits::InteriorPartition>();
+  const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorPartition>();
+  const auto coarse_dimensions = DSG::dimensions(coarse_view);
+  const auto fine_dimensions = DSG::dimensions(fine_view);
+  DXTC_LOG_ERROR << "COARSE\n" << coarse_dimensions << "\nFINE\n" << fine_dimensions << std::endl;
+  for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
+    const bool match =
+        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
+                                       fine_dimensions.coord_limits[i].min()) &&
+        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(),
+                                       fine_dimensions.coord_limits[i].max());
+    if (!match) {
+      DUNE_THROW(Dune::InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
+                 you use different refinements in different spatial dimensions?\n"
+                                                                                <<
+                                                                                coarse_dimensions.coord_limits[i]
+                                                                                << " | " <<
+                                                                                fine_dimensions.coord_limits[i]);
+    }
+  }
+}
+
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
   using namespace std;
   using namespace DSC;
@@ -136,6 +160,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
 
   CommonTraits::DiscreteFunctionType fine_msfem_solution(fine_space, "MsFEM_Solution");
   if (msfem_solution_) {
+    match_check(*coarse_grid, *fine_grid);
     MsFEMProjection::project(*msfem_solution_, fine_msfem_solution);
     if (problem_.config().get("global.vtk_output", false)) {
       MS_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
