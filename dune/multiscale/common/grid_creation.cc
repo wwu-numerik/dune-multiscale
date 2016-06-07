@@ -103,10 +103,10 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
                  << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
-    if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
-      DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
-          << " | " << coarse_view.size(0) << '\n');
-    }
+//if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
+//DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
+//<< " | " << coarse_view.size(0) << '\n');
+//}
   }
   return fine_gridptr;
 }
