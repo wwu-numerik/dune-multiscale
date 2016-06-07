@@ -23,7 +23,6 @@ namespace Thirteen {
 struct ModelProblemData : public IModelProblemData {
   ModelProblemData();
 
-  std::string getMacroGridFile() const final override;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
