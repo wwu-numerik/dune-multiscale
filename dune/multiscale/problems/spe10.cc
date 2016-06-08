@@ -88,7 +88,7 @@ ParameterTree ModelProblemData::boundary_settings() const {
 void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
-  if (Dune::XT::Common::FloatCmp::eq(x[0], CommonTraits::RangeFieldType(0)))
+  if (Dune::XT::Common::FloatCmp::eq(x[1], CommonTraits::RangeFieldType(0)))
     y = 1.0;
   else
     y = 0.0;
