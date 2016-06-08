@@ -34,23 +34,30 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper:
       DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
+Dune::XT::Common::Configuration default_config()
+{
+  Dune::XT::Common::Configuration config;
+  config["filename"] = model2_filename;
+  config["name"] = "Spe10Diffusion";
+  config["lower_left"] = "[0 0 0]";
+  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x)
+                          + " " + Dune::XT::Common::to_string(model_2_length_y)
+                          + " " + Dune::XT::Common::to_string(model_2_length_z)+ "]";
+  config["upper_right"] = "[2 5 1]";
+  config["anisotropic"] = "true";
+  config["min"] = Dune::XT::Common::to_string(model_2_min_value);
+  config["max"] = Dune::XT::Common::to_string(model_2_max_value);
+  return config;
+} // ... default_config(...)
+
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
-  switch (View::dimension /*View is defined in IModelProblemData*/) {
-    case 1:
-      DUNE_THROW(NotImplemented, "SPE10 is not defined in 1D!");
-      break;
-    case 2:
-      upperRight[0] = 365.76;
-      upperRight[1] = 670.56;
-      break;
-    case 3:
-      upperRight[0] = 365.76;
-      upperRight[1] = 670.56;
-      upperRight[2] = 51.816;
-  }
-  return {lowerLeft, upperRight};
+  if(View::dimension != 3)
+    DUNE_THROW(Dune::InvalidStateException, "SPE data only available for world dim == 3");
+  const auto ll = default_config().get< CommonTraits::DomainType >("lower_left");
+  const auto ur = default_config().get< CommonTraits::DomainType >("upper_right");
+  return {ll, ur};
 }
 
 const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
@@ -69,21 +76,20 @@ ParameterTree ModelProblemData::boundary_settings() const {
         DUNE_THROW(NotImplemented, "Boundary values are not implemented for SPE10 in 1D!");
         break;
       case 2:
-        boundarySettings["dirichlet.0"] = "[0.0 -1.0]";
+        boundarySettings["dirichlet.0"] = "[0.0 1.0]";
         break;
       case 3:
         boundarySettings["dirichlet.0"] = "[0.0 1.0 0.0]";
-        boundarySettings["dirichlet.1"] = "[0.0 -1.0 0.0]";
     }
   }
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 1.0; } // evaluate
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
 
 void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
-  if (std::abs(x[1] - 670.56) < 1e-6)
-    y = 1.0e-3;
+  if (Dune::XT::Common::FloatCmp::eq(x[0], CommonTraits::RangeFieldType(0)))
+    y = 1.0;
   else
     y = 0.0;
 } // evaluate
@@ -104,27 +110,6 @@ Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommun
 
 Diffusion::~Diffusion() {
 }
-
-Dune::XT::Common::Configuration default_config(const std::string sub_name = "")
-{
-  Dune::XT::Common::Configuration config;
-  config["filename"] = model2_filename;
-  config["name"] = "Spe10Diffusion";
-  config["lower_left"] = "[0 0 0]";
-  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x)
-                          + " " + Dune::XT::Common::to_string(model_2_length_y)
-                          + " " + Dune::XT::Common::to_string(model_2_length_z)+ "]";
-  config["anisotropic"] = "true";
-  config["min"] = Dune::XT::Common::to_string(model_2_min_value);
-  config["max"] = Dune::XT::Common::to_string(model_2_max_value);
-  if (sub_name.empty())
-    return config;
-  else {
-    Dune::XT::Common::Configuration tmp;
-    tmp.add(config, sub_name);
-    return tmp;
-  }
-} // ... default_config(...)
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
