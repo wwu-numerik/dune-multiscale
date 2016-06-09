@@ -127,7 +127,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   using namespace DSC;
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
-  const size_t over_integrate = 0; // <- would let the product use a higher quadrature order than needed
+  const size_t over_integrate = problem_.config().get("global.error.over_integrate", 0u);
 
   auto grids = make_grids(problem_);
   const auto coarse_grid = grids.first;
