@@ -31,7 +31,7 @@ public:
 };
 void NumberPrinter::develop(size_t i)
 {
-  const auto mm = Dune::XT::CommonthreadManager().thread();
+  const auto mm = Dune::XT::Common::threadManager().thread();
   cout << "Thread " << mm << ": " << i << std::endl;
 
 }

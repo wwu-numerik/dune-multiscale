@@ -36,7 +36,7 @@ void output_all(std::vector<std::unique_ptr<FunctionType>>& functions, CommonTra
 }
 
 void partition_vis_single(CommonTraits::GridType& grid, std::string function_name) {
-  const auto threadnum = Dune::XT::CommonthreadManager().max_threads();
+  const auto threadnum = Dune::XT::Common::threadManager().max_threads();
   // Dune::Fem::Parameter::replace(std::string("fem.threads.partitioningmethod"), std::string("kway"));
   auto view_ptr = grid.leafGridView();
   typedef GDT::Spaces::FV::Default<CommonTraits::GridViewType, double, 1, 1> FVSpace;
@@ -88,8 +88,6 @@ unsigned long id_to_ulong(const Dune::bigunsignedint<k>& id) {
 
 void subgrid_vis(DMP::ProblemContainer& problem, CommonTraits::GridType& coarse_grid,
                  CommonTraits::GridType& fine_grid) {
-  CommonTraits::GridProviderType coarse_grid_provider(coarse_grid);
-  CommonTraits::GridProviderType fine_grid_provider(fine_grid);
   const CommonTraits::SpaceType coarseSpace(
       CommonTraits::SpaceChooserType::PartViewType::create(coarse_grid, CommonTraits::st_gdt_grid_level));
   const CommonTraits::SpaceType fineSpace(
@@ -153,20 +151,11 @@ int main(int argc, char** argv) {
   try {
     init(argc, argv);
 
-    assert(Dune::XT::CommonthreadManager().max_threads() == DXTC_CONFIG_GET("threading.max_count", 1u));
+    assert(Dune::XT::Common::threadManager().max_threads() == DXTC_CONFIG_GET("threading.max_count", 1u));
     const std::string datadir = DXTC_CONFIG_GET("global.datadir", "data/");
 
     // generate directories for data output
     Dune::XT::Common::test_create_directory(datadir);
-
-    switch (DXTC_CONFIG_GET("msfem.oversampling_strategy", 1)) {
-      case 1:
-        break;
-      case 2:
-        break;
-      default:
-        DUNE_THROW(Dune::InvalidStateException, "Oversampling Strategy must be 1 or 2.");
-    }
 
     const auto& comm = Dune::MPIHelper::getCommunicator();
     DXTC_CONFIG.set("grids.dim", CommonTraits::world_dim);
@@ -179,10 +168,16 @@ int main(int argc, char** argv) {
     if (DXTC_CONFIG_GET("global.vtk_output", false)) {
       problem.getDiffusion().visualize(
           coarse_grid.leafGridView(),
-          OutputParameters(problem.config().get("global.datadir", "data")).fullpath("diffusion"));
+          OutputParameters(problem.config().get("global.datadir", "data")).fullpath("coarse_diffusion"));
+      problem.getDiffusion().visualize(
+          grids.second->leafGridView(),
+          OutputParameters(problem.config().get("global.datadir", "data")).fullpath("fine_diffusion"));
+      problem.getSource().visualize(
+          grids.second->leafGridView(),
+          OutputParameters(problem.config().get("global.datadir", "data")).fullpath("fine_source"));
     }
-    //    partition_vis(*grids.first, *grids.second);
-    //    subgrid_vis(*grids.first, *grids.second);
+    partition_vis(*grids.first, *grids.second);
+    subgrid_vis(problem, *grids.first, *grids.second);
     DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
     DSG::ElementVisualization::all(coarse_grid, datadir + "/coarse_element_visualization");
   } catch (Dune::Exception& e) {
