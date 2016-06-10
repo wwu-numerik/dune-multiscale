@@ -38,8 +38,8 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
 
   typedef MyGridFactory<MsFEMTraits::LocalGridType> FactoryType;
   const auto& gridCorners = problem.getModelData().gridCorners();
-  auto globalLowerLeft = gridCorners.first;
-  auto globalUpperRight = gridCorners.second;
+  const auto globalLowerLeft = gridCorners.first;
+  const auto globalUpperRight = gridCorners.second;
 
   const auto interior = coarseSpace_.grid_view().grid().leafGridView<InteriorBorder_Partition>();
   for (const auto& coarse_entity : elements(interior)) {

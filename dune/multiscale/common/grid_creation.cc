@@ -19,7 +19,7 @@ typedef tuple<CommonTraits::DomainType, CommonTraits::DomainType, array<unsigned
               array<unsigned int, CommonTraits::world_dim>> SetupReturnType;
 
 SetupReturnType setup(const DMP::ProblemContainer& problem) {
-  BOOST_ASSERT_MSG(DXTC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
+  BOOST_ASSERT_MSG(problem.config().has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");
 
   const auto world_dim = CommonTraits::world_dim;
   typedef CommonTraits::DomainType CoordType;
@@ -34,24 +34,24 @@ SetupReturnType setup(const DMP::ProblemContainer& problem) {
   const auto microPerMacro =
       problem.config().get<CommonTraits::DomainType>("grids.micro_cells_per_macrocell_dim", world_dim, 0, validator);
 
-  array<unsigned int, world_dim> elements, overCoarse, overFine;
+  array<unsigned int, world_dim> elements, coarse_overlap, overFine;
 
   for (const auto i : Dune::XT::Common::value_range(world_dim)) {
     elements[i] = coarse_cells[i];
-    overCoarse[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
+    coarse_overlap[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
     overFine[i] = problem.config().get("grids.overlap", 1);
   }
-  return std::make_tuple(lowerLeft, upperRight, elements, overCoarse, overFine);
+  return std::make_tuple(lowerLeft, upperRight, elements, coarse_overlap, overFine);
 }
 
 std::shared_ptr<CommonTraits::GridType>
 Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem,
                                    Dune::MPIHelper::MPICommunicator communicator) {
   CommonTraits::DomainType lowerLeft, upperRight;
-  array<unsigned int, CommonTraits::world_dim> elements, overCoarse;
-  std::tie(lowerLeft, upperRight, elements, overCoarse, std::ignore) = setup(problem);
+  array<unsigned int, CommonTraits::world_dim> elements, coarse_overlap;
+  std::tie(lowerLeft, upperRight, elements, coarse_overlap, std::ignore) = setup(problem);
   auto coarse_gridptr =
-      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, overCoarse, communicator);
+      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, coarse_overlap, communicator);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0) - coarse_gridptr->overlapSize(0);
   const auto sum_elements = coarse_gridptr->comm().sum(actual_elements);
