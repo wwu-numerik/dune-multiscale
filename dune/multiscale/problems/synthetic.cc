@@ -23,7 +23,6 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper:
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_() {}
 
-
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(1.0);

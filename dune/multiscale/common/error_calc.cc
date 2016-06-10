@@ -109,15 +109,12 @@ void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::
     const bool match =
         Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
                                        fine_dimensions.coord_limits[i].min()) &&
-        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(),
-                                       fine_dimensions.coord_limits[i].max());
+        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
     if (!match) {
       DUNE_THROW(Dune::InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
                  you use different refinements in different spatial dimensions?\n"
-                                                                                <<
-                                                                                coarse_dimensions.coord_limits[i]
-                                                                                << " | " <<
-                                                                                fine_dimensions.coord_limits[i]);
+                                                  << coarse_dimensions.coord_limits[i] << " | "
+                                                  << fine_dimensions.coord_limits[i]);
     }
   }
 }

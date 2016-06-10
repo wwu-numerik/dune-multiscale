@@ -22,7 +22,6 @@ namespace Thirteen {
 
 struct ModelProblemData : public IModelProblemData {
   ModelProblemData();
-
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {

@@ -34,15 +34,14 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper:
       DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
-Dune::XT::Common::Configuration default_config()
-{
+Dune::XT::Common::Configuration default_config() {
   Dune::XT::Common::Configuration config;
   config["filename"] = model2_filename;
   config["name"] = "Spe10Diffusion";
   config["lower_left"] = "[0 0 0]";
-  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x)
-                          + " " + Dune::XT::Common::to_string(model_2_length_y)
-                          + " " + Dune::XT::Common::to_string(model_2_length_z)+ "]";
+  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x) + " " +
+                          Dune::XT::Common::to_string(model_2_length_y) + " " +
+                          Dune::XT::Common::to_string(model_2_length_z) + "]";
   config["upper_right"] = "[2 5 1]";
   config["anisotropic"] = "true";
   config["min"] = Dune::XT::Common::to_string(model_2_min_value);
@@ -53,10 +52,10 @@ Dune::XT::Common::Configuration default_config()
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
-  if(View::dimension != 3)
+  if (View::dimension != 3)
     DUNE_THROW(Dune::InvalidStateException, "SPE data only available for world dim == 3");
-  const auto ll = default_config().get< CommonTraits::DomainType >("lower_left");
-  const auto ur = default_config().get< CommonTraits::DomainType >("upper_right");
+  const auto ll = default_config().get<CommonTraits::DomainType>("lower_left");
+  const auto ur = default_config().get<CommonTraits::DomainType>("upper_right");
   return {ll, ur};
 }
 
@@ -103,13 +102,11 @@ void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y
 
 Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration /*config_in*/)
-  : permeability_(nullptr)
-{
+  : permeability_(nullptr) {
   readPermeability();
 }
 
-Diffusion::~Diffusion() {
-}
+Diffusion::~Diffusion() {}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
@@ -127,15 +124,16 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
 
   const auto center = x;
   std::vector<size_t> whichPartition(dimDomain, 0);
-  const Dune::XT::Common::FieldVector< CommonTraits::DomainFieldType, CommonTraits::world_dim > ll = default_config().get< CommonTraits::DomainType >("lower_left");
-  const Dune::XT::Common::FieldVector< CommonTraits::DomainFieldType, CommonTraits::world_dim > ur = default_config().get< CommonTraits::DomainType >("upper_right");
+  const Dune::XT::Common::FieldVector<CommonTraits::DomainFieldType, CommonTraits::world_dim> ll =
+      default_config().get<CommonTraits::DomainType>("lower_left");
+  const Dune::XT::Common::FieldVector<CommonTraits::DomainFieldType, CommonTraits::world_dim> ur =
+      default_config().get<CommonTraits::DomainType>("upper_right");
   std::array<size_t, CommonTraits::world_dim> ne{{model2_x_elements, model2_y_elements, model2_z_elements}};
 
   for (size_t dd = 0; dd < dimDomain; ++dd) {
     // for points that are on upperRight_[d], this selects one partition too much
     // so we need to cap this
-    whichPartition[dd] =
-        std::min(size_t(std::floor(ne[dd] * ((center[dd] - ll[dd]) / (ur[dd] - ll[dd])))), ne[dd] - 1);
+    whichPartition[dd] = std::min(size_t(std::floor(ne[dd] * ((center[dd] - ll[dd]) / (ur[dd] - ll[dd])))), ne[dd] - 1);
   }
   size_t subdomain = 0;
   if (dimDomain == 1)
@@ -145,14 +143,12 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   else
     subdomain = whichPartition[0] + whichPartition[1] * ne[0] + whichPartition[2] * ne[1] * ne[0];
   const auto ii = subdomain;
-  const size_t entries_per_dim = model2_x_elements*model2_y_elements*model2_z_elements;
+  const size_t entries_per_dim = model2_x_elements * model2_y_elements * model2_z_elements;
   const bool anisotropic = true;
   y[0][0] = permeability_[ii];
-  y[1][1] = permeability_[anisotropic ?   entries_per_dim + ii : ii];
-  y[2][2] = permeability_[anisotropic ? 2*entries_per_dim + ii : ii];
+  y[1][1] = permeability_[anisotropic ? entries_per_dim + ii : ii];
+  y[2][2] = permeability_[anisotropic ? 2 * entries_per_dim + ii : ii];
 }
-
-
 
 void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const {
@@ -162,31 +158,29 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
 } // diffusiveFlux
 
 void Diffusion::readPermeability() {
-auto min = default_config().get< RangeFieldType >("min");
-auto max = default_config().get< RangeFieldType >("max");
+  auto min = default_config().get<RangeFieldType>("min");
+  auto max = default_config().get<RangeFieldType>("max");
   std::ifstream datafile(model2_filename);
   if (!datafile.is_open())
     DUNE_THROW(spe10_model2_data_file_missing, "could not open '" << model2_filename << "'!");
   if (!(max > min))
-    DUNE_THROW(Dune::RangeError,
-               "max (is " << max << ") has to be larger than min (is " << min << ")!");
+    DUNE_THROW(Dune::RangeError, "max (is " << max << ") has to be larger than min (is " << min << ")!");
   const RangeFieldType scale = (max - min) / (model_2_max_value - model_2_min_value);
-  const RangeFieldType shift = min - scale*model_2_min_value;
+  const RangeFieldType shift = min - scale * model_2_min_value;
   // read all the data from the file
-  const size_t entries_per_dim = model2_x_elements*model2_y_elements*model2_z_elements;
-//  std::vector< double > data(3*entries_per_dim);
-  const size_t data_size = 3*entries_per_dim;
+  const size_t entries_per_dim = model2_x_elements * model2_y_elements * model2_z_elements;
+  //  std::vector< double > data(3*entries_per_dim);
+  const size_t data_size = 3 * entries_per_dim;
   permeability_ = std::unique_ptr<double[]>(new double[data_size]());
   double tmp = 0;
   size_t counter = 0;
   while (datafile >> tmp) {
-    permeability_[counter++] = (tmp*scale) + shift;
+    permeability_[counter++] = (tmp * scale) + shift;
   }
   datafile.close();
   if (counter != data_size)
-    DUNE_THROW(Dune::IOError,
-               "wrong number of entries in '" << model2_filename << "' (are " << counter << ", should be "
-               << data_size << ")!");
+    DUNE_THROW(Dune::IOError, "wrong number of entries in '" << model2_filename << "' (are " << counter
+                                                             << ", should be " << data_size << ")!");
   return;
 } /* readPermeability */
 

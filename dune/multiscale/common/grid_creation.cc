@@ -50,8 +50,8 @@ Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem,
   CommonTraits::DomainType lowerLeft, upperRight;
   array<unsigned int, CommonTraits::world_dim> elements, coarse_overlap;
   std::tie(lowerLeft, upperRight, elements, coarse_overlap, std::ignore) = setup(problem);
-  auto coarse_gridptr =
-      MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements, coarse_overlap, communicator);
+  auto coarse_gridptr = MyGridFactory<CommonTraits::GridType>::createCubeGrid(lowerLeft, upperRight, elements,
+                                                                              coarse_overlap, communicator);
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0) - coarse_gridptr->overlapSize(0);
   const auto sum_elements = coarse_gridptr->comm().sum(actual_elements);
@@ -103,10 +103,10 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
                  << std::endl;
     const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
     const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
-//if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
-//DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
-//<< " | " << coarse_view.size(0) << '\n');
-//}
+    // if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
+    // DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
+    //<< " | " << coarse_view.size(0) << '\n');
+    //}
   }
   return fine_gridptr;
 }

@@ -91,7 +91,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
 void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
-  //to synchronize timing:
+  // to synchronize timing:
   MPIHelper::getCollectiveCommunication().barrier();
   MS_LOG_INFO << "Assembling coarse system took "
               << std::lround(DXTC_TIMINGS.walltime("msfem.coarse.assemble") / 100.) / 10. << "s" << std::endl;
@@ -114,8 +114,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("post_check_solves_system", problem_.config().get("msfem.coarse_solver.check", false), overwrite);
   try {
     inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
-  }
-  catch (Dune::Stuff::Exceptions::linear_solver_failed& f) {
+  } catch (Dune::Stuff::Exceptions::linear_solver_failed& f) {
     // prevents all ranks from outputting the same detailed error message
     MS_LOG_ERROR_0 << f.what();
     DUNE_THROW(InvalidStateException, "Coarse solve failed.");

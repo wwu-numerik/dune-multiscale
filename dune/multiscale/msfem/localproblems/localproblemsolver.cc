@@ -109,8 +109,8 @@ void LocalProblemSolver::solve_for_all_cells() {
   const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
-  MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n")
-                  % grid.comm().rank() % coarseGridSize;
+  MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n") % grid.comm().rank() %
+                     coarseGridSize;
   DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
@@ -125,7 +125,6 @@ void LocalProblemSolver::solve_for_all_cells() {
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
     const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
-
 
     // take time
     //    DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
