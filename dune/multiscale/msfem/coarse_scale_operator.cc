@@ -91,7 +91,8 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
 void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }
 
 void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
-
+  //to synchronize timing:
+  MPIHelper::getCollectiveCommunication().barrier();
   MS_LOG_INFO << "Assembling coarse system took "
               << std::lround(DXTC_TIMINGS.walltime("msfem.coarse.assemble") / 100.) / 10. << "s" << std::endl;
   Dune::XT::Common::ScopedTiming st("msfem.coarse.solve");
