@@ -62,8 +62,8 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
       const auto delta = (max - min) / double(micro_per_macro[i]);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), globalLowerLeft[i]);
       upperRight[i] = std::min(max + (oversampling_layer * delta), globalUpperRight[i]);
-      int smaller = ((min - (oversampling_layer * delta)) < globalLowerLeft[i]);
-      int bigger = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
+      const bool smaller = ((min - (oversampling_layer * delta)) < globalLowerLeft[i]);
+      const bool bigger = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
       elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
     }
     subGridList_[coarse_index] = FactoryType::createLocalGrid(lowerLeft, upperRight, elemens);
