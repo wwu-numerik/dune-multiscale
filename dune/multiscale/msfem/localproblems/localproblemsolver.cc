@@ -53,34 +53,34 @@ LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer& problem,
   , problem_(problem) {}
 
 void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
-                                                  MsFEMTraits::LocalSolutionVectorType& allLocalSolutions) const {
-  assert(allLocalSolutions.size() > 0);
+                                                  MsFEMTraits::LocalSolutionVectorType& all_localproblem_solutions) const {
+  assert(all_localproblem_solutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
   const auto numBoundaryCorrectors = DSG::is_simplex_grid(*coarse_space_) ? 1u : 2u;
-  const auto numInnerCorrectors = allLocalSolutions.size() - numBoundaryCorrectors;
+  const auto numInnerCorrectors = all_localproblem_solutions.size() - numBoundaryCorrectors;
 
   // clear return argument
-  for (auto& localSol : allLocalSolutions)
+  for (auto& localSol : all_localproblem_solutions)
     localSol->vector() *= 0;
 
-  const auto& subDiscreteFunctionSpace = allLocalSolutions[0]->space();
+  const auto& local_space = all_localproblem_solutions[0]->space();
 
   //! define the discrete (elliptic) local MsFEM problem operator
   // ( effect of the discretized differential operator on a certain discrete function )
-  LocalProblemOperator localProblemOperator(problem_, *coarse_space_, subDiscreteFunctionSpace);
+  LocalProblemOperator localProblemOperator(problem_, *coarse_space_, local_space);
 
   // right hand side vector of the algebraic local MsFEM problem
-  MsFEMTraits::LocalSolutionVectorType allLocalRHS(allLocalSolutions.size());
+  MsFEMTraits::LocalSolutionVectorType allLocalRHS(all_localproblem_solutions.size());
   for (auto& it : allLocalRHS)
-    it = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(subDiscreteFunctionSpace,
+    it = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(local_space,
                                                                                    "rhs of local MsFEM problem");
 
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
 
-  for (auto i : Dune::XT::Common::value_range(allLocalSolutions.size())) {
+  for (auto i : Dune::XT::Common::value_range(all_localproblem_solutions.size())) {
     auto& current_rhs = *allLocalRHS[i];
-    auto& current_solution = *allLocalSolutions[i];
+    auto& current_solution = *all_localproblem_solutions[i];
 
     // is the right hand side of the local MsFEM problem equal to zero or almost identical to zero?
     // if yes, the solution of the local MsFEM problem is also identical to zero. The solver is getting a problem with
@@ -128,7 +128,7 @@ void LocalProblemSolver::solve_for_all_cells() {
 
     // take time
     //    DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
-    LocalSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
+    LocalproblemSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
     //    solveTime(DXTC_TIMINGS.stop("msfem.local.solve_all_on_single_cell") / 1000.f);

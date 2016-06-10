@@ -11,7 +11,7 @@
 namespace Dune {
 namespace Multiscale {
 
-LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse_space,
+LocalproblemSolutionManager::LocalproblemSolutionManager(const CommonTraits::SpaceType& coarse_space,
                                            const MsFEMTraits::CoarseEntityType& coarseEntity,
                                            const LocalGridList& subgridList)
   : subgridList_(subgridList)
@@ -29,11 +29,11 @@ LocalSolutionManager::LocalSolutionManager(const CommonTraits::SpaceType& coarse
     it = make_df_ptr<MsFEMTraits::LocalGridDiscreteFunctionType>("Local problem Solution", memory_backend_.space());
 }
 
-MsFEMTraits::LocalSolutionVectorType& LocalSolutionManager::getLocalSolutions() { return localSolutions_; }
+MsFEMTraits::LocalSolutionVectorType& LocalproblemSolutionManager::getLocalSolutions() { return localSolutions_; }
 
-const MsFEMTraits::LocalSpaceType& LocalSolutionManager::space() const { return memory_backend_.space(); }
+const MsFEMTraits::LocalSpaceType& LocalproblemSolutionManager::space() const { return memory_backend_.space(); }
 
-void LocalSolutionManager::load() {
+void LocalproblemSolutionManager::load() {
   assert(localSolutions_.size() >= numLocalProblems_);
   for (unsigned int i = 0; i < numLocalProblems_; ++i) {
     auto& solution = localSolutions_[i];
@@ -43,12 +43,12 @@ void LocalSolutionManager::load() {
   }
 } // load
 
-void LocalSolutionManager::save() const {
+void LocalproblemSolutionManager::save() const {
   for (auto& it : localSolutions_)
     memory_backend_.append(it);
 } // save
 
-std::size_t LocalSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
+std::size_t LocalproblemSolutionManager::numBoundaryCorrectors() const { return numBoundaryCorrectors_; }
 
 } // namespace Multiscale {
 } // namespace Dune {

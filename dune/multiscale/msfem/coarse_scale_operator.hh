@@ -22,7 +22,7 @@ namespace Multiscale {
 
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
-class LocalSolutionManager;
+class LocalproblemSolutionManager;
 class LocalGridList;
 class CoarseScaleOperator;
 

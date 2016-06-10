@@ -28,7 +28,7 @@ MsFEMCodim0Integral::MsFEMCodim0Integral(const Problem::DiffusionBase& diffusion
 size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void MsFEMCodim0Integral::apply(
-    LocalSolutionManager& localSolutionManager, const MsFEMTraits::LocalEntityType& localGridEntity,
+    LocalproblemSolutionManager& localSolutionManager, const MsFEMTraits::LocalEntityType& localGridEntity,
     const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
     Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
@@ -123,7 +123,7 @@ void MsFemCodim0Matrix::assembleLocal(
   assert(tmpIndicesContainer.size() >= 2);
   // get and clear matrix
 
-  Multiscale::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
+  Multiscale::LocalproblemSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
   localSolutionManager.load();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);

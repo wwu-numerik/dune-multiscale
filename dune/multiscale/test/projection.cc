@@ -19,7 +19,7 @@ struct Projection : public GridAndSpaces {
                                                                 const LocalGridList& localgrid_list) {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     for (const auto& coarse_entity : Dune::elements(coarseSpace.grid_view())) {
-      LocalSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
+      LocalproblemSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
       auto& coarse_indexset = coarseSpace.grid_view().grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =

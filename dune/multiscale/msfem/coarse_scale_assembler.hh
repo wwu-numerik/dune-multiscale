@@ -16,7 +16,7 @@ namespace Multiscale {
 
 class MsFEMCodim0Integral;
 class MsFemCodim0Matrix;
-class LocalSolutionManager;
+class LocalproblemSolutionManager;
 class LocalGridList;
 
 class MsFEMCodim0IntegralTraits {
@@ -47,7 +47,7 @@ public:
 
   size_t numTmpObjectsRequired() const;
 
-  void apply(Multiscale::LocalSolutionManager& localSolutionManager,
+  void apply(Multiscale::LocalproblemSolutionManager& localSolutionManager,
              const MsFEMTraits::LocalEntityType& localGridEntity, const TestLocalfunctionSetInterfaceType& testBase,
              const AnsatzLocalfunctionSetInterfaceType& ansatzBase,
              Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,

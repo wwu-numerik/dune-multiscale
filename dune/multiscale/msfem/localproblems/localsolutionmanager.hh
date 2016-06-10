@@ -19,9 +19,9 @@ class LocalGridList;
 /**
  * @brief One LocalSolutionManager instance per coarse cell
  */
-class LocalSolutionManager {
+class LocalproblemSolutionManager {
 public:
-  LocalSolutionManager(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::CoarseEntityType& coarseEntity,
+  LocalproblemSolutionManager(const CommonTraits::SpaceType& coarse_space, const MsFEMTraits::CoarseEntityType& coarseEntity,
                        const LocalGridList& subgridList);
 
   MsFEMTraits::LocalSolutionVectorType& getLocalSolutions();

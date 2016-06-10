@@ -22,7 +22,7 @@ namespace Multiscale {
 size_t RhsCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
 
 void RhsCodim0Integral::apply(
-    MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension, LocalSolutionManager& localSolutionManager,
+    MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension, LocalproblemSolutionManager& localSolutionManager,
     const MsFEMTraits::LocalEntityType& localGridEntity,
     const RhsCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
@@ -122,7 +122,7 @@ void RhsCodim0Vector::assembleLocal(
   assert(tmpLocalVectorContainer[0].size() >= numTmpObjectsRequired_);
   assert(tmpLocalVectorContainer[1].size() >= localFunctional_.numTmpObjectsRequired());
 
-  Multiscale::LocalSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
+  Multiscale::LocalproblemSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
   localSolutionManager.load();
   const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);

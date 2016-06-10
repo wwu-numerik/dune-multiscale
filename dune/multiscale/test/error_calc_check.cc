@@ -24,7 +24,7 @@ struct ErrorCheck : public GridAndSpaces {
         coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
     const auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
     for (const auto& coarse_entity : Dune::elements(interior)) {
-      LocalSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
+      LocalproblemSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
 
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(
