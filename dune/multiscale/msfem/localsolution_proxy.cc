@@ -37,7 +37,7 @@ void Dune::Multiscale::LocalsolutionProxy::add(
         Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(cr.second->space(), "tmpcorrection");
   }
   for (auto& range_pr : targets) {
-    auto id = range_pr.first;
+    const auto id = range_pr.first;
     auto& range = *range_pr.second;
     const Dune::GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> prolongation_operator(
         range.space().grid_view());
@@ -50,12 +50,17 @@ void Dune::Multiscale::LocalsolutionProxy::add(
 Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() { return *search_; }
 
 void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const Dune::XT::Common::Configuration& config) const {
-  boost::format name("msfemsolution_parts_%08i");
+  const auto rank = MPIHelper::getCollectiveCommunication().rank();
+  boost::format name("rank_%04d_msfemsolution_parts_%08i");
   boost::filesystem::path base(config.get("global.datadir", "data/"));
   for (const auto& part_pair : corrections_) {
     const auto& id = part_pair.first;
     const auto& solution = *part_pair.second;
-    const auto path = base / (name % id).str();
+    const auto path = base / (name % rank % id).str();
     solution.visualize(path.string());
   }
+}
+
+void Dune::Multiscale::LocalsolutionProxy::visualize(const std::string&) const {
+  DUNE_THROW(NotImplemented, "due the proxying to multiple functions this cannot work");
 }

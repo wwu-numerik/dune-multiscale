@@ -40,6 +40,8 @@ public:
   LocalGridSearch& search();
   void visualize_parts(const XT::Common::Configuration& config) const;
 
+  void visualize(const std::string&) const;
+
 private:
   CorrectionsMapType corrections_;
   const CommonTraits::GridViewType view_;
