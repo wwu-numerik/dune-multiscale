@@ -46,6 +46,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
                                                      const CommonTraits::SpaceType& coarse_space,
                                                      std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
   Dune::XT::Common::ScopedTiming st("msfem.idFine");
+  const int rank = Dune::MPIHelper::getCollectiveCommunication().rank();
 
   auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
@@ -94,10 +95,10 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       // ie set all dofs not "covered" by the coarse cell to 0
       // also adds lg-prolongation of coarse_solution to local_correction
       const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
+      const auto& reference_element = DSG::reference_element(coarse_entity);
+      const auto& coarse_geometry = coarse_entity.geometry();
       for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
         const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
-        const auto& reference_element = DSG::reference_element(coarse_entity);
-        const auto& coarse_geometry = coarse_entity.geometry();
         auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 
         for (const auto lg_i : Dune::XT::Common::value_range(int(lg_points.size()))) {
@@ -118,7 +119,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       local_correction.vector() -= localSolutions[coarseSolutionLF->vector().size()]->vector();
 
       if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
-        const std::string name = (boost::format("local_correction_%d_") % coarse_index).str();
+        const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
         Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
         outputparam.set_prefix(name);
         local_correction.visualize(outputparam.fullpath(local_correction.name()));
