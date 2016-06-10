@@ -34,6 +34,9 @@ void Dune::Multiscale::init(int argc, char** argv) {
   if (helper.size() > 1 && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
     DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
   }
+  // makes inserting '\n' not flush
+  std::cout.sync_with_stdio(false);
+
   Dune::XT::Common::Config().read_command_line(argc, argv);
   Dune::XT::Common::test_create_directory(DXTC_CONFIG_GET("global.datadir", "data/"));
 
