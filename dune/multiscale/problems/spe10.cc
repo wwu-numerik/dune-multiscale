@@ -109,7 +109,7 @@ Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommun
 Diffusion::~Diffusion() {}
 
 void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
-  BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
+  BOOST_ASSERT_MSG(x.size() == 3, "SPE 10 model is only defined for three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
   if (!permeability_) {
     MS_LOG_ERROR_0 << "The SPE10-permeability data file could not be opened. This file does\n"
@@ -128,7 +128,8 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
       default_config().get<CommonTraits::DomainType>("lower_left");
   const Dune::XT::Common::FieldVector<CommonTraits::DomainFieldType, CommonTraits::world_dim> ur =
       default_config().get<CommonTraits::DomainType>("upper_right");
-  std::array<size_t, CommonTraits::world_dim> ne{{model2_x_elements, model2_y_elements, model2_z_elements}};
+  // code need to compile, not run, for dim 2, therefore hardcode to 3 elements
+  std::array<size_t, 3> ne{{model2_x_elements, model2_y_elements, model2_z_elements}};
 
   for (size_t dd = 0; dd < dimDomain; ++dd) {
     // for points that are on upperRight_[d], this selects one partition too much

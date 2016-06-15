@@ -54,7 +54,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
     typedef FieldVector<typename MsFEMTraits::LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
-    array<unsigned int, dim_world> elemens;
+    array<unsigned int, dim_world> elements_per_dim;
     for (const auto i : Dune::XT::Common::value_range(dim_world)) {
       const auto min = dimensions.coord_limits[i].min();
       const auto max = dimensions.coord_limits[i].max();
@@ -62,11 +62,11 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
       const auto delta = (max - min) / double(micro_per_macro[i]);
       lowerLeft[i] = std::max(min - (oversampling_layer * delta), globalLowerLeft[i]);
       upperRight[i] = std::min(max + (oversampling_layer * delta), globalUpperRight[i]);
-      const bool smaller = ((min - (oversampling_layer * delta)) < globalLowerLeft[i]);
-      const bool bigger = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
-      elemens[i] = micro_per_macro[i] + ((!smaller + !bigger) * oversampling_layer);
+      const bool exceeds_macro_grid_left = ((min - (oversampling_layer * delta)) < globalLowerLeft[i]);
+      const bool exceeds_macro_grid_right = ((max + (oversampling_layer * delta)) > globalUpperRight[i]);
+      elements_per_dim[i] = micro_per_macro[i] + ((int(!exceeds_macro_grid_left) + int(!exceeds_macro_grid_right)) * oversampling_layer);
     }
-    subGridList_[coarse_index] = FactoryType::createLocalGrid(lowerLeft, upperRight, elemens);
+    subGridList_[coarse_index] = FactoryType::createLocalGrid(lowerLeft, upperRight, elements_per_dim);
   }
 }
 
