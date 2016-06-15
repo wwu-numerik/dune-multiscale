@@ -14,14 +14,8 @@ find_package(SuiteSparse)
 include_directories( ${SUITESPARSE_INCLUDE_DIRS} )
 set(DUNE_UMFPACK_LIBRARIES ${UMFPACK_LIBRARY} ${CHOLMOD_LIBRARY} ${COLAMD_LIBRARY} ${AMD_LIBRARY} ${SUITESPARSE_CONFIG_LIBRARY} ) 
 
-set(HAVE_RANDOM_PROBLEM 0)
-set(FFTW_LIBRARIES "")
-find_package(FFTW )
-if(FFTW_FOUND)
-	include_directories(${FFTW_INCLUDES})
-	set(HAVE_RANDOM_PROBLEM 1)
-	set(COMMON_LIBS ${COMMON_LIBS} fftw3_mpi ${FFTW_LIBRARIES})
-endif(FFTW_FOUND)
+find_package(FFTW)
+set(HAVE_RANDOM_PROBLEM ${HAVE_FFTW})
 
 set( MULTISCALE_LIBS multiscale_common multiscale_cgfem multiscale_msfem multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${COMMON_LIBS} ${DUNE_UMFPACK_LIBRARIES} )
 
