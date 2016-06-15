@@ -135,14 +135,9 @@ foreach(_mod ${ALL_DEPENDENCIES})
     endif(${_mod}_INCLUDE_DIRS)
   endif(_index GREATER -1)
 endforeach(_mod DEPENDENCIES)
-  
-ADD_CPPCHECK(src/msfem.cc src/cgfem.cc
-            src/thread_vis.cc ${dune} ${header})
-add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
-            ${CGFEM_SOURCES} src/cgfem.cc src/msfem.cc src/thread_vis.cc )
-add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
-           ${CGFEM_SOURCES} src/cgfem.cc src/msfem.cc src/thread_vis.cc
-           ${header} ${dune})
+
+add_format(${CMAKE_CURRENT_SOURCE_DIR})
+add_tidy(${CMAKE_CURRENT_SOURCE_DIR})
 
 if (NOT ${SPE10MODEL1DATA} STREQUAL "SPE10MODEL1DATA-NOTFOUND")
   set (SPE10MODEL1DATA_TARGET_FILENAME "${CMAKE_CURRENT_BINARY_DIR}/spe10_permeability.dat")
