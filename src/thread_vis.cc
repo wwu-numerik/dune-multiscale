@@ -150,6 +150,9 @@ int main(int argc, char** argv) {
   using namespace Dune::Multiscale;
   try {
     init(argc, argv);
+    const size_t max_threads = DXTC_CONFIG_GET("threading.max_count", 1);
+    tbb::task_scheduler_init sched_init(max_threads);
+    Dune::XT::Common::threadManager().set_max_threads(max_threads);
 
     assert(Dune::XT::Common::threadManager().max_threads() == DXTC_CONFIG_GET("threading.max_count", 1u));
     const std::string datadir = DXTC_CONFIG_GET("global.datadir", "data/");

@@ -46,8 +46,7 @@ void Dune::Multiscale::init(int argc, char** argv) {
       DXTC_CONFIG_GET("logging.level", 62), DXTC_CONFIG_GET("logging.file", std::string(argv[0]) + ".log"),
       DXTC_CONFIG_GET("global.datadir", "data"), DXTC_CONFIG_GET("logging.dir", "log" /*path below datadir*/));
   DXTC_TIMINGS.set_outputdir(DXTC_CONFIG_GET("global.datadir", "data"));
-  const int threads = DXTC_CONFIG_GET("threading.max_count", 1);
-  DS::threadManager().set_max_threads(threads);
+
   Dune::XT::Common::install_signal_handler(SIGTERM, handle_sigterm);
 #ifdef MS_TIMED_LOGGER
   Dune::XT::Common::TimedLogger().create(20,          // max info level

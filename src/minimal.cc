@@ -57,6 +57,9 @@ int main(int argc, char** argv) {
   using namespace Dune::Multiscale;
   try {
     init(argc, argv);
+    const size_t max_threads = DXTC_CONFIG_GET("threading.max_count", 1);
+    tbb::task_scheduler_init sched_init(max_threads);
+    Dune::XT::Common::threadManager().set_max_threads(max_threads);
 
     //!TODO include base in config
     DXTC_TIMINGS.start("msfem.all");
