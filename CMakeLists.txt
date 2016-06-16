@@ -83,10 +83,8 @@ set( PROBLEM_SOURCES
     dune/multiscale/problems/tarbert.cc
     dune/multiscale/problems/selector.cc
     dune/multiscale/problems/base.cc
+    dune/multiscale/problems/random.cc
 )
-if(FFTW_FOUND)
-  set( PROBLEM_SOURCES ${PROBLEM_SOURCES} dune/multiscale/problems/random.cc )
-endif(FFTW_FOUND)
 
 set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
