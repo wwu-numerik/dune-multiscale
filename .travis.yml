@@ -34,10 +34,13 @@ before_install:
   - |-
     : ${BUILD_CMD:="ninja -k 10000 -j 2"} && export BUILD_CMD
   # workaround for https://github.com/travis-ci/travis-ci/issues/5285
-  - sudo -E apt-get install -y -q libtbb-dev python-pip libmetis-dev python3-pip libfftw3-mpi-dev libfftw3-bin libfftw3-dev libopenmpi-dev openmpi-bin
+  - sudo -E apt-get install -y -q libtbb-dev python-pip libmetis-dev python3-pip libfftw3-mpi-dev libfftw3-bin libfftw3-dev libopenmpi-dev openmpi-bin python3-pytest python-pytest
   - sudo -E pip3 install -U requests virtualenv cpp-coveralls
   - sudo -E pip install -U requests virtualenv cpp-coveralls
+  - sudo -E add-apt-repository -y ppa:renemilk/llvm 
+  - sudo -E apt-get update -qq && sudo -E aptitude install -y clang-3.7 clang-format-3.7
   - export PATH=/usr/lib/ccache:$PATH
+  - ccache -s
   - cd $HOME
   - test -d src || git clone https://github.com/wwu-numerik/dune-multiscale-super.git src
   - cd $HOME/src
@@ -62,8 +65,8 @@ install:
 
 before_script:
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} configure
-      #- ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD}
-      #- ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} test_binaries
+    - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD}
+    - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} test_binaries
 
 script:
     - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec ${BUILD_CMD} test
@@ -89,6 +92,7 @@ after_script:
     fi
   - ${SRC_DCTRL} ${DCTRL_ARG} --only=${MY_MODULE} bexec make clean
   - export CTEST_ARG="--output-on-failure -S ${TRAVIS_BUILD_DIR}/.travis.ctest"
+  - ccache -s
 
 notifications:
   email:
@@ -139,18 +143,17 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          - ['ubuntu-toolchain-r-test']
           packages:
           - *commonpackages
-          - ['clang-3.7', 'clang-format-3.7']
-      env: CXX=clang++-3.7 CC=clang-3.7 CLANG_FORMAT=/usr/bin/clang-format-3.7
+      env: CXX=clang++-3.7 CC=clang-3.7 MODULES_TO_DELETE="dune-xt-grid dune-xt-la dune-xt-functions" CLANG_FORMAT="/usr/bin/clang-format-3.7"
 
     - os: linux
       addons:
         apt:
           sources:
           - *commonsources
-          - ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7']
+          - ['ubuntu-toolchain-r-test'] 
           packages:
           - *commonpackages
           - ['clang-3.7']
