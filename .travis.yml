@@ -33,11 +33,13 @@ before_install:
     : ${OPTS:="config.opts/travis.ninja"} && export OPTS
   - |-
     : ${BUILD_CMD:="ninja -k 10000 -j 2"} && export BUILD_CMD
-  # workaround for https://github.com/travis-ci/travis-ci/issues/5285
+  # workaround for gnutls bug is using git built against curl-openssl
+  - sudo -E rm /etc/apt/sources.list.d/*git*.list
+  - sudo -E add-apt-repository -y ppa:pymor/travis && sudo -E aptitude update && sudo -E aptitude install git -y
   - sudo -E apt-get install -y -q libtbb-dev python-pip libmetis-dev python3-pip libfftw3-mpi-dev libfftw3-bin libfftw3-dev libopenmpi-dev openmpi-bin python3-pytest python-pytest
   - sudo -E pip3 install -U requests virtualenv cpp-coveralls
   - sudo -E pip install -U requests virtualenv cpp-coveralls
-  - sudo -E add-apt-repository -y ppa:renemilk/llvm 
+  - sudo -E add-apt-repository -y ppa:renemilk/llvm
   - sudo -E apt-get update -qq && sudo -E aptitude install -y clang-3.7 clang-format-3.7
   - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
@@ -110,10 +112,10 @@ cache:
 env:
   global:
     - secure: "BcuIJYZ6//P3W6yGkjlqxUZhvWA2NZ7lvCQLtsdB7wXpIDBnp9AKsuvtPBEOgRrqNyy6wKIPtjcK5GejulbcUQFg2XagHHdTstlFwn2JxoWCpxsi3TlJaMdbo4qrE9hd+crokaL7nrtLXQ8+aGT8Z19JPFIEwdgzRIxPTTkdXkY="
-    - MY_MODULE=dune-multiscale 
-    - DUNE_BUILD_DIR=${HOME}/dune_build/ 
-    - INSTALL_DIR=$HOME/dune 
-    - CTEST_OUTPUT_ON_FAILURE=1 
+    - MY_MODULE=dune-multiscale
+    - DUNE_BUILD_DIR=${HOME}/dune_build/
+    - INSTALL_DIR=$HOME/dune
+    - CTEST_OUTPUT_ON_FAILURE=1
     - MODULES_TO_DELETE="dune-mlmc"
     - GCCDEFAULT=4.9
     - LIBRARY_PATH=/usr/lib
@@ -153,8 +155,8 @@ matrix:
         apt:
           sources:
           - *commonsources
-          - ['ubuntu-toolchain-r-test'] 
+          - ['ubuntu-toolchain-r-test']
           packages:
           - *commonpackages
-      env: OPTS=config.opts/travis.make BUILD_CMD="make -k -j2" CXX=clang++-3.7 CC=clang-3.7 
+      env: OPTS=config.opts/travis.make BUILD_CMD="make -k -j2" CXX=clang++-3.7 CC=clang-3.7
 
