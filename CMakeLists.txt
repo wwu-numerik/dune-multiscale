@@ -108,6 +108,13 @@ dune_library_add_sources(multiscale_problem SOURCES ${PROBLEM_SOURCES})
 dune_library_add_sources(multiscale_msfem SOURCES ${MSFEM_SOURCES}) 
 dune_library_add_sources(multiscale_cgfem SOURCES ${CGFEM_SOURCES}) 
 
+set(MSFEM_MACRO_GRIDDIM 3 CACHE STRING "")
+set(MSFEM_MACRO_GRIDTYPE SPGRID_BISECTION CACHE STRING "AnyOf SPGRID_ISOTROPIC SPGRID_ANISOTROPIC SPGRID_BISECTION YASPGRID_OFFSET")
+set(USE_ISTL_BACKEND 1 CACHE BOOLEAN "use dune-istl as the la-backend. Disable to use Eigen3 instead.")
+set(USE_FEM_BACKEND 0 CACHE BOOLEAN "use dune-fem as the discretization-backend. Disable to use dune-pdelab instead.")
+
+dune_register_package_flags(COMPILE_DEFINITIONS ENABLE_PARMETIS=1 GRIDDIM=${MSFEM_MACRO_GRIDDIM} ${MSFEM_MACRO_GRIDTYPE} METISNAMEL 
+    USE_ISTL_BACKEND=${USE_ISTL_BACKEND} USE_FEM_BACKEND=${USE_FEM_BACKEND})
 
 ADD_EXECUTABLE(elliptic_msfem src/msfem.cc ${COMMON_HEADER} )
 ADD_EXECUTABLE(elliptic_fem src/cgfem.cc ${CGFEM_SOURCES} ${COMMON_HEADER} )

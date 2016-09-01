@@ -56,7 +56,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   for (const auto& coarse_entity : Dune::elements(interior)) {
     LocalproblemSolutionManager localSolutionManager(coarse_space, coarse_entity, localgrid_list);
     localSolutionManager.load();
-    auto& localSolutions = localSolutionManager.getLocalSolutions();
+    auto& localproblem_solutions = localSolutionManager.getLocalSolutions();
     const auto coarse_index = coarse_indexset.index(coarse_entity);
     local_corrections[coarse_index] = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(
         localSolutionManager.space(), "correction");
@@ -65,67 +65,51 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     local_correction.vector() *= 0;
     const auto coarseSolutionLF = coarse_msfem_solution.local_discrete_function(coarse_entity);
 
-    if (is_simplex_grid) {
-      BOOST_ASSERT_MSG(localSolutions.size() == CommonTraits::world_dim,
-                       "We should have dim local solutions per coarse element on triangular meshes!");
+    //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
+    //            BOOST_ASSERT_MSG(
+    //                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
+    //                    static_cast<long long>(coarseSolutionLF.size()),
+    //                "The current implementation relies on having thesame types of elements on coarse and fine
+    // level!");
+    for (std::size_t dof = 0; dof < coarseSolutionLF->vector().size(); ++dof) {
+      localproblem_solutions[dof]->vector() *= coarseSolutionLF->vector().get(dof);
+      local_correction.vector() += localproblem_solutions[dof]->vector();
+    }
 
-      MsFEMTraits::LocalGridDiscreteFunctionType::JacobianRangeType grad_coarse_msfem_on_entity;
-      // We only need the gradient of the coarse scale part on the element, which is a constant.
-      coarseSolutionLF->jacobian(coarse_entity.geometry().center(), grad_coarse_msfem_on_entity);
+    // oversampling : restrict the local correctors to the element T
+    // ie set all dofs not "covered" by the coarse cell to 0
+    // also adds lg-prolongation of coarse_solution to local_correction
+    const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
+    const auto& reference_element = DSG::reference_element(coarse_entity);
+    const auto& coarse_geometry = coarse_entity.geometry();
+    for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
+      const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
+      auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 
-      // get the coarse gradient on T, multiply it with the local correctors and sum it up.
-      for (int spaceDimension = 0; spaceDimension < CommonTraits::world_dim; ++spaceDimension) {
-        localSolutions[spaceDimension]->vector() *= grad_coarse_msfem_on_entity[0][spaceDimension];
-        local_correction.vector() += localSolutions[spaceDimension]->vector();
-      }
-      BOOST_ASSERT_MSG(false, "no adding of the boundary correctors??");
-    } else {
-      //! @warning At this point, we assume to have the same types of elements in the coarse and fine grid!
-      //            BOOST_ASSERT_MSG(
-      //                static_cast<long long>(localSolutions.size() - localSolManager.numBoundaryCorrectors()) ==
-      //                    static_cast<long long>(coarseSolutionLF.size()),
-      //                "The current implementation relies on having thesame types of elements on coarse and fine
-      // level!");
-      for (std::size_t dof = 0; dof < coarseSolutionLF->vector().size(); ++dof) {
-        localSolutions[dof]->vector() *= coarseSolutionLF->vector().get(dof);
-        local_correction.vector() += localSolutions[dof]->vector();
-      }
-
-      // oversampling : restrict the local correctors to the element T
-      // ie set all dofs not "covered" by the coarse cell to 0
-      // also adds lg-prolongation of coarse_solution to local_correction
-      const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
-      const auto& reference_element = DSG::reference_element(coarse_entity);
-      const auto& coarse_geometry = coarse_entity.geometry();
-      for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
-        const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
-        auto entity_local_correction = local_correction.local_discrete_function(local_entity);
-
-        for (const auto lg_i : Dune::XT::Common::value_range(int(lg_points.size()))) {
-          const auto local_point = lg_points[lg_i];
-          const auto global_lg_point = local_entity.geometry().global(local_point);
-          const auto local_coarse_point = coarse_geometry.local(global_lg_point);
-          auto& vec = entity_local_correction->vector();
-          if (cut_overlay) {
-            const bool covered = reference_element.checkInside(local_coarse_point);
-            vec.set(lg_i, covered ? vec.get(lg_i) : 0);
-          }
+      for (const auto lg_i : Dune::XT::Common::value_range(int(lg_points.size()))) {
+        const auto local_point = lg_points[lg_i];
+        const auto global_lg_point = local_entity.geometry().global(local_point);
+        const auto local_coarse_point = coarse_geometry.local(global_lg_point);
+        auto& vec = entity_local_correction->vector();
+        if (cut_overlay) {
+          const bool covered = reference_element.checkInside(local_coarse_point);
+          vec.set(lg_i, covered ? vec.get(lg_i) : 0);
         }
       }
-
-      // add dirichlet corrector
-      //      local_correction.vector() += localSolutions[coarseSolutionLF->vector().size() + 1]->vector();
-      // substract neumann corrector
-      local_correction.vector() -= localSolutions[coarseSolutionLF->vector().size()]->vector();
-
-      if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
-        const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
-        Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
-        outputparam.set_prefix(name);
-        local_correction.visualize(outputparam.fullpath(local_correction.name()));
-      }
     }
-    localSolutions.clear();
+
+    // add dirichlet corrector
+    local_correction.vector() += localproblem_solutions[coarseSolutionLF->vector().size() + 1]->vector();
+    // substract neumann corrector
+    local_correction.vector() -= localproblem_solutions[coarseSolutionLF->vector().size()]->vector();
+
+    if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
+      const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
+      Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
+      outputparam.set_prefix(name);
+      local_correction.visualize(outputparam.fullpath(local_correction.name()));
+    }
+    localproblem_solutions.clear();
   }
 
   MS_LOG_INFO_0 << "Dirichlet correctors are broken and disabled\n";
@@ -149,6 +133,7 @@ void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem, const CommonTr
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(problem, localgrid_list, coarse_msfem_solution, coarse_space, solution);
+  solution->visualize_parts(problem.config());
   solution->add(coarse_msfem_solution);
 }
 
