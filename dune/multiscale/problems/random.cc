@@ -57,8 +57,8 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
   const int overlap = problem.config().get("grids.overlap", 1u);
-  const auto corrLen = problem.config().get("mlmc.correlation_length", 0.2f);
-  const auto sigma = problem.config().get("mlmc.correlation_sigma", 1.0f);
+  const auto corrLen = problem.config().get("problem.correlation_length", 0.2f);
+  const auto sigma = problem.config().get("problem.correlation_sigma", 1.0f);
   correlation_ = Dune::XT::Common::make_unique<Correlation>(corrLen, sigma);
   Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.init");
   field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
@@ -82,26 +82,26 @@ const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
 const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return subBoundaryInfo_; }
 
 ParameterTree ModelProblemData::boundary_settings() const {
-  Dune::ParameterTree boundarySettings;
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
-    boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
-  } else {
-    boundarySettings["default"] = "dirichlet";
-    boundarySettings["compare_tolerance"] = "1e-10";
-    switch (CommonTraits::world_dim) {
-      case 1:
-        DUNE_THROW(InvalidStateException, "no boundary settings for 1D random field problem");
-      case 3:
-        boundarySettings["neumann.0"] = "[0.0  1.0  0.0]";
-        boundarySettings["neumann.1"] = "[0.0 -1.0  0.0]";
-        boundarySettings["neumann.2"] = "[0.0  0.0  1.0]";
-        boundarySettings["neumann.3"] = "[0.0  0.0 -1.0]";
-        break;
-      case 2:
-        boundarySettings["neumann.0"] = "[0.0  1.0]";
-        boundarySettings["neumann.1"] = "[0.0 -1.0]";
-        break;
-    }
+    return DXTC_CONFIG.sub("problem.boundaryInfo");
+  }
+
+  Dune::ParameterTree boundarySettings;
+  boundarySettings["default"] = "dirichlet";
+  boundarySettings["compare_tolerance"] = "1e-10";
+  switch (CommonTraits::world_dim) {
+    case 1:
+      DUNE_THROW(InvalidStateException, "no boundary settings for 1D random field problem");
+    case 3:
+      boundarySettings["neumann.0"] = "[0.0  1.0  0.0]";
+      boundarySettings["neumann.1"] = "[0.0 -1.0  0.0]";
+      boundarySettings["neumann.2"] = "[0.0  0.0  1.0]";
+      boundarySettings["neumann.3"] = "[0.0  0.0 -1.0]";
+      break;
+    case 2:
+      boundarySettings["neumann.0"] = "[0.0  1.0]";
+      boundarySettings["neumann.1"] = "[0.0 -1.0]";
+      break;
   }
   return boundarySettings;
 }

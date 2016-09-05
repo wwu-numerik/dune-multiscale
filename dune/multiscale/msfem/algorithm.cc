@@ -72,7 +72,7 @@ std::map<std::string, double> msfem_algorithm() {
         OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));
   }
 
-  if (!problem.config().get("global.skip_error", false))
+  if (!problem.config().get("msfem.skip_error", false))
     return ErrorCalculator(problem, msfem_solution).print(MS_LOG_INFO_0);
   return decltype(ErrorCalculator(problem, msfem_solution).print(MS_LOG_INFO_0))();
 } // function algorithm

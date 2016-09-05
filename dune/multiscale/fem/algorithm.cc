@@ -37,7 +37,7 @@ std::map<std::string, double> cgfem_algorithm() {
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
-  if (!problem.config().get("global.skip_error", false))
+  if (!problem.config().get("msfem.skip_error", false))
     return ErrorCalculator(problem, nullptr, &solution).print(MS_LOG_INFO_0);
   return std::map<std::string, double>();
 } // ... algorithm(...)
