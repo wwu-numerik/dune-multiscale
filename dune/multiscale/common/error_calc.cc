@@ -44,6 +44,11 @@ typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceTyp
 typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
+
+double surface_flow_gdt(const CommonTraits::GridType &grid,
+                    const CommonTraits::ConstDiscreteFunctionType& solution,
+                        const DMP::ProblemContainer& problem) ;
+
 void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::ConstDiscreteFunctionType& solution,
                      std::string name = "msfem_solution_") {
   using namespace Dune;
@@ -163,6 +168,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       data_output(problem_, fine_space.grid_view());
       solution_output(problem_, fine_msfem_solution);
     }
+    const auto space = CommonTraits::SpaceChooserType::make_space(*coarse_grid);
+    CommonTraits::DiscreteFunctionType coarse_fun(space, "MsFEM_Solution coarse");
+    const auto flow = surface_flow_gdt(*coarse_grid, coarse_fun, problem_);
+    MS_LOG_ERROR_0 << "FLOW " << flow << std::endl;
   }
 
   const string msfem_exact = "msfem_exact", fem_exact = "fem_exact", coarse_fem_exact = "coarse_fem_exact",
@@ -309,4 +318,51 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   }
   *csvfile << std::endl;
   return csv;
+}
+
+double surface_flow_gdt(const Dune::Multiscale::CommonTraits::GridType &grid,
+                    const Dune::Multiscale::CommonTraits::ConstDiscreteFunctionType& solution,
+                        const DMP::ProblemContainer& problem) {
+  using namespace Dune::Multiscale;
+  const auto gv = grid.leafGridView();
+
+  // Constants and types
+  constexpr auto dim = CommonTraits::world_dim;
+  typedef double REAL; //TODO read from input
+  typedef typename Dune::FieldVector<REAL,dim> FV;   // point on cell
+  typedef typename Dune::FieldMatrix<REAL,dim,dim> FM;   // point on cell
+  typedef typename Dune::FieldMatrix<REAL,1,dim> Grad;   // point on cell
+  typedef typename Dune::QuadratureRule<REAL,dim-1> QR;
+  typedef typename Dune::QuadratureRules<REAL,dim-1> QRS;
+
+  const auto& diffusion = problem.getDiffusion();
+
+  // Quadrature rule
+  auto iCell = gv.template begin< 0,Dune::Interior_Partition >();
+  auto iFace = gv.ibegin(*iCell);
+  const QR& rule = QRS::rule(iFace->geometry().type(),2); // TODO order as para
+
+  // Loop over cells
+  REAL localFlux(0);
+  for(iCell = gv.template begin< 0,Dune::Interior_Partition >();
+      iCell != gv.template end< 0,Dune::Interior_Partition >(); ++iCell) {
+    // Loop over interfaces
+    const auto local_solution = solution.local_function(*iCell);
+    for(iFace = gv.ibegin(*iCell); iFace != gv.iend(*iCell); ++iFace) {
+      if(iFace->boundary() && iFace->geometry().center()[0]==0) {
+        double area = iFace->geometry().volume();
+        // Loop over gauss points
+        for(auto iGauss = rule.begin(); iGauss != rule.end(); ++iGauss) {
+          FV pos = iFace->geometry().global(iGauss->position());
+          Grad grad;
+          FM diff;
+          diffusion.evaluate(pos, diff);
+          local_solution->jacobian(pos, grad);
+          localFlux -= iGauss->weight() * area * diff[0][0] * grad[0][0];
+        }
+      }
+    }
+  }
+  localFlux = grid.comm().sum(localFlux);
+  return localFlux;
 }
