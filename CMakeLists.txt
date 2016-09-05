@@ -14,10 +14,10 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # Xcode-specific settings
   IF(CMAKE_GENERATOR MATCHES "Xcode")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")  
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   ENDIF(CMAKE_GENERATOR MATCHES "Xcode")
   LINK_DIRECTORIES( /opt/local/lib/ )
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
         "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
@@ -50,16 +50,16 @@ set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
 dune_enable_all_packages(
    INCLUDE_DIRS ${dune-multiscale}/dune
-   COMPILE_DEFINITIONS 
-   COMPILE_OPTIONS 
-   MODULE_LIBRARIES multiscale_common multiscale_problem multiscale_cgfem multiscale_msfem 
+   COMPILE_DEFINITIONS
+   COMPILE_OPTIONS
+   MODULE_LIBRARIES multiscale_common multiscale_problem multiscale_cgfem multiscale_msfem
 )
 
 # macros from dune-xt
 include(DuneUtils)
 
 #these should be split into all+hmm+msfem parts
-set( COMMON_SOURCES 
+set( COMMON_SOURCES
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/grid_creation.cc
@@ -72,7 +72,7 @@ set( COMMON_SOURCES
         dune/multiscale/common/heterogenous.cc
         dune/multiscale/msfem/localsolution_proxy.cc
         dune/multiscale/msfem/localproblems/localgridsearch.cc
-        # 
+        #
         dune/multiscale/msfem/proxygridview.cc
         dune/multiscale/msfem/localproblems/localgridlist.cc
     )
@@ -90,11 +90,11 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
-        
+
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
-        
+
         dune/multiscale/msfem/coarse_scale_assembler.cc
         dune/multiscale/msfem/coarse_rhs_functional.cc
     )
@@ -105,9 +105,8 @@ set( CGFEM_SOURCES
 
 dune_library_add_sources(multiscale_common SOURCES ${COMMON_SOURCES})
 dune_library_add_sources(multiscale_problem SOURCES ${PROBLEM_SOURCES})
-dune_library_add_sources(multiscale_msfem SOURCES ${MSFEM_SOURCES}) 
-dune_library_add_sources(multiscale_cgfem SOURCES ${CGFEM_SOURCES}) 
-
+dune_library_add_sources(multiscale_msfem SOURCES ${MSFEM_SOURCES})
+dune_library_add_sources(multiscale_cgfem SOURCES ${CGFEM_SOURCES})
 
 ADD_EXECUTABLE(elliptic_msfem src/msfem.cc ${COMMON_HEADER} )
 ADD_EXECUTABLE(elliptic_fem src/cgfem.cc ${CGFEM_SOURCES} ${COMMON_HEADER} )
@@ -142,7 +141,7 @@ if (NOT ${SPE10MODEL1DATA} STREQUAL "SPE10MODEL1DATA-NOTFOUND")
   if (NOT EXISTS ${SPE10MODEL1DATA_TARGET_FILENAME})
     execute_process(COMMAND ln -s "${SPE10MODEL1DATA}" "${SPE10MODEL1DATA_TARGET_FILENAME}")
   endif(NOT EXISTS ${SPE10MODEL1DATA_TARGET_FILENAME})
-else(NOT ${SPE10MODEL1DATA} STREQUAL "SPE10MODEL1DATA-NOTFOUND")                                                                                          
+else(NOT ${SPE10MODEL1DATA} STREQUAL "SPE10MODEL1DATA-NOTFOUND")
   message(STATUS "Downloading Spe10 model1 data file:" ${SPE10MODEL1DATA})
   execute_process(COMMAND wget -nc http://wwwmath.uni-muenster.de/num/ohlberger/research/software/perm_case1.zip
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
