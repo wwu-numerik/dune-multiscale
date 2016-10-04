@@ -5,18 +5,19 @@
 #ifndef DUNE_MULTISCALE_COMMON_TRAITS_HH
 #define DUNE_MULTISCALE_COMMON_TRAITS_HH
 
-#include <dune/multiscale/common/la_backend.hh>
 #include <dune/common/tuples.hh>
-#include <dune/grid/spgrid.hh>
-#include <dune/grid/yaspgrid.hh>
-#include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/operators/elliptic-cg.hh>
-#include <dune/stuff/la/container.hh>
+#include <dune/gdt/spaces/cg.hh>
+#include <dune/grid/spgrid.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/multiscale/common/la_backend.hh>
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
+#include <dune/stuff/functions/expression.hh>
+#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/grid/provider.hh>
+#include <dune/stuff/la/container.hh>
 
 namespace Dune {
 
@@ -97,6 +98,8 @@ struct CommonTraits {
   typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
       DiffusionFunctionBaseType;
   typedef Stuff::Functions::Constant<EntityType, FieldType, dimDomain, FieldType, dimRange> ConstantFunctionBaseType;
+  typedef Stuff::Functions::Expression<EntityType, FieldType, dimDomain, FieldType, dimRange>
+      ExpressionFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 
   typedef SpaceType::BaseFunctionSetType BaseFunctionSetType;

@@ -5,14 +5,14 @@
 #ifndef DUNE_MS_PROBLEMS_BASE_HH
 #define DUNE_MS_PROBLEMS_BASE_HH
 
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/xt/common/memory.hh>
-#include <dune/xt/common/configuration.hh>
-#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/functions/constant.hh>
+#include <dune/stuff/functions/interfaces.hh>
 #include <dune/stuff/grid/boundaryinfo.hh>
-#include <dune/common/parallel/mpihelper.hh>
+#include <dune/xt/common/configuration.hh>
+#include <dune/xt/common/memory.hh>
 #include <memory>
 #include <string>
 
@@ -74,6 +74,8 @@ public:
 
 class ZeroDirichletData : public DirichletDataBase {
 public:
+  ZeroDirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                    Dune::XT::Common::Configuration /*config_in*/) {}
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
   virtual size_t order() const { return 0; }
 };
@@ -86,6 +88,8 @@ public:
 
 class ZeroNeumannData : public NeumannDataBase {
 public:
+  ZeroNeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+                  Dune::XT::Common::Configuration /*config_in*/) {}
   virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
   virtual size_t order() const { return 0; }
 };
@@ -219,6 +223,14 @@ namespace DMP = Dune::Multiscale::Problem;
     classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
               Dune::XT::Common::Configuration /*config_in*/)                                                           \
       : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
+  };
+
+#define MSEXPRESSIONFUNCTION(classname, expr, order, deriv)                                                            \
+  class classname : public Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType {                                \
+  public:                                                                                                              \
+    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+              Dune::XT::Common::Configuration /*config_in*/)                                                           \
+      : Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType("x", expr, order, #classname, deriv) {}             \
   };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

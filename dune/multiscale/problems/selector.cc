@@ -10,6 +10,7 @@
 
 #include "dune/multiscale/problems/base.hh"
 // for i in $(ls *hh) ; do echo \#include \"${i}\" ; done
+#include "er2007.hh"
 #include "random.hh"
 #include "selector.hh"
 #include "spe10.hh"
@@ -31,7 +32,8 @@ using namespace Dune::Multiscale;
 #define FUNCTION_MAP(ReturnType, FunctionName)                                                                         \
   struct FunctionName##Mapper {                                                                                        \
     typedef std::function<ReturnType*(Dune::MPIHelper::MPICommunicator, Dune::MPIHelper::MPICommunicator,              \
-                                      Dune::XT::Common::Configuration)> FF;                                            \
+                                      Dune::XT::Common::Configuration)>                                                \
+        FF;                                                                                                            \
     static std::map<std::string, FF> mk_map() {                                                                        \
       std::map<std::string, FF> funcs;                                                                                 \
       Dune::XT::Common::map_emplace(funcs, "Synthetic", [](Dune::MPIHelper::MPICommunicator global,                    \
@@ -53,6 +55,11 @@ using namespace Dune::Multiscale;
                                                          Dune::MPIHelper::MPICommunicator local,                       \
                                                          Dune::XT::Common::Configuration config_in) {                  \
         return new DMP::Tarbert::FunctionName(global, local, config_in);                                               \
+      });                                                                                                              \
+      Dune::XT::Common::map_emplace(funcs, "ER2007", [](Dune::MPIHelper::MPICommunicator global,                       \
+                                                        Dune::MPIHelper::MPICommunicator local,                        \
+                                                        Dune::XT::Common::Configuration config_in) {                   \
+        return new DMP::ER2007::FunctionName(global, local, config_in);                                                \
       });                                                                                                              \
       return funcs;                                                                                                    \
     }                                                                                                                  \
