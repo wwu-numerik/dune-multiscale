@@ -1,23 +1,23 @@
 #include <config.h>
 
+#include <algorithm>
 #include <assert.h>
 #include <boost/assert.hpp>
 #include <boost/multi_array/multi_array_ref.hpp>
 #include <dune/common/exceptions.hh>
-#include <dune/xt/common/logging.hh>
-#include <dune/xt/common/timings.hh>
-#include <dune/xt/common/ranges.hh>
-#include <dune/xt/common/float_cmp.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/multiscale/common/mygridfactory.hh>
+#include <dune/multiscale/problems/selector.hh>
+#include <dune/multiscale/tools/misc.hh>
 #include <dune/stuff/grid/information.hh>
-#include <algorithm>
+#include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/xt/common/float_cmp.hh>
+#include <dune/xt/common/logging.hh>
+#include <dune/xt/common/ranges.hh>
+#include <dune/xt/common/timings.hh>
 #include <iterator>
+#include <memory>
 #include <ostream>
 #include <utility>
-#include <memory>
-#include <dune/multiscale/tools/misc.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/multiscale/common/mygridfactory.hh>
 
 #include "localgridlist.hh"
 
@@ -41,7 +41,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
   const auto globalLowerLeft = gridCorners.first;
   const auto globalUpperRight = gridCorners.second;
 
-  const auto interior = coarseSpace_.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+  const auto interior = interior_border_view(coarseSpace_);
   for (const auto& coarse_entity : elements(interior)) {
     // make sure we only create subgrids for interior coarse elements, not
     // for overlap or ghost elements

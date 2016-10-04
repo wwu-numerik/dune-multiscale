@@ -19,6 +19,15 @@ inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space) {
 
 } // namespace Grid
 } // namespace Stuff
+
+namespace Multiscale {
+
+static inline auto interior_border_view(const CommonTraits::SpaceType& space)
+    -> decltype(space.grid_view().grid().leafGridView<InteriorBorder_Partition>()) {
+  return space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+}
+
+} // namespace Multiscale
 } // namespace Dune
 
 #endif // DUNE_MS__TOOLS_MISC_HH
