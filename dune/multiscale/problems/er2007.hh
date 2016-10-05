@@ -73,9 +73,6 @@ public:
 
   void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;
-  void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                             const Problem::JacobianRangeType& direction_gradient,
-                             Problem::JacobianRangeType& flux) const final override;
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 

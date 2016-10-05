@@ -14,9 +14,6 @@ namespace Multiscale {
 namespace Problem {
 namespace ER2007 {
 
-static constexpr double epsilon_ = 0.05;
-static constexpr double M_TWOPI = M_PI * 2.0;
-
 ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
@@ -68,11 +65,6 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
   flux[0][1] = direction[0][1];
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                                      const Problem::JacobianRangeType& direction_gradient,
-                                      Problem::JacobianRangeType& flux) const {}
-
-// jacobian
 
 } // namespace Nine
 } // namespace Problem

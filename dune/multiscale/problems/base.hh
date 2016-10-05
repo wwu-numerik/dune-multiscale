@@ -48,13 +48,6 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
   virtual void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
                              Problem::JacobianRangeType& flux) const = 0;
 
-  //! the jacobian matrix (JA^{\epsilon}) of the diffusion operator A^{\epsilon} at the position "\nabla v" in direction
-  //! "nabla w", i.e.
-  //! jacobian diffusiv flux = JA^{\epsilon}(\nabla v) nabla w:
-  //! jacobianDiffusiveFlux = A^{\epsilon}( x , position_gradient ) direction_gradient
-  virtual void jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                                     const Problem::JacobianRangeType& direction_gradient,
-                                     Problem::JacobianRangeType& flux) const;
   virtual size_t order() const { return 2; }
 
   //! call this once per grid setup
