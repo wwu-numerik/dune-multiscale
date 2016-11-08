@@ -66,6 +66,7 @@ Makefile.am.user
 
 .*
 !.travis.yml
+!.travis.*.bash
 !.gitignore
 *~
 *~
