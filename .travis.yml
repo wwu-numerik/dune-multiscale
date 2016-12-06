@@ -37,5 +37,6 @@ matrix:
   include:
     - env: DOCKER_TAG=gcc-5
     - env: DOCKER_TAG=clang-3.8
+    - env: DOCKER_TAG=clang-3.9
 
 
