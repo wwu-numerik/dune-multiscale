@@ -13,10 +13,10 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # Xcode-specific settings
   IF(CMAKE_GENERATOR MATCHES "Xcode")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")  
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   ENDIF(CMAKE_GENERATOR MATCHES "Xcode")
   LINK_DIRECTORIES( /opt/local/lib/ )
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
         "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
@@ -36,10 +36,6 @@ dune_project()
 include(DuneUtils)
 include(DuneMPI)
 
-find_package(METIS)
-find_package(ParMETIS REQUIRED)
-include(cmake/modules/AddMETISFlags.cmake)
-include(AddParMETISFlags)
 find_package(UMFPack REQUIRED)
 include(AddUMFPackFlags)
 
@@ -55,7 +51,7 @@ set( COMMON_HEADER ${header} ${dune} ${DUNE_HEADERS} )
 set_source_files_properties( ${COMMON_HEADER} PROPERTIES HEADER_FILE_ONLY 1 )
 
 #these should be split into all+hmm+msfem parts
-set( COMMON_SOURCES 
+set( COMMON_SOURCES
         dune/multiscale/tools/misc/outputparameter.cc
         dune/multiscale/msfem/fem_solver.cc
         dune/multiscale/common/grid_creation.cc
@@ -66,7 +62,7 @@ set( COMMON_SOURCES
         dune/multiscale/common/error_calc.cc
         dune/multiscale/msfem/localsolution_proxy.cc
         dune/multiscale/msfem/localproblems/localgridsearch.cc
-        # 
+        #
         dune/multiscale/msfem/proxygridview.cc
         dune/multiscale/msfem/localproblems/localgridlist.cc
     )
@@ -83,11 +79,11 @@ set( MSFEM_SOURCES
         dune/multiscale/msfem/algorithm.cc
         dune/multiscale/msfem/msfem_solver.cc
         dune/multiscale/msfem/coarse_scale_operator.cc
-        
+
         dune/multiscale/msfem/localproblems/localoperator.cc
         dune/multiscale/msfem/localproblems/localproblemsolver.cc
         dune/multiscale/msfem/localproblems/localsolutionmanager.cc
-        
+
         dune/multiscale/msfem/coarse_scale_assembler.cc
         dune/multiscale/msfem/coarse_rhs_functional.cc
     )
@@ -98,7 +94,7 @@ set( FEM_SOURCES
     )
 
 If    ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
-  ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native" 
+  ADD_IF_SUPPORTED(CMAKE_CXX_FLAGS_RELEASE "-funroll-loops" "-m64" "-mfpmath=sse" "-falign-loops" "-mtune=native" "-march=native"
   "-pipe" "-fomit-frame-pointer" "-O3" "-fno-alias" )
 EndIf ("${CMAKE_BUILD_TYPE}" MATCHES "^REL")
 
@@ -126,8 +122,6 @@ ADD_EXECUTABLE(thread_vis EXCLUDE_FROM_ALL src/thread_vis.cc ${COMMON_HEADER} )
 TARGET_LINK_LIBRARIES(thread_vis multiscale_msfem ${COMMON_LIBS} )
 
 foreach(target multiscale_common multiscale_problem multiscale_msfem elliptic_msfem elliptic_fem thread_vis)
-  add_dune_metis_flags(${target})
-  add_dune_parmetis_flags(${target})
   add_dune_superlu_flags(${target})
   add_dune_umfpack_flags(${target})
   add_dune_alugrid_flags(${target})
@@ -153,12 +147,12 @@ foreach(_mod ${ALL_DEPENDENCIES})
     endif(${_mod}_INCLUDE_DIRS)
   endif(_index GREATER -1)
 endforeach(_mod DEPENDENCIES)
-  
-ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc 
+
+ADD_CPPCHECK(${CMAKE_CURRENT_SOURCE_DIR}/src/elliptic_msfem.cc
              ${dune} ${header})
-add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
+add_analyze(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
             ${FEM_SOURCES} src/elliptic_msfem.cc )
-add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES} 
+add_format(${COMMON_SOURCES} ${PROBLEM_SOURCES} ${MSFEM_SOURCES}
            ${FEM_SOURCES} src/elliptic_msfem.cc
            ${header} ${dune})
 
