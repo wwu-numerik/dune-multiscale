@@ -150,7 +150,8 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     assert(fine_grid);
   const auto fine_space =
       fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
-  const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>();
+  const auto fine_interior_view =
+      fine_space.grid_view().grid().template leafGridView<CommonTraits::InteriorBorderPartition>();
   Dune::XT::Common::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(
@@ -181,7 +182,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       solution_output(problem_, fine_msfem_solution);
     }
     const auto space = CommonTraits::SpaceChooserType::make_space(*coarse_grid);
-    CommonTraits::DiscreteFunctionType coarse_fun(space, "MsFEM_Solution coarse");
+    CommonTraits::DiscreteFunctionType coarse_fun(space, "MsFEM_Solution_coarse");
     const auto flow = surface_flow_gdt(*coarse_grid, coarse_fun, problem_);
     MS_LOG_ERROR_0 << "FLOW " << flow << std::endl;
   }

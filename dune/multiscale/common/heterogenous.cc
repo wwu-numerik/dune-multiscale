@@ -11,11 +11,12 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
                                                 Dune::Multiscale::CommonTraits::DiscreteFunctionType& target)
 {
   constexpr size_t target_dimRange = CommonTraits::dimRange;
+  static_assert(target_dimRange == 1, "");
 
   const auto& space = target.space();
 
   preprocess(target);
-  const auto interior = space.grid_view().grid().template leafGridView<CommonTraits::InteriorBorderPartition>();
+  const auto interior = space.grid_view().grid().template leafGridView<Interior_Partition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(space, interior);
   Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
@@ -40,7 +41,7 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
         const auto& source_local_function = source.local_function(source_entity);
         source_value = source_local_function->evaluate(source_local_point);
         for (size_t i = 0; i < target_dimRange; ++i, ++k) {
-          target_local_function->vector().add(k, source_value[i]);
+          target_local_function->vector().set(k, source_value[i]);
         }
       } else {
         DUNE_THROW(InvalidStateException, "Did not find the local lagrange point in the source mesh!");
