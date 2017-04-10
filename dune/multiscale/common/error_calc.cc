@@ -115,8 +115,8 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
 
 void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::GridType& fine_grid)
 {
-  const auto fine_view = fine_grid.leafGridView<CommonTraits::InteriorPartition>();
-  const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorPartition>();
+  const auto fine_view = fine_grid.leafGridView<CommonTraits::InteriorBorderPartition>();
+  const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorBorderPartition>();
   const auto coarse_dimensions = DSG::dimensions(coarse_view);
   const auto fine_dimensions = DSG::dimensions(fine_view);
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
@@ -150,7 +150,7 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     assert(fine_grid);
   const auto fine_space =
       fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
-  const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
+  const auto fine_interior_view = fine_space.grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>();
   Dune::XT::Common::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(

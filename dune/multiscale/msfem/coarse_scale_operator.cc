@@ -38,7 +38,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
   , AssemblerBaseType(source_space_in,
-                      source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
+                      source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>())
   , global_matrix_(
         coarse_space().mapper().size(), coarse_space().mapper().size(), EllipticOperatorType::pattern(coarse_space()))
   , local_operator_(problem.getDiffusion())

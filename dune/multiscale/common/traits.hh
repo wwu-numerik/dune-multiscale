@@ -94,7 +94,7 @@ struct CommonTraits
 
   typedef SpaceType::GridViewType GridViewType;
   typedef typename GridType::Partition<InteriorBorder_Partition>::LeafGridView InteriorGridViewType;
-  static constexpr auto InteriorPartition = PartitionIteratorType::InteriorBorder_Partition;
+  static constexpr auto InteriorBorderPartition = PartitionIteratorType::InteriorBorder_Partition;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
   typedef BackendChooser<SpaceType>::GdtVectorType GdtVectorType;

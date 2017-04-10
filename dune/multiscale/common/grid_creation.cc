@@ -59,8 +59,8 @@ Dune::Multiscale::make_coarse_grid(const DMP::ProblemContainer& problem, Dune::M
   const auto expected_elements = std::accumulate(elements.begin(), elements.end(), 1u, std::multiplies<unsigned int>());
   auto actual_elements = coarse_gridptr->size(0) - coarse_gridptr->overlapSize(0);
   const auto sum_elements = coarse_gridptr->comm().sum(actual_elements);
-  if (int(expected_elements) != sum_elements)
-    DUNE_THROW(InvalidStateException, "Wonky grid distribution");
+  //  if (int(expected_elements) != sum_elements)
+  //    DUNE_THROW(InvalidStateException, "Wonky grid distribution");
   if ((coarse_gridptr->comm().size() > 1) && (actual_elements == int(expected_elements)))
     DUNE_THROW(InvalidStateException, "Rank 0 fail");
   return coarse_gridptr;
@@ -108,8 +108,8 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
     MS_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n")
                         % coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0)
                  << std::endl;
-    const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorPartition>();
-    const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorPartition>();
+    const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorBorderPartition>();
+    const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorBorderPartition>();
     // if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
     // DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
     //<< " | " << coarse_view.size(0) << '\n');
