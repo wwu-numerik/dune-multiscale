@@ -137,7 +137,7 @@ void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem,
 
   //! identify fine scale part of MsFEM solution (including the projection!)
   identify_fine_scale_part(problem, localgrid_list, coarse_msfem_solution, coarse_space, solution);
-  solution->visualize_parts(problem.config());
+  //  solution->visualize_parts(problem.config());
   solution->add(coarse_msfem_solution);
 }
 

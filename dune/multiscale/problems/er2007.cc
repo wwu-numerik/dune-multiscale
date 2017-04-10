@@ -35,24 +35,6 @@ const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
   return *boundaryInfo_;
 }
 
-ParameterTree ModelProblemData::boundary_settings() const {
-  Dune::ParameterTree boundarySettings;
-  if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
-    boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
-  } else {
-    boundarySettings["default"] = "dirichlet";
-    boundarySettings["compare_tolerance"] = "1e-10";
-    switch (CommonTraits::world_dim) {
-      case 1:
-        break;
-      case 2:
-        break;
-      case 3:
-        boundarySettings["neumann.0"] = "[0.0 0.0 1.0]";
-        boundarySettings["neumann.1"] = "[0.0 0.0 -1.0]";
-    }
-  }
-  return boundarySettings;
 const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const
 {
   return subBoundaryInfo_;

@@ -131,7 +131,7 @@ foreach(_mod ${ALL_DEPENDENCIES})
         add_definitions("-isystem ${_idir}")
       endforeach( _idir )
     endif(${_mod}_INCLUDE_DIRS)
-  endif(_index GREATER -1)
+  endif()
 endforeach(_mod DEPENDENCIES)
 
 add_format(${CMAKE_CURRENT_SOURCE_DIR})

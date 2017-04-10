@@ -97,8 +97,8 @@ void Dune::Multiscale::mem_usage()
   long peakMemConsumption = usage.ru_maxrss;
   // compute the maximum and mean peak memory consumption over all processes
   long maxPeakMemConsumption = comm.max(peakMemConsumption);
-  long totalPeakMemConsumption = comm.sum(peakMemConsumption);
-  long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
+  const long totalPeakMemConsumption = comm.sum(peakMemConsumption);
+  const long meanPeakMemConsumption = totalPeakMemConsumption / comm.size();
   // write output on rank zero
   if (comm.rank() == 0) {
     std::unique_ptr<boost::filesystem::ofstream> memoryConsFile(Dune::XT::Common::make_ofstream(

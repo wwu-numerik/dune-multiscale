@@ -56,7 +56,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   const auto& boundary_info = problem_.getModelData().boundaryInfo();
   const auto& neumann = problem_.getNeumannData();
-  const auto& dirichlet = problem_.getDirichletData();
+  const auto& dirichlet_data = problem_.getDirichletData();
   const auto& space = space_;
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
@@ -73,29 +73,30 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
       neumann_functional(neumann, rhs_vector, space);
   // dirichlet boundary values
-  CommonTraits::DiscreteFunctionType dirichlet_projection(space);
-  GDT::Operators::DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase,
+  CommonTraits::DiscreteFunctionType projected_dirichlet_data = solution;
+  GDT::Operators::DirichletProjectionLocalizable<GridViewType,
+                                                 Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-      dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet, dirichlet_projection);
+      dirichlet_projection_operator(space.grid_view(), boundary_info, dirichlet_data, projected_dirichlet_data);
   DXTC_TIMINGS.start("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space);
   system_assembler.add(elliptic_operator);
   system_assembler.add(force_functional);
   system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
-  system_assembler.add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.add(dirichlet_projection_operator, new Stuff::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(true);
   DXTC_TIMINGS.stop("fem.assemble");
 
   DXTC_TIMINGS.start("fem.constraints");
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
   CommonTraits::GdtVectorType tmp(space.mapper().size());
-  system_matrix.mv(dirichlet_projection.vector(), tmp);
+  system_matrix.mv(projected_dirichlet_data.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::DirichletConstraints<typename GridViewType::Intersection> dirichlet_constraints(
       boundary_info, space.mapper().size(), true);
-  system_assembler.add(dirichlet_constraints /*, new GDT::ApplyOn::BoundaryEntities< GridViewType >()*/);
+  system_assembler.add(dirichlet_constraints, new Stuff::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(problem_.config().get("threading.smp_constraints", false));
   dirichlet_constraints.apply(system_matrix, rhs_vector);
   DXTC_TIMINGS.stop("fem.constraints");
