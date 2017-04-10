@@ -125,7 +125,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   // add the dirichlet shift to obtain the solution in H^1
   DXTC_TIMINGS.stop("fem.solve");
 
-  solution_vector += dirichlet_projection.vector();
+  solution_vector += projected_dirichlet_data.vector();
 
   DXTC_TIMINGS.stop("fem.apply");
 }

@@ -51,7 +51,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   MS_LOG_INFO << "Assembling coarse system" << std::endl;
   Dune::XT::Common::ScopedTiming st("msfem.coarse.assemble");
   msfem_rhs_.vector() *= 0;
-  const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorPartition>();
+  const auto interior = coarse_space().grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
   SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
