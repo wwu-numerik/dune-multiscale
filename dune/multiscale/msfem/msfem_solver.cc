@@ -44,7 +44,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
                                                      LocalGridList& localgrid_list,
                                                      const CommonTraits::DiscreteFunctionType& coarse_msfem_solution,
                                                      const CommonTraits::SpaceType& coarse_space,
-                                                     std::unique_ptr<LocalsolutionProxy>& msfem_solution) const {
+                                                     std::unique_ptr<LocalsolutionProxy>& msfem_solution) const
+{
   Dune::XT::Common::ScopedTiming st("msfem.idFine");
   const int rank = Dune::MPIHelper::getCollectiveCommunication().rank();
 
@@ -117,8 +118,11 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       Dune::XT::Common::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
 }
 
-void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
-                                  std::unique_ptr<LocalsolutionProxy>& solution, LocalGridList& localgrid_list) const {
+void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem,
+                                  const CommonTraits::SpaceType& coarse_space,
+                                  std::unique_ptr<LocalsolutionProxy>& solution,
+                                  LocalGridList& localgrid_list) const
+{
   Dune::XT::Common::ScopedTiming st("msfem.Elliptic_MsFEM_Solver.apply");
   const auto clearGuard = DiscreteFunctionIO::clear_guard();
 

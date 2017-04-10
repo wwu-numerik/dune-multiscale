@@ -14,7 +14,8 @@
 
 #include <tbb/task_scheduler_init.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
   using namespace Dune::Multiscale;
   try {
     init(argc, argv);
@@ -29,8 +30,8 @@ int main(int argc, char** argv) {
 
     // generate directories for data output
     Dune::XT::Common::test_create_directory(datadir);
-    MS_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n") %
-                         datadir % datadir % DXTC_CONFIG_GET("logging.dir", "log");
+    MS_LOG_INFO_0 << boost::format("Data will be saved under: %s\nLogs will be saved under: %s/%s/ms.log.log\n")
+                         % datadir % datadir % DXTC_CONFIG_GET("logging.dir", "log");
 
     msfem_algorithm();
 

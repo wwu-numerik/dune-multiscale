@@ -21,7 +21,9 @@ namespace Dune {
 namespace Multiscale {
 
 void write_discrete_function(const DMP::ProblemContainer& problem,
-                             typename CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix) {
+                             typename CommonTraits::DiscreteFunction_ptr& discrete_solution,
+                             const std::string prefix)
+{
   // writing paraview data output
   // general output parameters
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
@@ -35,7 +37,8 @@ void write_discrete_function(const DMP::ProblemContainer& problem,
   }
 }
 
-void print_info(const Problem::ProblemContainer& problem, std::ostream& out) {
+void print_info(const Problem::ProblemContainer& problem, std::ostream& out)
+{
   // epsilon is specified in the parameter file
   // 'epsilon' in for instance A^{epsilon}(x) = A(x,x/epsilon)
   const double epsilon_ = problem.config().get("problem.epsilon", 1.0f);
@@ -57,7 +60,8 @@ void print_info(const Problem::ProblemContainer& problem, std::ostream& out) {
   out << "Epsilon = " << epsilon_ << std::endl << std::endl;
 }
 
-void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix) {
+void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix)
+{
   discrete_solution.visualize(prefix, true, Dune::VTK::appendedbase64);
 }
 

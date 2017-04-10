@@ -40,43 +40,49 @@ string prepend_test_dir(string fn)
   return path.string();
 }
 
-void set_param(map<string, string> params) {
-  for( auto vp : params) {
+void set_param(map<string, string> params)
+{
+  for (auto vp : params) {
     DXTC_CONFIG.set(vp.first, vp.second, true);
   }
 }
 
-class GridTestBase : public ::testing::Test {
+class GridTestBase : public ::testing::Test
+{
 
 public:
-
- GridTestBase() {
-    problem_ = DSC::make_unique<DMP::ProblemContainer>(Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DXTC_CONFIG);
+  GridTestBase()
+  {
+    problem_ = DSC::make_unique<DMP::ProblemContainer>(
+        Dune::MPIHelper::getCommunicator(), Dune::MPIHelper::getCommunicator(), DXTC_CONFIG);
     grids_ = make_grids(*problem_);
     DXTC_LOG_DEBUG << "Instantiating tests for dimension " << CommonTraits::world_dim << std::endl;
-    constexpr bool sp_grid = std::is_same<CommonTraits::GridType,
-        Dune::SPGrid<double, CommonTraits::world_dim, Dune::SPIsotropicRefinement>>::value;
+    constexpr bool sp_grid =
+        std::is_same<CommonTraits::GridType,
+                     Dune::SPGrid<double, CommonTraits::world_dim, Dune::SPIsotropicRefinement>>::value;
     if (sp_grid && DXTC_CONFIG_GET("threading.max_count", 1) > 1) {
       DUNE_THROW(Dune::InvalidStateException, "SPGRID currently fails with > 1 threads");
     }
   }
- virtual ~GridTestBase() {
- }
+  virtual ~GridTestBase()
+  {
+  }
 
 protected:
- std::unique_ptr<DMP::ProblemContainer> problem_;
- std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> grids_;
+  std::unique_ptr<DMP::ProblemContainer> problem_;
+  std::pair<std::shared_ptr<CommonTraits::GridType>, std::shared_ptr<CommonTraits::GridType>> grids_;
 };
 
 
-struct GridAndSpaces : public GridTestBase {
+struct GridAndSpaces : public GridTestBase
+{
 public:
-
- GridAndSpaces()
-   : GridTestBase()
-   , coarseSpace(CommonTraits::SpaceChooserType::make_space(*grids_.first))
-   , fineSpace(CommonTraits::SpaceChooserType::make_space(*grids_.second))
- {}
+  GridAndSpaces()
+    : GridTestBase()
+    , coarseSpace(CommonTraits::SpaceChooserType::make_space(*grids_.first))
+    , fineSpace(CommonTraits::SpaceChooserType::make_space(*grids_.second))
+  {
+  }
 
 
 protected:
@@ -85,8 +91,7 @@ protected:
 };
 
 
-
-//static const auto default_common_values = CommonTraits::world_dim < 3
+// static const auto default_common_values = CommonTraits::world_dim < 3
 //                                  // Values need to have number of elements
 //#ifndef NDEBUG
 //                                  ? testing::Values(p_small, p_small_aniso, p_small_wover)

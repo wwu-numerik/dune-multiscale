@@ -20,7 +20,8 @@ class LocalGridSearch;
 /**
  * Fake DiscreteFunction that forwards localFunction calls to appropriate local_correction
  **/
-class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionType {
+class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionType
+{
   typedef LocalsolutionProxy ThisType;
   typedef MsFEMTraits::LocalGridConstDiscreteFunctionType BaseType;
   typedef CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSetType;
@@ -28,9 +29,11 @@ class LocalsolutionProxy : public MsFEMTraits::LocalGridConstDiscreteFunctionTyp
 
 public:
   typedef std::unordered_map<typename LeafIndexSetType::IndexType,
-                             std::unique_ptr<MsFEMTraits::LocalGridDiscreteFunctionType>> CorrectionsMapType;
+                             std::unique_ptr<MsFEMTraits::LocalGridDiscreteFunctionType>>
+      CorrectionsMapType;
 
-  LocalsolutionProxy(CorrectionsMapType&& corrections, const CommonTraits::SpaceType& coarseSpace,
+  LocalsolutionProxy(CorrectionsMapType&& corrections,
+                     const CommonTraits::SpaceType& coarseSpace,
                      const LocalGridList& gridlist);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;

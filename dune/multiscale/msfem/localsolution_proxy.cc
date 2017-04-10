@@ -15,12 +15,14 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
   , corrections_(std::move(corrections))
   , view_(coarseSpace.grid_view())
   , index_set_(view_.grid().leafIndexSet())
-  , search_(coarseSpace, gridlist) {
+  , search_(coarseSpace, gridlist)
+{
   assert(corrections_.size() == index_set_.size(0));
 }
 
 std::unique_ptr<Dune::Multiscale::LocalsolutionProxy::LocalFunctionType>
-Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType& entity) const {
+Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType& entity) const
+{
   const auto& coarse_cell = search_->current_coarse_pointer();
   auto it = corrections_.find(index_set_.index(coarse_cell));
   if (it != corrections_.end())
@@ -28,8 +30,8 @@ Dune::Multiscale::LocalsolutionProxy::local_function(const BaseType::EntityType&
   DUNE_THROW(InvalidStateException, "Coarse cell was not found!");
 }
 
-void Dune::Multiscale::LocalsolutionProxy::add(
-    const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func) {
+void Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTraits::DiscreteFunctionType& coarse_func)
+{
   Dune::XT::Common::ScopedTiming st("proxy.add");
   CorrectionsMapType targets;
   for (auto& cr : corrections_) {
@@ -47,9 +49,13 @@ void Dune::Multiscale::LocalsolutionProxy::add(
   }
 }
 
-Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search() { return *search_; }
+Dune::Multiscale::LocalGridSearch& Dune::Multiscale::LocalsolutionProxy::search()
+{
+  return *search_;
+}
 
-void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const Dune::XT::Common::Configuration& config) const {
+void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const Dune::XT::Common::Configuration& config) const
+{
   const auto rank = MPIHelper::getCollectiveCommunication().rank();
   boost::format name("rank_%04d_msfemsolution_parts_%08i");
   boost::filesystem::path base(config.get("global.datadir", "data/"));
@@ -61,6 +67,7 @@ void Dune::Multiscale::LocalsolutionProxy::visualize_parts(const Dune::XT::Commo
   }
 }
 
-void Dune::Multiscale::LocalsolutionProxy::visualize(const std::string&) const {
+void Dune::Multiscale::LocalsolutionProxy::visualize(const std::string&) const
+{
   DUNE_THROW(NotImplemented, "due the proxying to multiple functions this cannot work");
 }

@@ -8,7 +8,8 @@ namespace Multiscale {
 
 ProxyGridview::ProxyGridview(const LocalGridList& localGrids)
   : BaseType(localGrids.getSubGrid(0))
-  , localGrids_(localGrids) {
+  , localGrids_(localGrids)
+{
   localGrids_.size();
 }
 

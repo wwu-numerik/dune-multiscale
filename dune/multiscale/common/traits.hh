@@ -42,7 +42,8 @@ class IModelProblemData;
 } // namespace Problem
 
 template <class G, class R, int r>
-struct SpaceChooser {
+struct SpaceChooser
+{
   static constexpr auto backend_type =
 #if DUNE_MULTISCALE_WITH_DUNE_FEM
       GDT::ChooseSpaceBackend::fem;
@@ -59,12 +60,19 @@ private:
 
 public:
   typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
-  static Type make_space(G& g) { return Type(PartViewType::create(g, 0)); }
-  static Type make_space(GridLayerType& p) { return Type(p); }
+  static Type make_space(G& g)
+  {
+    return Type(PartViewType::create(g, 0));
+  }
+  static Type make_space(GridLayerType& p)
+  {
+    return Type(p);
+  }
 };
 
 //! Common Types, duh
-struct CommonTraits {
+struct CommonTraits
+{
 
   static constexpr int dimRange = 1;
   static constexpr int dimDomain = Dune::GridSelector::dimgrid;
@@ -125,7 +133,8 @@ struct CommonTraits {
 };
 
 template <class T = CommonTraits::DiscreteFunctionType>
-std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::SpaceType& space) {
+std::shared_ptr<T> make_df_ptr(const std::string name, const typename T::SpaceType& space)
+{
   return std::make_shared<T>(space, name);
   //  return Dune::XT::Common::make_unique<T>(name, space);
 }

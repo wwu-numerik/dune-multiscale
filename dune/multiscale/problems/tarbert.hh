@@ -21,10 +21,15 @@ namespace Problem {
 
 namespace Tarbert {
 
-struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const final override { return false; }
+struct ModelProblemData : public IModelProblemData
+{
+  virtual bool hasExactSolution() const final override
+  {
+    return false;
+  }
 
-  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/,
+                   MPIHelper::MPICommunicator /*local*/,
                    Dune::XT::Common::Configuration /*config_in*/);
 
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -37,25 +42,33 @@ private:
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo_;
 };
 
-class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
-  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Source(MPIHelper::MPICommunicator /*global*/,
+         MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration /*config_in*/);
 
   void evaluate(const DomainType& x, RangeType& y) const final override;
-  virtual size_t order() const final override { return 3; }
+  virtual size_t order() const final override
+  {
+    return 3;
+  }
 };
 
-class Diffusion : public DiffusionBase {
+class Diffusion : public DiffusionBase
+{
 public:
-  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Diffusion(MPIHelper::MPICommunicator /*global*/,
+            MPIHelper::MPICommunicator /*local*/,
             Dune::XT::Common::Configuration /*config_in*/);
   ~Diffusion();
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, RangeType& y) const final override;
 
-  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  void diffusiveFlux(const DomainType& x,
+                     const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;
 
   //  void visualizePermeability(const CommonTraits::GridType& grid) const;
@@ -68,22 +81,30 @@ private:
   mutable Dune::FieldMatrix<double, DomainType::dimension, DomainType::dimension> permMatrix_;
 };
 
-class DirichletData : public DirichletDataBase {
+class DirichletData : public DirichletDataBase
+{
 private:
 public:
 public:
-  DirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                Dune::XT::Common::Configuration /*config_in*/) {}
+  DirichletData(MPIHelper::MPICommunicator /*global*/,
+                MPIHelper::MPICommunicator /*local*/,
+                Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
 
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };
 
-class NeumannData : public NeumannDataBase {
+class NeumannData : public NeumannDataBase
+{
 private:
 public:
 public:
-  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-              Dune::XT::Common::Configuration /*config_in*/) {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/,
+              MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
 
   void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
 };

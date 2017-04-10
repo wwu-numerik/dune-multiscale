@@ -34,57 +34,96 @@ typedef CommonTraits::FunctionBaseType NeumannBCType;
 //! type of exact solution (in general unknown)
 typedef CommonTraits::FunctionBaseType ExactSolutionType;
 
-struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType {
+struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType
+{
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, CommonTraits::DiffusionFunctionBaseType::RangeType& y) const = 0;
 
-  virtual ~DiffusionBase() {}
+  virtual ~DiffusionBase()
+  {
+  }
 
   //! in the linear setting, use the structure
   //! A^{\epsilon}_i(x,\xi) = A^{\epsilon}_{i1}(x) \xi_1 + A^{\epsilon}_{i2}(x) \xi_2
   //! (diffusive) flux = A^{\epsilon}( x , direction )
   //! (typically direction is some 'gradient_of_a_function')
-  virtual void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  virtual void diffusiveFlux(const DomainType& x,
+                             const Problem::JacobianRangeType& direction,
                              Problem::JacobianRangeType& flux) const = 0;
 
-  virtual size_t order() const { return 2; }
+  virtual size_t order() const
+  {
+    return 2;
+  }
 
   //! call this once per grid setup
-  virtual void init(const ProblemContainer&, MPIHelper::MPICommunicator /*global*/,
-                    MPIHelper::MPICommunicator /*local*/) {}
+  virtual void
+  init(const ProblemContainer&, MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/)
+  {
+  }
   //! call this once per "run"
-  virtual void prepare_new_evaluation() {}
+  virtual void prepare_new_evaluation()
+  {
+  }
 };
 
 typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusionType;
 
-class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual size_t order() const { return 3; }
+  virtual size_t order() const
+  {
+    return 3;
+  }
 };
 
-class ZeroDirichletData : public DirichletDataBase {
+class ZeroDirichletData : public DirichletDataBase
+{
 public:
-  ZeroDirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                    Dune::XT::Common::Configuration /*config_in*/) {}
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
-  virtual size_t order() const { return 0; }
+  ZeroDirichletData(MPIHelper::MPICommunicator /*global*/,
+                    MPIHelper::MPICommunicator /*local*/,
+                    Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final
+  {
+    y = RangeType(0.0);
+  }
+  virtual size_t order() const
+  {
+    return 0;
+  }
 };
 
-class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
   virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual size_t order() const { return 3; }
+  virtual size_t order() const
+  {
+    return 3;
+  }
 };
 
-class ZeroNeumannData : public NeumannDataBase {
+class ZeroNeumannData : public NeumannDataBase
+{
 public:
-  ZeroNeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                  Dune::XT::Common::Configuration /*config_in*/) {}
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final { y = RangeType(0.0); }
-  virtual size_t order() const { return 0; }
+  ZeroNeumannData(MPIHelper::MPICommunicator /*global*/,
+                  MPIHelper::MPICommunicator /*local*/,
+                  Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final
+  {
+    y = RangeType(0.0);
+  }
+  virtual size_t order() const
+  {
+    return 0;
+  }
 };
 
 /**
@@ -159,7 +198,8 @@ public:
  *
  *
 **/
-class IModelProblemData {
+class IModelProblemData
+{
 protected:
   typedef CommonTraits::GridViewType View;
   typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
@@ -168,32 +208,52 @@ protected:
 
 public:
   //! Constructor for ModelProblemData
-  inline IModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                           Dune::XT::Common::Configuration /*config_in*/) {}
-  virtual ~IModelProblemData() {}
+  inline IModelProblemData(MPIHelper::MPICommunicator /*global*/,
+                           MPIHelper::MPICommunicator /*local*/,
+                           Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
+  virtual ~IModelProblemData()
+  {
+  }
 
   //! does the problem implement an exact solution?
-  virtual bool hasExactSolution() const { return false; }
+  virtual bool hasExactSolution() const
+  {
+    return false;
+  }
 
   //! is the diffusion matrix symmetric?
-  virtual bool symmetricDiffusion() const { return true; }
+  virtual bool symmetricDiffusion() const
+  {
+    return true;
+  }
 
   //! linear/nonlinear toggle
-  virtual bool linear() const { return true; }
+  virtual bool linear() const
+  {
+    return true;
+  }
 
   virtual const BoundaryInfoType& boundaryInfo() const = 0;
 
   virtual const SubBoundaryInfoType& subBoundaryInfo() const = 0;
 
-  virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const {
+  virtual std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const
+  {
     return {CommonTraits::DomainType(0.0), CommonTraits::DomainType(1.0)};
   }
 
   //! call this once per grid setup
-  virtual void problem_init(DMP::ProblemContainer& /*problem*/, MPIHelper::MPICommunicator /*global*/,
-                            MPIHelper::MPICommunicator /*local*/) {}
+  virtual void problem_init(DMP::ProblemContainer& /*problem*/,
+                            MPIHelper::MPICommunicator /*global*/,
+                            MPIHelper::MPICommunicator /*local*/)
+  {
+  }
   //! call this once per "run"
-  virtual void prepare_new_evaluation(DMP::ProblemContainer& /*problem*/) {}
+  virtual void prepare_new_evaluation(DMP::ProblemContainer& /*problem*/)
+  {
+  }
 };
 
 } //! @} namespace Problem
@@ -203,27 +263,39 @@ public:
 namespace DMP = Dune::Multiscale::Problem;
 
 #define MSCONSTANTFUNCTION(classname, constant)                                                                        \
-  class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
+  class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType                                    \
+  {                                                                                                                    \
   public:                                                                                                              \
-    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+    classname(MPIHelper::MPICommunicator /*global*/,                                                                   \
+              MPIHelper::MPICommunicator /*local*/,                                                                    \
               Dune::XT::Common::Configuration /*config_in*/)                                                           \
-      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant) {}                                          \
+      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(constant)                                             \
+    {                                                                                                                  \
+    }                                                                                                                  \
   };
 
 #define MSNULLFUNCTION(classname)                                                                                      \
-  class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType {                                  \
+  class classname : public Dune::Multiscale::CommonTraits::ConstantFunctionBaseType                                    \
+  {                                                                                                                    \
   public:                                                                                                              \
-    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+    classname(MPIHelper::MPICommunicator /*global*/,                                                                   \
+              MPIHelper::MPICommunicator /*local*/,                                                                    \
               Dune::XT::Common::Configuration /*config_in*/)                                                           \
-      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0) {}                                               \
+      : Dune::Multiscale::CommonTraits::ConstantFunctionBaseType(0.0)                                                  \
+    {                                                                                                                  \
+    }                                                                                                                  \
   };
 
 #define MSEXPRESSIONFUNCTION(classname, expr, order, deriv)                                                            \
-  class classname : public Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType {                                \
+  class classname : public Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType                                  \
+  {                                                                                                                    \
   public:                                                                                                              \
-    classname(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,                             \
+    classname(MPIHelper::MPICommunicator /*global*/,                                                                   \
+              MPIHelper::MPICommunicator /*local*/,                                                                    \
               Dune::XT::Common::Configuration /*config_in*/)                                                           \
-      : Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType("x", expr, order, #classname, deriv) {}             \
+      : Dune::Multiscale::CommonTraits::ExpressionFunctionBaseType("x", expr, order, #classname, deriv)                \
+    {                                                                                                                  \
+    }                                                                                                                  \
   };
 
 #endif // DUNE_MS_PROBLEMS_BASE_HH

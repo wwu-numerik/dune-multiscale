@@ -38,22 +38,30 @@ namespace Multiscale {
 /** \brief define output parameters for local problems
  *  appends "local_problems" for path
  **/
-struct LocalProblemDataOutputParameters : public OutputParameters {
+struct LocalProblemDataOutputParameters : public OutputParameters
+{
 public:
   explicit LocalProblemDataOutputParameters(const Problem::ProblemContainer& problem);
 };
 
 LocalProblemDataOutputParameters::LocalProblemDataOutputParameters(const DMP::ProblemContainer& problem)
-  : OutputParameters(problem.config().get("global.datadir", "data") + std::string("/local_problems/")) {}
+  : OutputParameters(problem.config().get("global.datadir", "data") + std::string("/local_problems/"))
+{
+}
 
-LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer& problem, CommonTraits::SpaceType coarse_space,
+LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer& problem,
+                                       CommonTraits::SpaceType coarse_space,
                                        LocalGridList& localgrid_list)
   : localgrid_list_(localgrid_list)
   , coarse_space_(coarse_space)
-  , problem_(problem) {}
+  , problem_(problem)
+{
+}
 
-void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntityType& coarseCell,
-                                                  MsFEMTraits::LocalSolutionVectorType& all_localproblem_solutions) const {
+void LocalProblemSolver::solve_all_on_single_cell(
+    const MsFEMTraits::CoarseEntityType& coarseCell,
+    MsFEMTraits::LocalSolutionVectorType& all_localproblem_solutions) const
+{
   assert(all_localproblem_solutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
@@ -105,12 +113,13 @@ void LocalProblemSolver::solve_all_on_single_cell(const MsFEMTraits::CoarseEntit
   }
 }
 
-void LocalProblemSolver::solve_for_all_cells() {
+void LocalProblemSolver::solve_for_all_cells()
+{
   const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
-  MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n") % grid.comm().rank() %
-                     coarseGridSize;
+  MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n") % grid.comm().rank()
+                     % coarseGridSize;
   DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method

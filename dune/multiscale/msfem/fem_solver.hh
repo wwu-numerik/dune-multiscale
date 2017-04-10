@@ -16,7 +16,8 @@ struct ProblemContainer;
 }
 
 //! \todo docme
-class Elliptic_FEM_Solver {
+class Elliptic_FEM_Solver
+{
 
   typedef std::shared_ptr<CommonTraits::GridType> GridPtrType;
 

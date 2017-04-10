@@ -28,7 +28,8 @@ namespace Multiscale {
 
 Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScaleOperator::RangeSpaceType& range_space,
                                                                const CoarseScaleOperator::SourceSpaceType& source_space,
-                                                               const CoarseScaleOperator::GridViewType& grid_view) {
+                                                               const CoarseScaleOperator::GridViewType& grid_view)
+{
   return range_space.compute_volume_pattern(grid_view, source_space);
 }
 
@@ -38,13 +39,14 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   : OperatorBaseType(global_matrix_, source_space_in)
   , AssemblerBaseType(source_space_in,
                       source_space_in.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
-  , global_matrix_(coarse_space().mapper().size(), coarse_space().mapper().size(),
-                   EllipticOperatorType::pattern(coarse_space()))
+  , global_matrix_(
+        coarse_space().mapper().size(), coarse_space().mapper().size(), EllipticOperatorType::pattern(coarse_space()))
   , local_operator_(problem.getDiffusion())
   , local_assembler_(local_operator_, localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
   , dirichlet_projection_(coarse_space())
-  , problem_(problem) {
+  , problem_(problem)
+{
 
   MS_LOG_INFO << "Assembling coarse system" << std::endl;
   Dune::XT::Common::ScopedTiming st("msfem.coarse.assemble");
@@ -60,7 +62,8 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   const auto& neumann = problem_.getNeumannData();
 
   typedef CommonTraits::InteriorGridViewType InteriorView;
-  GDT::Operators::DirichletProjectionLocalizable<InteriorView, Problem::DirichletDataBase,
+  GDT::Operators::DirichletProjectionLocalizable<InteriorView,
+                                                 Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
       dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, InteriorView>
@@ -88,9 +91,13 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   dirichlet_constraints.apply(global_matrix_, force_functional.vector());
 }
 
-void CoarseScaleOperator::assemble() { DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this"); }
+void CoarseScaleOperator::assemble()
+{
+  DUNE_THROW(Dune::InvalidStateException, "nobody should be calling this");
+}
 
-void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution) {
+void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunction& solution)
+{
   // to synchronize timing:
   MPIHelper::getCollectiveCommunication().barrier();
   MS_LOG_INFO << "Assembling coarse system took "
@@ -130,7 +137,10 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
               << std::endl;
 }
 
-const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const { return test_space(); }
+const CoarseScaleOperator::SourceSpaceType& CoarseScaleOperator::coarse_space() const
+{
+  return test_space();
+}
 
 } // namespace Multiscale {
 } // namespace Dune {

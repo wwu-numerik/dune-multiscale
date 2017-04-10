@@ -8,7 +8,8 @@
 #include <dune/grid/common/gridenums.hh>
 
 Dune::Multiscale::LocalGridSearch::EntityVectorType Dune::Multiscale::LocalGridSearch::
-operator()(const PointContainerType& points) {
+operator()(const PointContainerType& points)
+{
   typedef typename EntityVectorType::value_type EPV;
   const auto is_null = [&](const EPV& ptr) { return ptr == nullptr; };
   const auto not_null = [&](const EPV& ptr) { return ptr != nullptr; };
@@ -55,7 +56,8 @@ operator()(const PointContainerType& points) {
 
 bool Dune::Multiscale::LocalGridSearch::covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity,
                                                       const Dune::Multiscale::LocalGridSearch::PointIterator first,
-                                                      const Dune::Multiscale::LocalGridSearch::PointIterator last) {
+                                                      const Dune::Multiscale::LocalGridSearch::PointIterator last)
+{
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (auto it = first; it != last; ++it) {
@@ -70,16 +72,20 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
   , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
-  , static_iterator_(nullptr) {}
+  , static_iterator_(nullptr)
+{
+}
 
 Dune::Multiscale::LocalGridSearch::LocalGridSearch(const Dune::Multiscale::LocalGridSearch& other)
   : coarse_space_(other.coarse_space_)
   , gridlist_(other.gridlist_)
   , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorPartition>())
-  , static_iterator_(nullptr) {}
+  , static_iterator_(nullptr)
+{
+}
 
-const Dune::Multiscale::MsFEMTraits::CoarseEntityType&
-Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const {
+const Dune::Multiscale::MsFEMTraits::CoarseEntityType& Dune::Multiscale::LocalGridSearch::current_coarse_pointer() const
+{
   assert(current_coarse_entity_);
   return *current_coarse_entity_;
 }

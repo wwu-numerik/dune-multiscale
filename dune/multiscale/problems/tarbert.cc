@@ -14,17 +14,20 @@ namespace Multiscale {
 namespace Problem {
 namespace Tarbert {
 
-ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
+                                   MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , subBoundaryInfo_() {
+  , subBoundaryInfo_()
+{
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
       DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
   subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
       DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const
+{
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
   switch (View::dimension /*View is defined in IModelProblemData*/) {
@@ -43,11 +46,18 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   return {lowerLeft, upperRight};
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
+{
+  return *boundaryInfo_;
+}
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return *subBoundaryInfo_; }
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const
+{
+  return *subBoundaryInfo_;
+}
 
-ParameterTree ModelProblemData::boundary_settings() const {
+ParameterTree ModelProblemData::boundary_settings() const
+{
   Dune::ParameterTree boundarySettings;
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
@@ -69,36 +79,48 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
+  y = 0.0;
+} // evaluate
 
-void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
+void NeumannData::evaluate(const DomainType& x, RangeType& y) const
+{
   if (std::abs(x[1]) < 1e-6)
     y = -1.0;
   else
     y = 0.0;
 } // evaluate
 
-Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-               Dune::XT::Common::Configuration /*config_in*/) {}
+Source::Source(MPIHelper::MPICommunicator /*global*/,
+               MPIHelper::MPICommunicator /*local*/,
+               Dune::XT::Common::Configuration /*config_in*/)
+{
+}
 
-void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
+void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
   y = typename CommonTraits::RangeType(0.0);
 } // evaluate
 
-Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/,
+                     MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration /*config_in*/)
   : deltas_{6.096, 3.048, 0.6096}
   , permeability_(nullptr)
-  , permMatrix_(0.0) {
+  , permMatrix_(0.0)
+{
   readPermeability();
 }
 
-Diffusion::~Diffusion() {
+Diffusion::~Diffusion()
+{
   delete permeability_;
   permeability_ = nullptr;
 }
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const
+{
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
   if (!permeability_) {
@@ -134,14 +156,17 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   y = permMatrix_;
 }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                              Problem::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x,
+                              const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const
+{
   Diffusion::RangeType eval_tmp;
   evaluate(x, eval_tmp);
   eval_tmp.mv(direction[0], flux[0]);
 } // diffusiveFlux
 
-void Diffusion::readPermeability() {
+void Diffusion::readPermeability()
+{
   std::string filename = "../dune/multiscale/problems/elliptic/spe10_permeability.dat";
   std::ifstream file(filename.c_str());
   double val;

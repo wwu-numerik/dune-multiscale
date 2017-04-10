@@ -39,7 +39,8 @@
 /// \tparam COR   class providing correlation via method R operator()(X d)
 ///               where d=x-y is the difference of two related points
 template <int DIM, typename X, typename R, typename COR>
-class Permeability {
+class Permeability
+{
 
 private:
   typedef std::array<double, 2> complex;
@@ -48,18 +49,25 @@ private:
 
 public:
   /// Exception
-  class Error : public std::exception {
+  class Error : public std::exception
+  {
   public:
     Error(const char* message)
-      : _message(message) {}
-    const char* what() const throw() { return _message; }
+      : _message(message)
+    {
+    }
+    const char* what() const throw()
+    {
+      return _message;
+    }
 
   private:
     const char* _message;
   };
 
   /// Default constructor
-  Permeability() {
+  Permeability()
+  {
     _fft = NULL;
     _ifft = NULL;
   }
@@ -75,7 +83,8 @@ public:
   /// \param log2Seg  log2 of number of segments on [0,1] per dimension
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
-  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8) {
+  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8)
+  {
     _fft = NULL;
     _ifft = NULL;
     init(comm, corr, log2Seg, seed, overlap, minimal);
@@ -90,7 +99,8 @@ public:
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
   /// \param minimal  minimal permeability
-  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8) {
+  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8)
+  {
 
     // Initialize
     _comm = comm;
@@ -158,8 +168,8 @@ public:
       fftw_complex* layer = (fftw_complex*)_layer.data();
       _fft =
           fftw_mpi_plan_dft_3d(_2N, _2N, _2N, base, base, _comm, FFTW_FORWARD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_OUT);
-      _ifft = fftw_mpi_plan_dft_3d(_2N, _2N, _2N, layer, layer, _comm, FFTW_BACKWARD,
-                                   FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN);
+      _ifft = fftw_mpi_plan_dft_3d(
+          _2N, _2N, _2N, layer, layer, _comm, FFTW_BACKWARD, FFTW_ESTIMATE | FFTW_MPI_TRANSPOSED_IN);
       int p = 0;
       for (int i = 0; i < _n0; ++i) {
         x[0] = (i + _start > _N) ? (_2N - _start - i) * h : (_start + i) * h;
@@ -186,7 +196,8 @@ public:
   }
 
   /// Delete object.
-  ~Permeability() {
+  ~Permeability()
+  {
     fftw_destroy_plan(_fft);
     fftw_destroy_plan(_ifft);
   }
@@ -195,7 +206,8 @@ public:
   /// \param   nProc       total number of processors
   /// \param   procPerDim  number of processors per dimension
   /// \returns false, if number of processors is not a power of 2
-  static bool partition(int nProc, int* procPerDim) {
+  static bool partition(int nProc, int* procPerDim)
+  {
     double h = std::log2(nProc);
     int log2P = int(h);
     if (log2P != h)
@@ -212,7 +224,8 @@ private:
   /// \param iProc       processor index
   /// \param procPerDim  number of processors per dimension
   /// \param pos         position on processor grid
-  static void gridPosition(int iProc, const int* procPerDim, int* pos) {
+  static void gridPosition(int iProc, const int* procPerDim, int* pos)
+  {
     int off[DIM];
     off[0] = 1;
     for (int i = 1; i < DIM; ++i) {
@@ -225,7 +238,8 @@ private:
   }
 
   /// Compute index range of local part of permeability field
-  void setRange() {
+  void setRange()
+  {
     int size = 1;
     int procPerDim[DIM];
     int pos[DIM];
@@ -242,7 +256,8 @@ private:
   }
 
   /// Redistribute permeability from layers to blocks.
-  void redistribute() {
+  void redistribute()
+  {
     MPI_Win win;
     int nCplx = sizeof(complex);
     MPI_Win_create(_layer.data(), nCplx * _layer.size(), nCplx, MPI_INFO_NULL, _comm, &win);
@@ -278,7 +293,8 @@ private:
 
 public:
   /// Create random permeability field from basis.
-  void create() {
+  void create()
+  {
     // toggle between real and imaginary part of permeability field.
     // Recompute only if next real part is requested.
     _part = 1 - _part;
@@ -308,7 +324,8 @@ public:
   /// Evaluate permeability field.
   /// \param x position
   /// \return permeability at x
-  R operator()(const X& x) const {
+  R operator()(const X& x) const
+  {
     int cell = 0;
     double t[DIM];
     double k;
@@ -326,8 +343,8 @@ public:
       int c01 = c00 + 1;
       int c10 = c00 + _size[1];
       int c11 = c10 + 1;
-      k = ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0]) +
-          ((1 - t[1]) * _perm[c10][_part] + t[1] * _perm[c11][_part]) * t[0];
+      k = ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0])
+          + ((1 - t[1]) * _perm[c10][_part] + t[1] * _perm[c11][_part]) * t[0];
     } else if (DIM == 3) {
       int c000 = cell;
       int c001 = c000 + 1;
@@ -337,12 +354,12 @@ public:
       int c101 = c100 + 1;
       int c110 = c100 + _size[2];
       int c111 = c110 + 1;
-      k = (((1 - t[2]) * _perm[c000][_part] + t[2] * _perm[c001][_part]) * (1 - t[1]) +
-           ((1 - t[2]) * _perm[c010][_part] + t[2] * _perm[c011][_part]) * t[1]) *
-              (1 - t[0]) +
-          (((1 - t[2]) * _perm[c100][_part] + t[2] * _perm[c101][_part]) * (1 - t[1]) +
-           ((1 - t[2]) * _perm[c110][_part] + t[2] * _perm[c111][_part]) * t[1]) *
-              t[0];
+      k = (((1 - t[2]) * _perm[c000][_part] + t[2] * _perm[c001][_part]) * (1 - t[1])
+           + ((1 - t[2]) * _perm[c010][_part] + t[2] * _perm[c011][_part]) * t[1])
+              * (1 - t[0])
+          + (((1 - t[2]) * _perm[c100][_part] + t[2] * _perm[c101][_part]) * (1 - t[1])
+             + ((1 - t[2]) * _perm[c110][_part] + t[2] * _perm[c111][_part]) * t[1])
+                * t[0];
     } else {
       std::cerr << "Not implemented, yet.\n";
       exit(1);
@@ -352,25 +369,25 @@ public:
 
   //--- Members ------------------------------------------------------------
 private:
-  int _iProc;                               ///< index of processor
-  int _nProc;                               ///< total number of processors
-  int _overlap;                             ///< overlap of subgrids
-  int _N;                                   ///< number of segments on [0,1]
-  double _minimal;                          ///< minimal permeability
-  ptrdiff_t _n0;                            ///< local num. of segments along 1st dim
-  ptrdiff_t _start;                         ///< 1st local index along 1st dim.
-  COR _corr;                                ///< correlation as function of x-y
-  MPI_Comm _comm;                           ///< MPI-communicator
-  fftw_plan _fft;                           ///< plan for fast fourier transform
-  fftw_plan _ifft;                          ///< plan for inverse fft
-  cvec _base;                               ///< base functions
-  cvec _layer;                              ///< local layer of permeability field
-  cvec _perm;                               ///< permeability field
-  int _part;                                ///< 0: real, 1: imaginary part of _perm
-  iarr _iMin;                               ///< minimal global indices of subgrid
-  iarr _iMax;                               ///< maximal global indices of subgrid
-  iarr _size;                               ///< number of nodes per dim in subgrid
-  std::default_random_engine _rand;         ///< random number generator
+  int _iProc; ///< index of processor
+  int _nProc; ///< total number of processors
+  int _overlap; ///< overlap of subgrids
+  int _N; ///< number of segments on [0,1]
+  double _minimal; ///< minimal permeability
+  ptrdiff_t _n0; ///< local num. of segments along 1st dim
+  ptrdiff_t _start; ///< 1st local index along 1st dim.
+  COR _corr; ///< correlation as function of x-y
+  MPI_Comm _comm; ///< MPI-communicator
+  fftw_plan _fft; ///< plan for fast fourier transform
+  fftw_plan _ifft; ///< plan for inverse fft
+  cvec _base; ///< base functions
+  cvec _layer; ///< local layer of permeability field
+  cvec _perm; ///< permeability field
+  int _part; ///< 0: real, 1: imaginary part of _perm
+  iarr _iMin; ///< minimal global indices of subgrid
+  iarr _iMax; ///< maximal global indices of subgrid
+  iarr _size; ///< number of nodes per dim in subgrid
+  std::default_random_engine _rand; ///< random number generator
   std::normal_distribution<double> _normal; ///< normal distribution
 };
 

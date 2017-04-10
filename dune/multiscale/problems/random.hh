@@ -45,7 +45,8 @@ namespace Random {
 ///
 /// \author jan.mohring@itwm.fraunhofer.de
 /// \date 2014
-class Correlation {
+class Correlation
+{
   static constexpr auto DIM = CommonTraits::world_dim;
   typedef DomainType X;
   typedef CommonTraits::DomainFieldType R;
@@ -56,16 +57,20 @@ public:
   /// \param sigma     standard deviation
   Correlation(R corrLen = 0.1, R sigma = 1.0)
     : _corrLen(corrLen)
-    , _sigma2(sigma * sigma) {}
+    , _sigma2(sigma * sigma)
+  {
+  }
 
-  Correlation(const Correlation& old) {
+  Correlation(const Correlation& old)
+  {
     _corrLen = old._corrLen;
     _sigma2 = old._sigma2;
   }
 
   /// Evaluation
   /// \param d   difference of points to take corretation of
-  R operator()(X d) const {
+  R operator()(X d) const
+  {
     R sumX2 = 0;
     for (int i = 0; i < DIM; ++i) {
       sumX2 += d[i] * d[i];
@@ -75,20 +80,26 @@ public:
 
 private:
   R _corrLen; //< correlation length
-  R _sigma2;  //< standard deviation
+  R _sigma2; //< standard deviation
 };
 
-struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const final override { return false; }
+struct ModelProblemData : public IModelProblemData
+{
+  virtual bool hasExactSolution() const final override
+  {
+    return false;
+  }
 
-  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/,
+                   MPIHelper::MPICommunicator /*local*/,
                    Dune::XT::Common::Configuration /*config_in*/);
 
   const BoundaryInfoType& boundaryInfo() const final override;
   const SubBoundaryInfoType& subBoundaryInfo() const final override;
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
-  virtual void problem_init(DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
+  virtual void problem_init(DMP::ProblemContainer& problem,
+                            MPIHelper::MPICommunicator global,
                             MPIHelper::MPICommunicator local) final override;
   virtual void prepare_new_evaluation(DMP::ProblemContainer& problem) final override;
 
@@ -98,19 +109,23 @@ private:
   DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
-class Diffusion : public DiffusionBase {
+class Diffusion : public DiffusionBase
+{
 public:
-  Diffusion(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+  Diffusion(MPIHelper::MPICommunicator global,
+            MPIHelper::MPICommunicator local,
             Dune::XT::Common::Configuration config_in);
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
-  PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  PURE HOT void diffusiveFlux(const DomainType& x,
+                              const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const final override;
 
   virtual size_t order() const final override;
 
-  virtual void init(const DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
+  virtual void init(const DMP::ProblemContainer& problem,
+                    MPIHelper::MPICommunicator global,
                     MPIHelper::MPICommunicator local) final override;
   virtual void prepare_new_evaluation() final override;
 
@@ -123,19 +138,29 @@ private:
 #endif
 };
 
-class DirichletData : public DirichletDataBase {
+class DirichletData : public DirichletDataBase
+{
 public:
-  DirichletData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                Dune::XT::Common::Configuration /*config_in*/) {}
-  virtual ~DirichletData() {}
+  DirichletData(MPIHelper::MPICommunicator /*global*/,
+                MPIHelper::MPICommunicator /*local*/,
+                Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
+  virtual ~DirichletData()
+  {
+  }
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
-class NeumannData : public NeumannDataBase {
+class NeumannData : public NeumannDataBase
+{
 public:
-  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-              Dune::XT::Common::Configuration /*config_in*/) {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/,
+              MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };

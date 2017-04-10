@@ -13,10 +13,13 @@ namespace Dune {
 namespace Multiscale {
 
 //! define output parameters for \ref Dune::DataOutput
-struct OutputParameters {
+struct OutputParameters
+{
 public:
   explicit OutputParameters(const std::string _path);
-  virtual ~OutputParameters() {}
+  virtual ~OutputParameters()
+  {
+  }
 
 private:
   std::string my_prefix_;

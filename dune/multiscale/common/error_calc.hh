@@ -14,10 +14,12 @@ namespace Multiscale {
 class Elliptic_FEM_Solver;
 class LocalsolutionProxy;
 
-class ErrorCalculator {
+class ErrorCalculator
+{
 
 public:
-  ErrorCalculator(const Problem::ProblemContainer& problem, const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
+  ErrorCalculator(const Problem::ProblemContainer& problem,
+                  const std::unique_ptr<LocalsolutionProxy>& msfem_solution,
                   CommonTraits::ConstDiscreteFunctionType* fem_solution);
 
   //! this one runs cg-fem sim if mandated by config

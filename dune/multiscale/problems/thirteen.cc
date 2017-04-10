@@ -15,26 +15,44 @@ namespace Thirteen {
 // default value for epsilon (if not sprecified in the parameter file)
 CONSTANTSFUNCTION(0.05)
 
-ModelProblemData::ModelProblemData() : IModelProblemData(constants()) {
+ModelProblemData::ModelProblemData()
+  : IModelProblemData(constants())
+{
   if (constants().get("stochastic_pertubation", false) && !(this->problemAllowsStochastics()))
     DUNE_THROW(Dune::InvalidStateException,
                "The problem does not allow stochastic perturbations. Please, switch the key off.");
 }
 
-std::string ModelProblemData::getMacroGridFile() const {
+std::string ModelProblemData::getMacroGridFile() const
+{
   return ("../dune/multiscale/grids/macro_grids/elliptic/cube_three_dirichlet_neumann.dgf");
 }
 
-bool ModelProblemData::problemIsPeriodic() const { return false; }
+bool ModelProblemData::problemIsPeriodic() const
+{
+  return false;
+}
 
-void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+void FirstSource::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
+  y = 0.0;
+} // evaluate
 
-void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const { evaluate(x, y); }
+void FirstSource::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+{
+  evaluate(x, y);
+}
 
-Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                     Dune::XT::Common::Configuration /*config_in*/) {}
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/,
+                     MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration /*config_in*/)
+{
+}
 
-void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction, Problem::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x,
+                              const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const
+{
 
   double conductor_thickness = 0.05;
   double conductivity = 20.0;
@@ -114,8 +132,11 @@ void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeT
   flux[0][1] = a_1_0 * direction[0][0] + a_1_1 * direction[0][1];
 } // diffusiveFlux
 
-void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& /*position_gradient*/,
-                                      const Problem::JacobianRangeType& direction_gradient, Problem::JacobianRangeType& flux) const {
+void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
+                                      const Problem::JacobianRangeType& /*position_gradient*/,
+                                      const Problem::JacobianRangeType& direction_gradient,
+                                      Problem::JacobianRangeType& flux) const
+{
 
   double conductor_thickness = 0.05;
   double conductivity = 100.0;
@@ -196,7 +217,8 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x, const Problem::Jacobi
 } // jacobianDiffusiveFlux
 
 
-void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const {
+void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const
+{
 
   double conductor_thickness = 0.05;
 
@@ -212,7 +234,8 @@ void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const
 
 } // evaluate
 
-void NeumannBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const {
+void NeumannBoundaryCondition::evaluate(const DomainType& x, const TimeType& /*time*/, RangeType& y) const
+{
   evaluate(x, y);
 }
 

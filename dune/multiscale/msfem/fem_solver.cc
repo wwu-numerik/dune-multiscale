@@ -31,17 +31,23 @@ Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Problem::ProblemContainer& proble
   : grid_(grid)
   , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
   , solution_(space_, "fem_solution")
-  , problem_(problem) {}
+  , problem_(problem)
+{
+}
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const DMP::ProblemContainer& problem)
-  : Elliptic_FEM_Solver(problem, make_fine_grid(problem, nullptr, false)) {}
+  : Elliptic_FEM_Solver(problem, make_fine_grid(problem, nullptr, false))
+{
+}
 
-CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve() {
+CommonTraits::ConstDiscreteFunctionType& Elliptic_FEM_Solver::solve()
+{
   apply(solution_);
   return solution_;
 }
 
-void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const {
+void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) const
+{
   MS_LOG_DEBUG_0 << "Solving linear problem with standard FEM" << std::endl;
 
   DXTC_TIMINGS.start("fem.apply");
@@ -55,8 +61,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
       EllipticOperatorType;
-  CommonTraits::LinearOperatorType system_matrix(space.mapper().size(), space.mapper().size(),
-                                                 EllipticOperatorType::pattern(space));
+  CommonTraits::LinearOperatorType system_matrix(
+      space.mapper().size(), space.mapper().size(), EllipticOperatorType::pattern(space));
   CommonTraits::GdtVectorType rhs_vector(space.mapper().size());
   auto& solution_vector = solution.vector();
   // left hand side (elliptic operator)

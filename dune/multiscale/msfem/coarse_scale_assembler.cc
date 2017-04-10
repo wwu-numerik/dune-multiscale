@@ -23,16 +23,23 @@ namespace Multiscale {
 
 MsFEMCodim0Integral::MsFEMCodim0Integral(const Problem::DiffusionBase& diffusion, const size_t over_integrate)
   : over_integrate_(over_integrate)
-  , diffusion_(diffusion) {}
+  , diffusion_(diffusion)
+{
+}
 
-size_t MsFEMCodim0Integral::numTmpObjectsRequired() const { return numTmpObjectsRequired_; }
+size_t MsFEMCodim0Integral::numTmpObjectsRequired() const
+{
+  return numTmpObjectsRequired_;
+}
 
 void MsFEMCodim0Integral::apply(
-    LocalproblemSolutionManager& localSolutionManager, const MsFEMTraits::LocalEntityType& localGridEntity,
+    LocalproblemSolutionManager& localSolutionManager,
+    const MsFEMTraits::LocalEntityType& localGridEntity,
     const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
     Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
-    std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& /*tmpLocalMatrices*/) const {
+    std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& /*tmpLocalMatrices*/) const
+{
   const auto& diffusion_operator = diffusion_;
 
   // quadrature
@@ -98,24 +105,33 @@ void MsFEMCodim0Integral::apply(
         ret[jj][ii] += local_integral * integrationFactor * quadratureWeight;
       }
     } // compute integral
-  }   // loop over all quadrature points
+  } // loop over all quadrature points
 }
 
 MsFemCodim0Matrix::MsFemCodim0Matrix(const MsFemCodim0Matrix::LocalOperatorType& op, LocalGridList& localGridList)
   : localOperator_(op)
-  , localGridList_(localGridList) {}
+  , localGridList_(localGridList)
+{
+}
 
-const MsFemCodim0Matrix::LocalOperatorType& MsFemCodim0Matrix::localOperator() const { return localOperator_; }
+const MsFemCodim0Matrix::LocalOperatorType& MsFemCodim0Matrix::localOperator() const
+{
+  return localOperator_;
+}
 
-std::vector<size_t> MsFemCodim0Matrix::numTmpObjectsRequired() const {
+std::vector<size_t> MsFemCodim0Matrix::numTmpObjectsRequired() const
+{
   return {numTmpObjectsRequired_, localOperator_.numTmpObjectsRequired()};
 }
 
 void MsFemCodim0Matrix::assembleLocal(
-    const CommonTraits::SpaceType& testSpace, const CommonTraits::SpaceType& ansatzSpace,
-    const CommonTraits::EntityType& coarse_grid_entity, CommonTraits::LinearOperatorType& systemMatrix,
+    const CommonTraits::SpaceType& testSpace,
+    const CommonTraits::SpaceType& ansatzSpace,
+    const CommonTraits::EntityType& coarse_grid_entity,
+    CommonTraits::LinearOperatorType& systemMatrix,
     std::vector<std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>>& tmpLocalMatricesContainer,
-    std::vector<Dune::DynamicVector<size_t>>& tmpIndicesContainer) const {
+    std::vector<Dune::DynamicVector<size_t>>& tmpIndicesContainer) const
+{
   // check
   assert(tmpLocalMatricesContainer.size() >= 1);
   assert(tmpLocalMatricesContainer[0].size() >= numTmpObjectsRequired_);
@@ -137,8 +153,12 @@ void MsFemCodim0Matrix::assembleLocal(
     localMatrix *= 0.0;
     auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
     // apply local operator (result is in localMatrix)
-    localOperator_.apply(localSolutionManager, localGridEntity, testSpace.base_function_set(coarse_grid_entity),
-                         ansatzSpace.base_function_set(coarse_grid_entity), localMatrix, tmpOperatorMatrices);
+    localOperator_.apply(localSolutionManager,
+                         localGridEntity,
+                         testSpace.base_function_set(coarse_grid_entity),
+                         ansatzSpace.base_function_set(coarse_grid_entity),
+                         localMatrix,
+                         tmpOperatorMatrices);
     // write local matrix to global
     auto& globalRows = tmpIndicesContainer[0];
     auto& globalCols = tmpIndicesContainer[1];

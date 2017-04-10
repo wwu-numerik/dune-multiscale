@@ -32,7 +32,8 @@
 namespace Dune {
 namespace Multiscale {
 
-struct IOTraits {
+struct IOTraits
+{
   typedef MsFEMTraits::LocalGridDiscreteFunctionType DiscreteFunctionType;
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
@@ -40,9 +41,11 @@ struct IOTraits {
   typedef typename DiscreteFunctionSpaceType::GridViewType GridViewType;
 };
 
-class DiskBackend : public boost::noncopyable {
+class DiskBackend : public boost::noncopyable
+{
 
-  void load_disk_functions() {
+  void load_disk_functions()
+  {
     Dune::XT::Common::test_create_directory(dir_.string());
     // if functions present, load em
   }
@@ -56,15 +59,19 @@ public:
    */
   DiskBackend(const Dune::XT::Common::Configuration& config, const std::string filename = "nonsense_default_for_map")
     : dir_(boost::filesystem::path(config.get("global.datadir", "data")) / filename)
-    , index_(0) {}
+    , index_(0)
+  {
+  }
 
-  void append(const IOTraits::DiscreteFunction_ptr& /*df*/) {
+  void append(const IOTraits::DiscreteFunction_ptr& /*df*/)
+  {
     const std::string fn = (dir_ / Dune::XT::Common::to_string(index_++)).string();
     Dune::XT::Common::test_create_directory(fn);
     DUNE_THROW(NotImplemented, "");
   }
 
-  void read(const unsigned long index, IOTraits::DiscreteFunction_ptr& /*df*/) {
+  void read(const unsigned long index, IOTraits::DiscreteFunction_ptr& /*df*/)
+  {
     const std::string fn = (dir_ / Dune::XT::Common::to_string(index)).string();
     DUNE_THROW(NotImplemented, "");
   }
@@ -79,7 +86,8 @@ private:
  * this class isn't type safe in the sense that different appends may append
  * non-convertible discrete function implementations
  */
-class MemoryBackend : public boost::noncopyable {
+class MemoryBackend : public boost::noncopyable
+{
 public:
   /**
    * \brief DiscreteFunctionWriter
@@ -88,11 +96,17 @@ public:
    * \throws Dune::IOError if config["global.datadir"]/filename cannot be opened
    */
   MemoryBackend(IOTraits::GridViewType& grid_view, const std::string /*filename*/ = "nonsense_default_for_map")
-    : space_(MsFEMTraits::SpaceChooserType::make_space(grid_view)) {}
+    : space_(MsFEMTraits::SpaceChooserType::make_space(grid_view))
+  {
+  }
 
-  void append(const IOTraits::DiscreteFunction_ptr& df) { functions_.push_back(df); }
+  void append(const IOTraits::DiscreteFunction_ptr& df)
+  {
+    functions_.push_back(df);
+  }
 
-  void read(const unsigned long index, IOTraits::DiscreteFunction_ptr& df) {
+  void read(const unsigned long index, IOTraits::DiscreteFunction_ptr& df)
+  {
     if (index < functions_.size()) {
       df = functions_.at(index);
     } else
@@ -100,31 +114,41 @@ public:
     assert(df != nullptr);
   }
 
-  IOTraits::DiscreteFunctionSpaceType& space() { return space_; }
+  IOTraits::DiscreteFunctionSpaceType& space()
+  {
+    return space_;
+  }
 
 private:
   IOTraits::DiscreteFunctionSpaceType space_;
   IOTraits::Vector functions_;
 };
 
-class DiscreteFunctionIO : public boost::noncopyable {
+class DiscreteFunctionIO : public boost::noncopyable
+{
 
   typedef DiscreteFunctionIO ThisType;
 
   DiscreteFunctionIO() = default;
 
 private:
-  static ThisType& instance() {
+  static ThisType& instance()
+  {
     static ThisType s_this;
     return s_this;
   }
 
-  struct ClearGuard {
-    ~ClearGuard() { DiscreteFunctionIO::clear(); }
+  struct ClearGuard
+  {
+    ~ClearGuard()
+    {
+      DiscreteFunctionIO::clear();
+    }
   };
 
   template <class IOMapType, class... Args>
-  typename IOMapType::mapped_type& get(IOMapType& map, typename IOMapType::key_type key, Args&&... ctor_args) {
+  typename IOMapType::mapped_type& get(IOMapType& map, typename IOMapType::key_type key, Args&&... ctor_args)
+  {
     auto it = map.find(key);
     if (it != map.end())
       return it->second;
@@ -145,7 +169,10 @@ public:
   static MemoryBackend& memory(std::string filename, IOTraits::GridViewType& grid_view);
   static DiskBackend& disk(const XT::Common::Configuration& config, std::string filename);
 
-  static ClearGuard clear_guard() { return ClearGuard(); }
+  static ClearGuard clear_guard()
+  {
+    return ClearGuard();
+  }
 
 private:
   std::unordered_map<size_t, std::shared_ptr<MemoryBackend>> memory_;

@@ -25,7 +25,8 @@ class LocalGridSearch;
 template <class ImpTraits, size_t domainDim, size_t rangeDim>
 std::vector<typename GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>::DomainType> global_evaluation_points(
     const GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>& space,
-    const typename GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>::EntityType& target_entity) {
+    const typename GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>::EntityType& target_entity)
+{
   const auto& target_lagrangepoint_set = space.lagrange_points(target_entity);
   const auto& target_geometry = target_entity.geometry();
   const auto quadNop = target_lagrangepoint_set.size();
@@ -36,7 +37,8 @@ std::vector<typename GDT::Spaces::CGInterface<ImpTraits, domainDim, rangeDim, 1>
   return points;
 }
 
-class MsFEMProjection {
+class MsFEMProjection
+{
 public:
   //! signature for non-default SearchStrategy constructions
   static void project(LocalsolutionProxy& source, CommonTraits::DiscreteFunctionType& target);

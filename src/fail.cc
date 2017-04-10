@@ -1,15 +1,25 @@
 #include <type_traits>
 
-struct A{ typedef int I; I in;};
-struct B{ typedef int I; I in;};
+struct A
+{
+  typedef int I;
+  I in;
+};
+struct B
+{
+  typedef int I;
+  I in;
+};
 
 typedef A GridA;
 typedef B GridB;
 
 template <class T>
-struct Info {
+struct Info
+{
 
-  bool ok(T& ) {
+  bool ok(T&)
+  {
     return true;
   }
 };
@@ -18,33 +28,49 @@ typedef Info<GridA> AI;
 typedef Info<GridB> BI;
 
 
-struct ProblemBase {
-  virtual ~ProblemBase() {}
+struct ProblemBase
+{
+  virtual ~ProblemBase()
+  {
+  }
   virtual AI* info() = 0;
   virtual BI* subinfo() = 0;
-
 };
 
-struct Problem : public ProblemBase {
-  virtual ~Problem() {}
-  virtual AI* info() { return new AI(); }
-  virtual BI* subinfo() { return new BI(); }
-
+struct Problem : public ProblemBase
+{
+  virtual ~Problem()
+  {
+  }
+  virtual AI* info()
+  {
+    return new AI();
+  }
+  virtual BI* subinfo()
+  {
+    return new BI();
+  }
 };
 
-Problem problem() { return Problem(); }
+Problem problem()
+{
+  return Problem();
+}
 
 template <class J>
-typename std::enable_if<std::is_same<GridA, J>::value, bool>::type is_neu(J& j) {
+typename std::enable_if<std::is_same<GridA, J>::value, bool>::type is_neu(J& j)
+{
   return problem().info()->ok(j);
 }
 
 template <class J>
-typename std::enable_if<!std::is_same<GridA, J>::value, bool>::type is_neu(J& j) {
+typename std::enable_if<!std::is_same<GridA, J>::value, bool>::type is_neu(J& j)
+{
   return problem().subinfo()->ok(j);
 }
 
-int main() {
+int main()
+{
   GridA a;
   GridB b;
   auto foo = is_neu(a);

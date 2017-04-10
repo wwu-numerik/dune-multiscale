@@ -26,29 +26,38 @@ namespace Multiscale {
 namespace Problem {
 namespace Random {
 
-ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
+                                   MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
   , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
-  , subBoundaryInfo_() {}
+  , subBoundaryInfo_()
+{
+}
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const
+{
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(1.0);
   return {lowerLeft, upperRight};
 }
 
-void ModelProblemData::problem_init(DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
-                                    MPIHelper::MPICommunicator local) {
+void ModelProblemData::problem_init(DMP::ProblemContainer& problem,
+                                    MPIHelper::MPICommunicator global,
+                                    MPIHelper::MPICommunicator local)
+{
   problem.getMutableDiffusion().init(problem, global, local);
 }
 
-void ModelProblemData::prepare_new_evaluation(DMP::ProblemContainer& problem) {
+void ModelProblemData::prepare_new_evaluation(DMP::ProblemContainer& problem)
+{
   problem.getMutableDiffusion().prepare_new_evaluation();
 }
 
-void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommunicator global,
-                     MPIHelper::MPICommunicator local) {
+void Diffusion::init(const DMP::ProblemContainer& problem,
+                     MPIHelper::MPICommunicator global,
+                     MPIHelper::MPICommunicator local)
+{
   const auto cells_per_dim = problem.config().get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
   std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
   const int log2Seg = std::log2l(cells_per_dim[0]);
@@ -67,7 +76,8 @@ void Diffusion::init(const DMP::ProblemContainer& problem, MPIHelper::MPICommuni
 #endif
 }
 
-void Diffusion::prepare_new_evaluation() {
+void Diffusion::prepare_new_evaluation()
+{
   Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.create");
 #if HAVE_FFTW
   assert(field_);
@@ -77,11 +87,18 @@ void Diffusion::prepare_new_evaluation() {
 #endif
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
+{
+  return *boundaryInfo_;
+}
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return subBoundaryInfo_; }
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const
+{
+  return subBoundaryInfo_;
+}
 
-ParameterTree ModelProblemData::boundary_settings() const {
+ParameterTree ModelProblemData::boundary_settings() const
+{
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     return DXTC_CONFIG.sub("problem.boundaryInfo");
   }
@@ -106,10 +123,14 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-                     Dune::XT::Common::Configuration /*config_in*/) {}
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/,
+                     MPIHelper::MPICommunicator /*local*/,
+                     Dune::XT::Common::Configuration /*config_in*/)
+{
+}
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const
+{
 #if HAVE_FFTW
   assert(field_);
   const double scalar = field_->operator()(x);
@@ -121,8 +142,10 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const {
 #endif
 }
 
-PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                                       Problem::JacobianRangeType& flux) const {
+PURE HOT void Diffusion::diffusiveFlux(const DomainType& x,
+                                       const Problem::JacobianRangeType& direction,
+                                       Problem::JacobianRangeType& flux) const
+{
   Diffusion::RangeType eval;
   evaluate(x, eval);
   flux = 0;
@@ -131,11 +154,20 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x, const Problem::Jacob
 
 } // diffusiveFlux
 
-size_t Diffusion::order() const { return 1; }
+size_t Diffusion::order() const
+{
+  return 1;
+}
 
-PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const { y = 1.0 - x[0]; } // evaluate
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
+{
+  y = 1.0 - x[0];
+} // evaluate
 
-PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.; } // evaluate
+PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
+  y = 0.;
+} // evaluate
 
 } // namespace Nine
 } // namespace Problem

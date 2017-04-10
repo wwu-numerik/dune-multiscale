@@ -12,9 +12,10 @@ namespace Dune {
 namespace Stuff {
 namespace Grid {
 
-inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space) {
-  return space.grid_view().grid().leafIndexSet().geomTypes(0).size() == 1 &&
-         space.grid_view().grid().leafIndexSet().geomTypes(0)[0].isSimplex();
+inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space)
+{
+  return space.grid_view().grid().leafIndexSet().geomTypes(0).size() == 1
+         && space.grid_view().grid().leafIndexSet().geomTypes(0)[0].isSimplex();
 }
 
 } // namespace Grid
@@ -23,7 +24,8 @@ inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space) {
 namespace Multiscale {
 
 static inline auto interior_border_view(const CommonTraits::SpaceType& space)
-    -> decltype(space.grid_view().grid().leafGridView<InteriorBorder_Partition>()) {
+    -> decltype(space.grid_view().grid().leafGridView<InteriorBorder_Partition>())
+{
   return space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
 }
 

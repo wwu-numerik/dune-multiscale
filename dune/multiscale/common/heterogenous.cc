@@ -8,7 +8,8 @@
 #include <dune/grid/utility/partitioning/seedlist.hh>
 
 void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionProxy& source,
-                                                Dune::Multiscale::CommonTraits::DiscreteFunctionType& target) {
+                                                Dune::Multiscale::CommonTraits::DiscreteFunctionType& target)
+{
   constexpr size_t target_dimRange = CommonTraits::dimRange;
 
   const auto& space = target.space();
@@ -53,12 +54,14 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
   postprocess(target);
 }
 
-void Dune::Multiscale::MsFEMProjection::preprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func) {
+void Dune::Multiscale::MsFEMProjection::preprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func)
+{
   // set all DoFs to zero
   func.vector() *= 0;
 }
 
-void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func) {
+void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func)
+{
   // compute node to entity relations
   std::vector<int> nodeToEntity(func.space().grid_view().grid().size(CommonTraits::world_dim), 0);
   identifySharedNodes(func.space().grid_view(), nodeToEntity);
@@ -74,7 +77,8 @@ void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTrai
 }
 
 void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
-    const Dune::Multiscale::CommonTraits::GridViewType& gridPart, std::vector<int>& map) {
+    const Dune::Multiscale::CommonTraits::GridViewType& gridPart, std::vector<int>& map)
+{
   const auto& indexSet = gridPart.indexSet();
 
   for (const auto& entity : Dune::elements(gridPart.grid().leafGridView())) {

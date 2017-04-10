@@ -13,7 +13,8 @@
 
 #include <tbb/task_scheduler_init.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
   using namespace Dune::Multiscale;
   try {
     init(argc, argv);

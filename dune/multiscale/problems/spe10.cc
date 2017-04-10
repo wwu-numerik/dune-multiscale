@@ -24,24 +24,27 @@ static const double model_2_length_z = 51.816;
 static const double model_2_min_value = 6.65e-8; // isotropic: 0.000665
 static const double model_2_max_value = 20000;
 
-ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
+                                   MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , subBoundaryInfo_() {
+  , subBoundaryInfo_()
+{
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
       DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
   subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
       DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
-Dune::XT::Common::Configuration default_config() {
+Dune::XT::Common::Configuration default_config()
+{
   Dune::XT::Common::Configuration config;
   config["filename"] = model2_filename;
   config["name"] = "Spe10Diffusion";
   config["lower_left"] = "[0 0 0]";
-  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x) + " " +
-                          Dune::XT::Common::to_string(model_2_length_y) + " " +
-                          Dune::XT::Common::to_string(model_2_length_z) + "]";
+  config["upper_right"] = "[" + Dune::XT::Common::to_string(model_2_length_x) + " "
+                          + Dune::XT::Common::to_string(model_2_length_y) + " "
+                          + Dune::XT::Common::to_string(model_2_length_z) + "]";
   config["upper_right"] = "[2 5 1]";
   config["anisotropic"] = "true";
   config["min"] = Dune::XT::Common::to_string(model_2_min_value);
@@ -49,7 +52,8 @@ Dune::XT::Common::Configuration default_config() {
   return config;
 } // ... default_config(...)
 
-std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const {
+std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const
+{
   CommonTraits::DomainType lowerLeft(0.0);
   CommonTraits::DomainType upperRight(0.0);
   if (View::dimension != 3)
@@ -59,11 +63,18 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   return {ll, ur};
 }
 
-const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const { return *boundaryInfo_; }
+const ModelProblemData::BoundaryInfoType& ModelProblemData::boundaryInfo() const
+{
+  return *boundaryInfo_;
+}
 
-const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const { return *subBoundaryInfo_; }
+const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo() const
+{
+  return *subBoundaryInfo_;
+}
 
-ParameterTree ModelProblemData::boundary_settings() const {
+ParameterTree ModelProblemData::boundary_settings() const
+{
   Dune::ParameterTree boundarySettings;
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
@@ -84,31 +95,44 @@ ParameterTree ModelProblemData::boundary_settings() const {
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const { y = 0.0; } // evaluate
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
+  y = 0.0;
+} // evaluate
 
-void NeumannData::evaluate(const DomainType& x, RangeType& y) const {
+void NeumannData::evaluate(const DomainType& x, RangeType& y) const
+{
   if (Dune::XT::Common::FloatCmp::eq(x[1], CommonTraits::RangeFieldType(0)))
     y = 1.0;
   else
     y = 0.0;
 } // evaluate
 
-Source::Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-               Dune::XT::Common::Configuration /*config_in*/) {}
+Source::Source(MPIHelper::MPICommunicator /*global*/,
+               MPIHelper::MPICommunicator /*local*/,
+               Dune::XT::Common::Configuration /*config_in*/)
+{
+}
 
-void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const {
+void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const
+{
   y = typename CommonTraits::RangeType(0.0);
 } // evaluate
 
-Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/,
+                     MPIHelper::MPICommunicator /*local*/,
                      Dune::XT::Common::Configuration /*config_in*/)
-  : permeability_(nullptr) {
+  : permeability_(nullptr)
+{
   readPermeability();
 }
 
-Diffusion::~Diffusion() {}
+Diffusion::~Diffusion()
+{
+}
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const
+{
   BOOST_ASSERT_MSG(x.size() == 3, "SPE 10 model is only defined for three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?
   if (!permeability_) {
@@ -151,14 +175,17 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const {
   y[2][2] = permeability_[anisotropic ? 2 * entries_per_dim + ii : ii];
 }
 
-void Diffusion::diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
-                              Problem::JacobianRangeType& flux) const {
+void Diffusion::diffusiveFlux(const DomainType& x,
+                              const Problem::JacobianRangeType& direction,
+                              Problem::JacobianRangeType& flux) const
+{
   Diffusion::RangeType eval_tmp;
   evaluate(x, eval_tmp);
   eval_tmp.mv(direction[0], flux[0]);
 } // diffusiveFlux
 
-void Diffusion::readPermeability() {
+void Diffusion::readPermeability()
+{
   auto min = default_config().get<RangeFieldType>("min");
   auto max = default_config().get<RangeFieldType>("max");
   std::ifstream datafile(model2_filename);
@@ -180,8 +207,9 @@ void Diffusion::readPermeability() {
   }
   datafile.close();
   if (counter != data_size)
-    DUNE_THROW(Dune::IOError, "wrong number of entries in '" << model2_filename << "' (are " << counter
-                                                             << ", should be " << data_size << ")!");
+    DUNE_THROW(Dune::IOError,
+               "wrong number of entries in '" << model2_filename << "' (are " << counter << ", should be " << data_size
+                                              << ")!");
   return;
 } /* readPermeability */
 

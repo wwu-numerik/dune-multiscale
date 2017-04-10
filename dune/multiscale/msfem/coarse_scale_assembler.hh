@@ -19,27 +19,34 @@ class MsFemCodim0Matrix;
 class LocalproblemSolutionManager;
 class LocalGridList;
 
-class MsFEMCodim0IntegralTraits {
+class MsFEMCodim0IntegralTraits
+{
 public:
   typedef MsFEMCodim0Integral derived_type;
 };
 
-class MsFemCodim0MatrixTraits {
+class MsFemCodim0MatrixTraits
+{
 public:
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix derived_type;
 };
 
 class MsFEMCodim0Integral // LocalOperatorType
-    : public GDT::LocalOperator::Codim0Interface<MsFEMCodim0IntegralTraits> {
+    : public GDT::LocalOperator::Codim0Interface<MsFEMCodim0IntegralTraits>
+{
 public:
   typedef MsFEMCodim0IntegralTraits Traits;
 
 private:
   static constexpr size_t numTmpObjectsRequired_ = 1;
-  typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType, CommonTraits::DomainFieldType,
-                                           CommonTraits::dimDomain, CommonTraits::RangeFieldType,
-                                           CommonTraits::dimRange, 1> AnsatzLocalfunctionSetInterfaceType;
+  typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType,
+                                           CommonTraits::DomainFieldType,
+                                           CommonTraits::dimDomain,
+                                           CommonTraits::RangeFieldType,
+                                           CommonTraits::dimRange,
+                                           1>
+      AnsatzLocalfunctionSetInterfaceType;
   typedef AnsatzLocalfunctionSetInterfaceType TestLocalfunctionSetInterfaceType;
 
 public:
@@ -48,7 +55,8 @@ public:
   size_t numTmpObjectsRequired() const;
 
   void apply(Multiscale::LocalproblemSolutionManager& localSolutionManager,
-             const MsFEMTraits::LocalEntityType& localGridEntity, const TestLocalfunctionSetInterfaceType& testBase,
+             const MsFEMTraits::LocalEntityType& localGridEntity,
+             const TestLocalfunctionSetInterfaceType& testBase,
              const AnsatzLocalfunctionSetInterfaceType& ansatzBase,
              Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
              std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>& tmpLocalMatrices) const;
@@ -58,7 +66,8 @@ private:
   const DMP::DiffusionBase& diffusion_;
 };
 
-class MsFemCodim0Matrix {
+class MsFemCodim0Matrix
+{
 public:
   typedef MsFemCodim0MatrixTraits Traits;
   typedef typename Traits::LocalOperatorType LocalOperatorType;
@@ -74,8 +83,10 @@ public:
   std::vector<size_t> numTmpObjectsRequired() const;
 
   void
-  assembleLocal(const CommonTraits::SpaceType& testSpace, const CommonTraits::SpaceType& ansatzSpace,
-                const CommonTraits::EntityType& coarse_grid_entity, CommonTraits::LinearOperatorType& systemMatrix,
+  assembleLocal(const CommonTraits::SpaceType& testSpace,
+                const CommonTraits::SpaceType& ansatzSpace,
+                const CommonTraits::EntityType& coarse_grid_entity,
+                CommonTraits::LinearOperatorType& systemMatrix,
                 std::vector<std::vector<Dune::DynamicMatrix<CommonTraits::RangeFieldType>>>& tmpLocalMatricesContainer,
                 std::vector<Dune::DynamicVector<size_t>>& tmpIndicesContainer) const; // ... assembleLocal(...)
 

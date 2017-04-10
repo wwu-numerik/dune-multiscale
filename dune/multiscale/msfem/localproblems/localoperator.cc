@@ -29,34 +29,44 @@ namespace Multiscale {
 
 //! holds functionals,etc for boundary correctors to make conditional usage simpler
 template <class LocalNeumann>
-class BoundaryValueHelper {
+class BoundaryValueHelper
+{
   typedef GDT::Functionals::L2Face<LocalNeumann, CommonTraits::GdtVectorType, MsFEMTraits::LocalSpaceType>
       NeumannFunctional;
-  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
-                                     MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
-                                     DirichletProduct> DirichletCorrectorFunctionalType;
+  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType,
+                                     CommonTraits::GdtVectorType,
+                                     MsFEMTraits::LocalSpaceType,
+                                     MsFEMTraits::LocalGridViewType,
+                                     DirichletProduct>
+      DirichletCorrectorFunctionalType;
 
 public:
-  BoundaryValueHelper(const DMP::ProblemContainer& problem, const MsFEMTraits::LocalSpaceType& localSpace,
+  BoundaryValueHelper(const DMP::ProblemContainer& problem,
+                      const MsFEMTraits::LocalSpaceType& localSpace,
                       const Problem::LocalDiffusionType& local_diffusion_operator,
-                      MsFEMTraits::LocalSolutionVectorType& allLocalRHS, std::size_t coarseBaseFunc)
+                      MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
+                      std::size_t coarseBaseFunc)
     : localSpace_(localSpace)
     , dirichletExtensionLocal(localSpace_, "dirichletExtension")
     , local_neumann(problem.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
     , neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
     , dl_corrector_functional(problem.getDiffusion(), dirichletExtensionLocal, local_diffusion_operator)
-    , dirichlet_corrector(local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_,
-                          dl_corrector_functional)
-    , problem_(problem) {}
+    , dirichlet_corrector(
+          local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_, dl_corrector_functional)
+    , problem_(problem)
+  {
+  }
 
-  void dirichlet_projection(const CommonTraits::SpaceType& coarse_space) {
+  void dirichlet_projection(const CommonTraits::SpaceType& coarse_space)
+  {
     GDT::SystemAssembler<CommonTraits::SpaceType> coarse_system_assembler(coarse_space);
     const auto& dirichlet_data = problem_.getDirichletData();
     CommonTraits::DiscreteFunctionType dirichletExtensionCoarse(coarse_space, "Dirichlet Extension Coarse");
-    GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType, Problem::DirichletDataBase,
+    GDT::Operators::DirichletProjectionLocalizable<CommonTraits::GridViewType,
+                                                   Problem::DirichletDataBase,
                                                    CommonTraits::DiscreteFunctionType>
-        coarse_dirichlet_projection_operator(coarse_space.grid_view(), problem_.getModelData().boundaryInfo(),
-                                             dirichlet_data, dirichletExtensionCoarse);
+        coarse_dirichlet_projection_operator(
+            coarse_space.grid_view(), problem_.getModelData().boundaryInfo(), dirichlet_data, dirichletExtensionCoarse);
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
                                 new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
     coarse_system_assembler.assemble();
@@ -64,7 +74,8 @@ public:
     projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
   }
 
-  void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler) {
+  void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler)
+  {
     system_assembler.add(neumann_functional);
     system_assembler.add(dirichlet_corrector);
   }
@@ -94,12 +105,14 @@ LocalProblemOperator::LocalProblemOperator(const DMP::ProblemContainer& problem,
 #else
   , use_umfpack_(false)
 #endif
-  , problem_(problem) {
+  , problem_(problem)
+{
   system_assembler_.add(elliptic_operator_);
 }
 
 void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntityType& coarseEntity,
-                                                  MsFEMTraits::LocalSolutionVectorType& allLocalRHS) {
+                                                  MsFEMTraits::LocalSolutionVectorType& allLocalRHS)
+{
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
   const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
@@ -112,14 +125,17 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   typedef BoundaryValueHelper<decltype(problem_.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())> BVHelper;
   std::unique_ptr<BVHelper> bv_helper(nullptr);
   if (coarseEntity.hasBoundaryIntersections()) {
-    bv_helper = Dune::XT::Common::make_unique<BVHelper>(problem_, localSpace_, local_diffusion_operator_, allLocalRHS,
-                                                        numInnerCorrectors);
+    bv_helper = Dune::XT::Common::make_unique<BVHelper>(
+        problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
 
-  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType, CommonTraits::GdtVectorType,
-                                     MsFEMTraits::LocalSpaceType, MsFEMTraits::LocalGridViewType,
-                                     CoarseBasisProduct> RhsFunctionalType;
+  typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType,
+                                     CommonTraits::GdtVectorType,
+                                     MsFEMTraits::LocalSpaceType,
+                                     MsFEMTraits::LocalGridViewType,
+                                     CoarseBasisProduct>
+      RhsFunctionalType;
   std::vector<std::unique_ptr<RhsFunctionalType>> rhs_functionals(numInnerCorrectors);
   std::size_t coarseBaseFunc = 0;
   const auto coarseBaseFunctionSet = coarse_space_.base_function_set(coarseEntity);
@@ -153,7 +169,8 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 }
 
 void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFunctionType& current_rhs,
-                                         MsFEMTraits::LocalGridDiscreteFunctionType& current_solution) {
+                                         MsFEMTraits::LocalGridDiscreteFunctionType& current_solution)
+{
   if (!current_rhs.dofs_valid())
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 

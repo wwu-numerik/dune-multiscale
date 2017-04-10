@@ -21,8 +21,10 @@ class Intersection;
 namespace Multiscale {
 namespace Problem {
 
-struct ProblemContainer {
-  ProblemContainer(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+struct ProblemContainer
+{
+  ProblemContainer(MPIHelper::MPICommunicator global,
+                   MPIHelper::MPICommunicator local,
                    Dune::XT::Common::Configuration config_in);
 
   typedef std::unique_ptr<const CommonTraits::FunctionBaseType> BasePtr;

@@ -12,7 +12,8 @@
 
 #include <boost/filesystem.hpp>
 
-TEST(CgFemCompare, All) {
+TEST(CgFemCompare, All)
+{
   using namespace Dune::Multiscale;
   auto errorsMap = cgfem_algorithm();
 

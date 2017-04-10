@@ -26,7 +26,8 @@ struct ProblemContainer;
 }
 
 //! the essential local msfem problem solver class
-class LocalProblemSolver {
+class LocalProblemSolver
+{
 private:
   friend struct LocalFunctor;
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType InverseOperatorType;
@@ -41,7 +42,8 @@ public:
    * \param localgrid_list cannot be const because Dune::Fem does not provide Gridparts that can be build on a const
    *grid
    **/
-  LocalProblemSolver(const DMP::ProblemContainer& problem, CommonTraits::SpaceType coarse_space,
+  LocalProblemSolver(const DMP::ProblemContainer& problem,
+                     CommonTraits::SpaceType coarse_space,
                      LocalGridList& localgrid_list);
 
   /** method for solving and saving the solutions of the local msfem problems

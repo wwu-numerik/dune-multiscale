@@ -15,7 +15,8 @@ namespace Multiscale {
 void print_info(const Problem::ProblemContainer& problem, std::ostream& out);
 //! write discrete function VTK Output
 void write_discrete_function(const DMP::ProblemContainer& problem,
-                             CommonTraits::DiscreteFunction_ptr& discrete_solution, const std::string prefix);
+                             CommonTraits::DiscreteFunction_ptr& discrete_solution,
+                             const std::string prefix);
 void write_discrete_function(CommonTraits::DiscreteFunctionType& discrete_solution, const std::string prefix);
 
 } // namespace Multiscale {

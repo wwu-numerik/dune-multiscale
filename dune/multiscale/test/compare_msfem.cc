@@ -12,7 +12,8 @@
 
 #include <boost/filesystem.hpp>
 
-TEST(MsFemCompare, All) {
+TEST(MsFemCompare, All)
+{
   using namespace Dune::Multiscale;
   auto errorsMap = msfem_algorithm();
 

@@ -20,34 +20,45 @@ namespace Problem {
 
 namespace Thirteen {
 
-struct ModelProblemData : public IModelProblemData {
+struct ModelProblemData : public IModelProblemData
+{
   ModelProblemData();
 };
 
-class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
-  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Source(MPIHelper::MPICommunicator /*global*/,
+         MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration /*config_in*/);
 
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
-class Diffusion : public DiffusionBase {
+class Diffusion : public DiffusionBase
+{
 public:
-  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Diffusion(MPIHelper::MPICommunicator /*global*/,
+            MPIHelper::MPICommunicator /*local*/,
             Dune::XT::Common::Configuration /*config_in*/);
 
-  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  void diffusiveFlux(const DomainType& x,
+                     const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;
 };
 
-class NeumannBoundaryCondition : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class NeumannBoundaryCondition : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };
 
-class DirichletData : public ZeroDirichletData {};
-class NeumannData : public ZeroNeumannData {};
+class DirichletData : public ZeroDirichletData
+{
+};
+class NeumannData : public ZeroNeumannData
+{
+};
 
 MSNULLFUNCTION(ExactSolution)
 

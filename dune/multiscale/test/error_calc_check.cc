@@ -13,9 +13,11 @@
 using namespace Dune;
 using namespace Dune::Multiscale;
 
-struct ErrorCheck : public GridAndSpaces {
+struct ErrorCheck : public GridAndSpaces
+{
 
-  void run_error_calc() {
+  void run_error_calc()
+  {
     const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     auto& coarse_space = this->coarseSpace;
@@ -38,4 +40,7 @@ struct ErrorCheck : public GridAndSpaces {
   }
 };
 
-TEST_F(ErrorCheck, LP) { this->run_error_calc(); }
+TEST_F(ErrorCheck, LP)
+{
+  this->run_error_calc();
+}

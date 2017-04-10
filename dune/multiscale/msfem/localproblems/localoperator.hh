@@ -15,7 +15,8 @@
 
 namespace Dune {
 namespace Multiscale {
-class LocalProblemOperator {
+class LocalProblemOperator
+{
   typedef typename BackendChooser<MsFEMTraits::LocalSpaceType>::LinearOperatorType LocalLinearOperatorType;
   typedef GDT::Operators::EllipticCG<Problem::LocalDiffusionType, LocalLinearOperatorType, MsFEMTraits::LocalSpaceType>
       EllipticOperatorType;
@@ -29,7 +30,8 @@ class LocalProblemOperator {
 #endif
 
 public:
-  LocalProblemOperator(const DMP::ProblemContainer& problem, const CommonTraits::SpaceType& coarse_space,
+  LocalProblemOperator(const DMP::ProblemContainer& problem,
+                       const CommonTraits::SpaceType& coarse_space,
                        const MsFEMTraits::LocalSpaceType& subDiscreteFunctionSpace);
 
   /** Assemble right hand side vectors for all local problems on one coarse cell.

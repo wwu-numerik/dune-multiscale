@@ -13,7 +13,8 @@
 #include <dune/multiscale/common/heterogenous.hh>
 
 template <typename T>
-std::vector<typename T::GlobalCoordinate> corners(const T& geo) {
+std::vector<typename T::GlobalCoordinate> corners(const T& geo)
+{
   std::vector<typename T::GlobalCoordinate> ret;
   for (auto c : Dune::XT::Common::value_range(geo.corners())) {
     auto co = geo.corner(c);
@@ -23,7 +24,8 @@ std::vector<typename T::GlobalCoordinate> corners(const T& geo) {
 }
 
 template <typename T>
-std::vector<typename T::GlobalCoordinate> cornersA(const T& geo) {
+std::vector<typename T::GlobalCoordinate> cornersA(const T& geo)
+{
   std::vector<typename T::GlobalCoordinate> ret;
   auto rg = DSC::cornerRange(geo);
   auto end = rg.end();
@@ -34,9 +36,11 @@ std::vector<typename T::GlobalCoordinate> cornersA(const T& geo) {
   return ret;
 }
 
-struct PointsAndStuff : public GridAndSpaces {
+struct PointsAndStuff : public GridAndSpaces
+{
 
-  void check_lagrange_points() {
+  void check_lagrange_points()
+  {
     for (auto& grid_ptr : {grids_.first, grids_.second}) {
       auto& grid = *grid_ptr;
       const CommonTraits::SpaceType space = CommonTraits::SpaceChooserType::make_space(grid);
@@ -50,7 +54,8 @@ struct PointsAndStuff : public GridAndSpaces {
     }
   }
 
-  void check_fine_lp_in_coarse() {
+  void check_fine_lp_in_coarse()
+  {
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
 
@@ -66,7 +71,8 @@ struct PointsAndStuff : public GridAndSpaces {
     }
   }
 
-  void check_search() {
+  void check_search()
+  {
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
 
@@ -77,15 +83,18 @@ struct PointsAndStuff : public GridAndSpaces {
     }
   }
 
-  void check_local_grids() {
+  void check_local_grids()
+  {
     LocalGridList localgrid_list(*problem_, coarseSpace);
     EXPECT_EQ(localgrid_list.size(), grids_.first->size(0));
   }
 };
 
-struct GridMatch : public GridTestBase {
+struct GridMatch : public GridTestBase
+{
 
-  void check_dimensions() {
+  void check_dimensions()
+  {
     const auto dimensions =
         make_pair(DSG::dimensions(grids_.first->leafGridView()), DSG::dimensions(grids_.second->leafGridView()));
     const auto limits = make_pair(dimensions.first.coord_limits, dimensions.second.coord_limits);
@@ -116,7 +125,8 @@ struct GridMatch : public GridTestBase {
     EXPECT_EQ(grids_.second->leafGridView().size(0), expected_fine);
   }
 
-  void check_unique_corners() {
+  void check_unique_corners()
+  {
     for (auto& grid : {grids_.first, grids_.second}) {
       for (const auto& ent : Dune::elements(grid->leafGridView())) {
         const auto& geo = ent.geometry();
@@ -139,7 +149,8 @@ struct GridMatch : public GridTestBase {
     }
   }
 
-  void check_inside() {
+  void check_inside()
+  {
     for (const auto& ent : Dune::elements(grids_.second->leafGridView())) {
       for (auto corner : corners(ent.geometry())) {
         bool found = false;
@@ -152,13 +163,15 @@ struct GridMatch : public GridTestBase {
   }
 };
 
-TEST_F(GridMatch, Match) {
+TEST_F(GridMatch, Match)
+{
   this->check_dimensions();
   this->check_unique_corners();
   this->check_inside();
 }
 
-TEST_F(PointsAndStuff, LP) {
+TEST_F(PointsAndStuff, LP)
+{
   this->check_lagrange_points();
   this->check_fine_lp_in_coarse();
   this->check_local_grids();

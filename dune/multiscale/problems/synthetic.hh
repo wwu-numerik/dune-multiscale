@@ -35,10 +35,15 @@ namespace Problem {
 
 namespace Synthetic {
 
-struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const final override { return true; }
+struct ModelProblemData : public IModelProblemData
+{
+  virtual bool hasExactSolution() const final override
+  {
+    return true;
+  }
 
-  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/,
+                   MPIHelper::MPICommunicator /*local*/,
                    Dune::XT::Common::Configuration /*config_in*/);
 
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -51,9 +56,11 @@ private:
   DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
-class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
-  Source(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Source(MPIHelper::MPICommunicator /*global*/,
+         MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration config_in);
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
@@ -63,14 +70,17 @@ private:
   const double epsilon_;
 };
 
-class Diffusion : public DiffusionBase {
+class Diffusion : public DiffusionBase
+{
 public:
-  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  Diffusion(MPIHelper::MPICommunicator /*global*/,
+            MPIHelper::MPICommunicator /*local*/,
             Dune::XT::Common::Configuration config_in);
 
   //! currently used in gdt assembler
   virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
-  PURE HOT void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  PURE HOT void diffusiveFlux(const DomainType& x,
+                              const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const final override;
 
   virtual size_t order() const final override;
@@ -79,9 +89,11 @@ private:
   const double epsilon_;
 };
 
-class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType {
+class ExactSolution : public Dune::Multiscale::CommonTraits::FunctionBaseType
+{
 public:
-  ExactSolution(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator /*local*/,
+  ExactSolution(MPIHelper::MPICommunicator global,
+                MPIHelper::MPICommunicator /*local*/,
                 Dune::XT::Common::Configuration config_in);
 
   PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
@@ -93,11 +105,15 @@ private:
   const double epsilon_;
 };
 
-class DirichletData : public DirichletDataBase {
+class DirichletData : public DirichletDataBase
+{
 public:
-  DirichletData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+  DirichletData(MPIHelper::MPICommunicator global,
+                MPIHelper::MPICommunicator local,
                 Dune::XT::Common::Configuration config_in)
-    : solution_(global, local, config_in) {}
+    : solution_(global, local, config_in)
+  {
+  }
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
   PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
@@ -106,10 +122,14 @@ private:
   ExactSolution solution_;
 };
 
-class NeumannData : public NeumannDataBase {
+class NeumannData : public NeumannDataBase
+{
 public:
-  NeumannData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-              Dune::XT::Common::Configuration config_in) {}
+  NeumannData(MPIHelper::MPICommunicator /*global*/,
+              MPIHelper::MPICommunicator /*local*/,
+              Dune::XT::Common::Configuration config_in)
+  {
+  }
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
 };

@@ -48,10 +48,15 @@ namespace Problem {
 
 namespace ER2007 {
 
-struct ModelProblemData : public IModelProblemData {
-  virtual bool hasExactSolution() const final override { return true; }
+struct ModelProblemData : public IModelProblemData
+{
+  virtual bool hasExactSolution() const final override
+  {
+    return true;
+  }
 
-  ModelProblemData(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
+  ModelProblemData(MPIHelper::MPICommunicator /*global*/,
+                   MPIHelper::MPICommunicator /*local*/,
                    Dune::XT::Common::Configuration /*config_in*/);
 
   const BoundaryInfoType& boundaryInfo() const final override;
@@ -59,19 +64,23 @@ struct ModelProblemData : public IModelProblemData {
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
-  Dune::ParameterTree boundary_settings() const;
-  std::unique_ptr<DSG::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
+  std::unique_ptr<DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>> boundaryInfo_;
   DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 static const std::vector<std::string> exact_deriv{"-8.0*pi*sin(8.0*pi*x[0])", "-8.0*pi*sin(8.0*pi*x[1])"};
 
-class Diffusion : public DiffusionBase {
+class Diffusion : public DiffusionBase
+{
 public:
-  Diffusion(MPIHelper::MPICommunicator /*global*/, MPIHelper::MPICommunicator /*local*/,
-            Dune::XT::Common::Configuration /*config_in*/) {}
+  Diffusion(MPIHelper::MPICommunicator /*global*/,
+            MPIHelper::MPICommunicator /*local*/,
+            Dune::XT::Common::Configuration /*config_in*/)
+  {
+  }
 
-  void diffusiveFlux(const DomainType& x, const Problem::JacobianRangeType& direction,
+  void diffusiveFlux(const DomainType& x,
+                     const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;
   void evaluate(const DomainType& x, RangeType& y) const final override;
 };
@@ -82,11 +91,15 @@ using NeumannData = ZeroNeumannData;
 
 MSEXPRESSIONFUNCTION(ExactSolution, "cos(8.0*pi*x[0])+cos(8.0*pi*x[1])", 3, exact_deriv)
 
-class DirichletData : public DirichletDataBase {
+class DirichletData : public DirichletDataBase
+{
 public:
-  DirichletData(MPIHelper::MPICommunicator global, MPIHelper::MPICommunicator local,
+  DirichletData(MPIHelper::MPICommunicator global,
+                MPIHelper::MPICommunicator local,
                 Dune::XT::Common::Configuration config_in)
-    : solution_(global, local, config_in) {}
+    : solution_(global, local, config_in)
+  {
+  }
 
   PURE void evaluate(const DomainType& x, RangeType& y) const final override;
   PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;

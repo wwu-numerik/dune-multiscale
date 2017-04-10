@@ -17,19 +17,22 @@ namespace Dune {
 namespace Multiscale {
 
 template <class GridType>
-struct LocalGridChooser {
+struct LocalGridChooser
+{
   typedef Dune::SPGrid<double, CommonTraits::GridType::dimension, SPIsotropicRefinement> type;
 };
 
 template <>
-struct LocalGridChooser<
-    Dune::YaspGrid<CommonTraits::world_dim, Dune::EquidistantOffsetCoordinates<double, CommonTraits::world_dim>>> {
+struct LocalGridChooser<Dune::YaspGrid<CommonTraits::world_dim,
+                                       Dune::EquidistantOffsetCoordinates<double, CommonTraits::world_dim>>>
+{
   typedef Dune::YaspGrid<CommonTraits::world_dim, Dune::EquidistantOffsetCoordinates<double, CommonTraits::world_dim>>
       type;
 };
 
 //! type construction for the MSFEM code
-struct MsFEMTraits {
+struct MsFEMTraits
+{
   // change dirichletconstraints.cc bottom accordingly
   typedef typename LocalGridChooser<CommonTraits::GridType>::type LocalGridType;
 
@@ -39,8 +42,12 @@ struct MsFEMTraits {
 
   typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef typename BackendChooser<LocalSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
-  typedef Stuff::Functions::Constant<LocalEntityType, CommonTraits::FieldType, CommonTraits::dimDomain,
-                                     CommonTraits::FieldType, CommonTraits::dimRange> LocalConstantFunctionType;
+  typedef Stuff::Functions::Constant<LocalEntityType,
+                                     CommonTraits::FieldType,
+                                     CommonTraits::dimDomain,
+                                     CommonTraits::FieldType,
+                                     CommonTraits::dimRange>
+      LocalConstantFunctionType;
   typedef typename LocalSpaceType::GridViewType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;

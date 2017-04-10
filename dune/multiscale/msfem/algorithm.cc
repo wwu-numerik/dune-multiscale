@@ -44,7 +44,8 @@ namespace Dune {
 namespace Multiscale {
 
 //! algorithm
-std::map<std::string, double> msfem_algorithm() {
+std::map<std::string, double> msfem_algorithm()
+{
   using namespace Dune;
 
   Dune::XT::Common::ScopedTiming algo("msfem.algorithm");

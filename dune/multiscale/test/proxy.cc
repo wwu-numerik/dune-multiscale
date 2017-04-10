@@ -9,9 +9,11 @@
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
 #include <dune/multiscale/common/df_io.hh>
 
-struct PointsAndStuff : public GridAndSpaces {
+struct PointsAndStuff : public GridAndSpaces
+{
 
-  void check_fine_lp_in_coarse() {
+  void check_fine_lp_in_coarse()
+  {
     const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch search(coarseSpace, localgrid_list);
@@ -19,4 +21,7 @@ struct PointsAndStuff : public GridAndSpaces {
   }
 };
 
-TEST_F(PointsAndStuff, LP) { this->check_fine_lp_in_coarse(); }
+TEST_F(PointsAndStuff, LP)
+{
+  this->check_fine_lp_in_coarse();
+}

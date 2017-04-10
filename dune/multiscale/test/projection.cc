@@ -11,12 +11,14 @@
 
 using namespace Dune::GDT;
 
-struct Projection : public GridAndSpaces {
+struct Projection : public GridAndSpaces
+{
 
   typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
 
   LocalsolutionProxy::CorrectionsMapType fill_local_corrections(const Lambda& lambda,
-                                                                const LocalGridList& localgrid_list) {
+                                                                const LocalGridList& localgrid_list)
+  {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
     for (const auto& coarse_entity : Dune::elements(coarseSpace.grid_view())) {
       LocalproblemSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
@@ -29,7 +31,8 @@ struct Projection : public GridAndSpaces {
     return local_corrections;
   }
 
-  void project() {
+  void project()
+  {
     const auto clearGuard = Dune::Multiscale::DiscreteFunctionIO::clear_guard();
     LocalGridList localgrid_list(*problem_, coarseSpace);
     const double constant(1);
@@ -47,11 +50,13 @@ struct Projection : public GridAndSpaces {
   }
 };
 
-struct Search : public GridAndSpaces {
+struct Search : public GridAndSpaces
+{
 
   typedef DS::FunctionTypeGenerator<MsFEMTraits::LocalConstantFunctionType, DS::GlobalLambdaFunction>::type Lambda;
 
-  void lg_search() {
+  void lg_search()
+  {
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch lgs(coarseSpace, localgrid_list);
 
@@ -66,7 +71,10 @@ struct Search : public GridAndSpaces {
   }
 };
 
-TEST_F(Projection, Project) { this->project(); }
+TEST_F(Projection, Project)
+{
+  this->project();
+}
 // TEST_P(Search, Project) {
 //  this->lg_search();
 //}

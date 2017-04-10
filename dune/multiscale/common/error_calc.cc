@@ -45,12 +45,14 @@ typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDiffe
 typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
 
 
-double surface_flow_gdt(const CommonTraits::GridType &grid,
-                    const CommonTraits::ConstDiscreteFunctionType& solution,
-                        const DMP::ProblemContainer& problem) ;
+double surface_flow_gdt(const CommonTraits::GridType& grid,
+                        const CommonTraits::ConstDiscreteFunctionType& solution,
+                        const DMP::ProblemContainer& problem);
 
-void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::ConstDiscreteFunctionType& solution,
-                     std::string name = "msfem_solution_") {
+void solution_output(const DMP::ProblemContainer& problem,
+                     const CommonTraits::ConstDiscreteFunctionType& solution,
+                     std::string name = "msfem_solution_")
+{
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
@@ -58,15 +60,19 @@ void solution_output(const DMP::ProblemContainer& problem, const CommonTraits::C
   solution.visualize(outputparam.fullpath(solution.name()));
 }
 template <typename L, typename R>
-void solution_output(const DMP::ProblemContainer& problem, const DSFu::Difference<L, R>& solution,
-                     const CommonTraits::GridViewType& view, std::string name) {
+void solution_output(const DMP::ProblemContainer& problem,
+                     const DSFu::Difference<L, R>& solution,
+                     const CommonTraits::GridViewType& view,
+                     std::string name)
+{
   using namespace Dune;
 
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
   outputparam.set_prefix(name);
   solution.visualize(view, outputparam.fullpath(solution.name()));
 }
-void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart) {
+void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart)
+{
   using namespace Dune;
   Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
 
@@ -83,7 +89,8 @@ Dune::Multiscale::ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& 
   : problem_(problem)
   , msfem_solution_(msfem_solution)
   , fem_solution_(fem_solution)
-  , timing_("error.fem+msfem") {
+  , timing_("error.fem+msfem")
+{
   assert(fem_solution_);
 }
 
@@ -92,7 +99,8 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
   : problem_(problem)
   , msfem_solution_(msfem_solution)
   , fem_solution_(nullptr)
-  , timing_("error.msfem") {
+  , timing_("error.msfem")
+{
   assert(msfem_solution_);
   if (problem.config().get("msfem.fem_comparison", false)) {
     fem_solver_ = Dune::XT::Common::make_unique<Elliptic_FEM_Solver>(problem);
@@ -105,26 +113,30 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
   }
 }
 
-void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::GridType& fine_grid) {
+void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::GridType& fine_grid)
+{
   const auto fine_view = fine_grid.leafGridView<CommonTraits::InteriorPartition>();
   const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorPartition>();
   const auto coarse_dimensions = DSG::dimensions(coarse_view);
   const auto fine_dimensions = DSG::dimensions(fine_view);
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
     const bool match =
-        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(),
-                                       fine_dimensions.coord_limits[i].min()) &&
-        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(), fine_dimensions.coord_limits[i].max());
+        Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min())
+        && Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].max(),
+                                          fine_dimensions.coord_limits[i].max());
     if (!match) {
-      DUNE_THROW(Dune::InvalidStateException, "Coarse and fine mesh do not match after load balancing, do \
+      DUNE_THROW(Dune::InvalidStateException,
+                 "Coarse and fine mesh do not match after load balancing, do \
                  you use different refinements in different spatial dimensions?\n"
-                                                  << coarse_dimensions.coord_limits[i] << " | "
-                                                  << fine_dimensions.coord_limits[i]);
+                     << coarse_dimensions.coord_limits[i]
+                     << " | "
+                     << fine_dimensions.coord_limits[i]);
     }
   }
 }
 
-std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out) {
+std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out)
+{
   using namespace std;
   using namespace DSC;
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
@@ -218,9 +230,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     system_assembler.add(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
-      const auto& difference = map_emplace(discrete_differences, pcw, name,
-                                           forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
-                                   .first->second;
+      const auto& difference =
+          map_emplace(
+              discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
+              .first->second;
       const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
       system_assembler.add(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
       system_assembler.add(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
@@ -320,39 +333,41 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   return csv;
 }
 
-double surface_flow_gdt(const Dune::Multiscale::CommonTraits::GridType &grid,
-                    const Dune::Multiscale::CommonTraits::ConstDiscreteFunctionType& solution,
-                        const DMP::ProblemContainer& problem) {
+double surface_flow_gdt(const Dune::Multiscale::CommonTraits::GridType& grid,
+                        const Dune::Multiscale::CommonTraits::ConstDiscreteFunctionType& solution,
+                        const DMP::ProblemContainer& problem)
+{
   using namespace Dune::Multiscale;
   const auto gv = grid.leafGridView();
 
   // Constants and types
   constexpr auto dim = CommonTraits::world_dim;
-  typedef double REAL; //TODO read from input
-  typedef typename Dune::FieldVector<REAL,dim> FV;   // point on cell
-  typedef typename Dune::FieldMatrix<REAL,dim,dim> FM;   // point on cell
-  typedef typename Dune::FieldMatrix<REAL,1,dim> Grad;   // point on cell
-  typedef typename Dune::QuadratureRule<REAL,dim-1> QR;
-  typedef typename Dune::QuadratureRules<REAL,dim-1> QRS;
+  typedef double REAL; // TODO read from input
+  typedef typename Dune::FieldVector<REAL, dim> FV; // point on cell
+  typedef typename Dune::FieldMatrix<REAL, dim, dim> FM; // point on cell
+  typedef typename Dune::FieldMatrix<REAL, 1, dim> Grad; // point on cell
+  typedef typename Dune::QuadratureRule<REAL, dim - 1> QR;
+  typedef typename Dune::QuadratureRules<REAL, dim - 1> QRS;
 
   const auto& diffusion = problem.getDiffusion();
 
   // Quadrature rule
-  auto iCell = gv.template begin< 0,Dune::Interior_Partition >();
+  auto iCell = gv.template begin<0, Dune::Interior_Partition>();
   auto iFace = gv.ibegin(*iCell);
-  const QR& rule = QRS::rule(iFace->geometry().type(),2); // TODO order as para
+  const QR& rule = QRS::rule(iFace->geometry().type(), 2); // TODO order as para
 
   // Loop over cells
   REAL localFlux(0);
-  for(iCell = gv.template begin< 0,Dune::Interior_Partition >();
-      iCell != gv.template end< 0,Dune::Interior_Partition >(); ++iCell) {
+  for (iCell = gv.template begin<0, Dune::Interior_Partition>();
+       iCell != gv.template end<0, Dune::Interior_Partition>();
+       ++iCell) {
     // Loop over interfaces
     const auto local_solution = solution.local_function(*iCell);
-    for(iFace = gv.ibegin(*iCell); iFace != gv.iend(*iCell); ++iFace) {
-      if(iFace->boundary() && iFace->geometry().center()[0]==0) {
+    for (iFace = gv.ibegin(*iCell); iFace != gv.iend(*iCell); ++iFace) {
+      if (iFace->boundary() && iFace->geometry().center()[0] == 0) {
         double area = iFace->geometry().volume();
         // Loop over gauss points
-        for(auto iGauss = rule.begin(); iGauss != rule.end(); ++iGauss) {
+        for (auto iGauss = rule.begin(); iGauss != rule.end(); ++iGauss) {
           FV pos = iFace->geometry().global(iGauss->position());
           Grad grad;
           FM diff;

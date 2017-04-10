@@ -30,7 +30,8 @@ namespace Problem {
 struct ProblemContainer;
 }
 
-class CoarseScaleOperatorTraits {
+class CoarseScaleOperatorTraits
+{
 public:
   typedef CoarseScaleOperator derived_type;
   typedef CommonTraits::LinearOperatorType MatrixType;
@@ -39,17 +40,20 @@ public:
   typedef CommonTraits::GridViewType GridViewType;
 }; // class EllipticCGTraits
 
-class CoarseScaleOperator
-    : public GDT::Operators::MatrixBased<CoarseScaleOperatorTraits>,
-      public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CommonTraits::InteriorGridViewType,
-                                  CoarseScaleOperatorTraits::SourceSpaceType> {
+class CoarseScaleOperator : public GDT::Operators::MatrixBased<CoarseScaleOperatorTraits>,
+                            public GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType,
+                                                        CommonTraits::InteriorGridViewType,
+                                                        CoarseScaleOperatorTraits::SourceSpaceType>
+{
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
       EllipticOperatorType;
   typedef GDT::Operators::MatrixBased<CoarseScaleOperatorTraits> OperatorBaseType;
   typedef MsFEMCodim0Integral LocalOperatorType;
   typedef MsFemCodim0Matrix LocalAssemblerType;
-  typedef GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType, CommonTraits::InteriorGridViewType,
-                               CoarseScaleOperatorTraits::SourceSpaceType> AssemblerBaseType;
+  typedef GDT::SystemAssembler<CoarseScaleOperatorTraits::RangeSpaceType,
+                               CommonTraits::InteriorGridViewType,
+                               CoarseScaleOperatorTraits::SourceSpaceType>
+      AssemblerBaseType;
   typedef CommonTraits::DiscreteFunctionType CoarseDiscreteFunction;
   typedef typename CommonTraits::SpaceType CoarseDiscreteFunctionSpace;
 
@@ -63,13 +67,16 @@ public:
 
   using OperatorBaseType::pattern;
 
-  static Stuff::LA::SparsityPatternDefault pattern(const RangeSpaceType& range_space,
-                                                   const SourceSpaceType& source_space, const GridViewType& grid_view);
+  static Stuff::LA::SparsityPatternDefault
+  pattern(const RangeSpaceType& range_space, const SourceSpaceType& source_space, const GridViewType& grid_view);
 
-  CoarseScaleOperator(const DMP::ProblemContainer& problem, const SourceSpaceType& source_space_in,
+  CoarseScaleOperator(const DMP::ProblemContainer& problem,
+                      const SourceSpaceType& source_space_in,
                       LocalGridList& localGridList);
 
-  virtual ~CoarseScaleOperator() {}
+  virtual ~CoarseScaleOperator()
+  {
+  }
 
   virtual void assemble() override final;
 

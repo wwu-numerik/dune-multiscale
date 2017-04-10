@@ -10,7 +10,8 @@ namespace Multiscale {
 class LocalGridList;
 
 //! given a Localgridlist, facilitate searching for evaluation points in a pseudo-hierachical manner
-class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> {
+class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType>
+{
   typedef DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> BaseType;
   typedef DSG::EntityInlevelSearch<MsFEMTraits::LocalGridViewType> PerGridSearchType;
   typedef typename CommonTraits::SpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
@@ -28,7 +29,8 @@ public:
 
   const MsFEMTraits::CoarseEntityType& current_coarse_pointer() const;
 
-  bool covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity, const PointIterator first,
+  bool covers_strict(const CommonTraits::SpaceType::EntityType& coarse_entity,
+                     const PointIterator first,
                      const PointIterator last);
 
 private:

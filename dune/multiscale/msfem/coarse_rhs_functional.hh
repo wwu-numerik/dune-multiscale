@@ -25,37 +25,46 @@ class CoarseRhsFunctional;
 class RhsCodim0Vector;
 
 class RhsCodim0IntegralTraits // LocalOperator
-    {
+{
 public:
   typedef RhsCodim0Integral derived_type;
 };
 
-class RhsCodim0VectorTraits {
+class RhsCodim0VectorTraits
+{
 public:
   typedef RhsCodim0Vector derived_type;
 }; // class LocalAssemblerCodim0MatrixTraits
 
 class RhsCodim0Integral // LocalFunctionalType
-    : public GDT::LocalOperator::Codim0Interface<RhsCodim0IntegralTraits> {
+    : public GDT::LocalOperator::Codim0Interface<RhsCodim0IntegralTraits>
+{
 public:
   typedef RhsCodim0IntegralTraits Traits;
 
 private:
   static constexpr size_t numTmpObjectsRequired_ = 1;
-  typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType, CommonTraits::DomainFieldType,
-                                           CommonTraits::dimDomain, CommonTraits::RangeFieldType,
-                                           CommonTraits::dimRange, 1> TestLocalfunctionSetInterfaceType;
+  typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType,
+                                           CommonTraits::DomainFieldType,
+                                           CommonTraits::dimDomain,
+                                           CommonTraits::RangeFieldType,
+                                           CommonTraits::dimRange,
+                                           1>
+      TestLocalfunctionSetInterfaceType;
 
 public:
   explicit RhsCodim0Integral(const DMP::ProblemContainer& problem, const size_t over_integrate = 0)
     : over_integrate_(over_integrate)
-    , problem_(problem) {}
+    , problem_(problem)
+  {
+  }
 
   size_t numTmpObjectsRequired() const;
 
   void apply(MsFEMTraits::LocalGridDiscreteFunctionType& dirichletExtension,
              Multiscale::LocalproblemSolutionManager& localSolutionManager,
-             const MsFEMTraits::LocalEntityType& localGridEntity, const TestLocalfunctionSetInterfaceType& testBase,
+             const MsFEMTraits::LocalEntityType& localGridEntity,
+             const TestLocalfunctionSetInterfaceType& testBase,
              Dune::DynamicVector<CommonTraits::RangeFieldType>& ret,
              std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>& tmpLocalVectors) const;
 
@@ -65,15 +74,20 @@ private:
 };
 
 class RhsCodim0Vector // LocalAssemblerType
-    {
+{
 public:
   typedef RhsCodim0VectorTraits Traits;
 
   RhsCodim0Vector(const RhsCodim0Integral& func, LocalGridList& localGridList)
     : localFunctional_(func)
-    , localGridList_(localGridList) {}
+    , localGridList_(localGridList)
+  {
+  }
 
-  const RhsCodim0Integral& localFunctional() const { return localFunctional_; }
+  const RhsCodim0Integral& localFunctional() const
+  {
+    return localFunctional_;
+  }
 
 private:
   static constexpr size_t numTmpObjectsRequired_ = 1;
@@ -82,7 +96,8 @@ public:
   std::vector<size_t> numTmpObjectsRequired() const;
 
   void
-  assembleLocal(const CommonTraits::SpaceType& testSpace, const CommonTraits::EntityType& coarse_grid_entity,
+  assembleLocal(const CommonTraits::SpaceType& testSpace,
+                const CommonTraits::EntityType& coarse_grid_entity,
                 CommonTraits::GdtVectorType& systemVector,
                 std::vector<std::vector<Dune::DynamicVector<CommonTraits::RangeFieldType>>>& tmpLocalVectorContainer,
                 Dune::DynamicVector<size_t>& tmpIndices) const; // ... assembleLocal(...)
@@ -92,7 +107,8 @@ private:
   LocalGridList& localGridList_;
 }; // class RhsCodim0Vector
 
-class CoarseRhsFunctionalTraits {
+class CoarseRhsFunctionalTraits
+{
   typedef CommonTraits::GdtVectorType VectorImp;
   typedef CommonTraits::SpaceType SpaceImp;
   typedef typename CommonTraits::InteriorGridViewType GridViewImp;
@@ -100,13 +116,14 @@ class CoarseRhsFunctionalTraits {
 public:
   typedef Problem::DiffusionBase FunctionType;
 
-  static_assert(
-      std::is_base_of<
-          Stuff::LocalizableFunctionInterface<typename FunctionType::EntityType, typename FunctionType::DomainFieldType,
-                                              FunctionType::dimDomain, typename FunctionType::RangeFieldType,
-                                              FunctionType::dimRange, FunctionType::dimRangeCols>,
-          FunctionType>::value,
-      "FunctionType has to be derived from Stuff::LocalizableFunctionInterface!");
+  static_assert(std::is_base_of<Stuff::LocalizableFunctionInterface<typename FunctionType::EntityType,
+                                                                    typename FunctionType::DomainFieldType,
+                                                                    FunctionType::dimDomain,
+                                                                    typename FunctionType::RangeFieldType,
+                                                                    FunctionType::dimRange,
+                                                                    FunctionType::dimRangeCols>,
+                                FunctionType>::value,
+                "FunctionType has to be derived from Stuff::LocalizableFunctionInterface!");
   static_assert(GDT::is_space<SpaceImp>::value, "SpaceImp has to be derived from SpaceInterface!");
 
   typedef GDT::SystemAssembler<SpaceImp, GridViewImp, SpaceImp> SystemAssemblerType;
@@ -118,7 +135,8 @@ public:
 }; // class CoarseRhsFunctionalTraits
 
 class CoarseRhsFunctional : public GDT::Functionals::VectorBased<CoarseRhsFunctionalTraits>,
-                            public CoarseRhsFunctionalTraits::SystemAssemblerType {
+                            public CoarseRhsFunctionalTraits::SystemAssemblerType
+{
   typedef GDT::Functionals::VectorBased<CoarseRhsFunctionalTraits> FunctionalBaseType;
   typedef CoarseRhsFunctionalTraits::SystemAssemblerType AssemblerBaseType;
 
@@ -131,10 +149,15 @@ public:
   typedef typename Traits::SpaceType SpaceType;
   typedef typename Traits::GridViewType GridViewType;
 
-  CoarseRhsFunctional(const Problem::ProblemContainer& problem, VectorType& vec, const SpaceType& spc,
-                      LocalGridList& localGridList, const CommonTraits::InteriorGridViewType& interior);
+  CoarseRhsFunctional(const Problem::ProblemContainer& problem,
+                      VectorType& vec,
+                      const SpaceType& spc,
+                      LocalGridList& localGridList,
+                      const CommonTraits::InteriorGridViewType& interior);
 
-  virtual ~CoarseRhsFunctional() {}
+  virtual ~CoarseRhsFunctional()
+  {
+  }
 
   virtual void assemble() override final;
 

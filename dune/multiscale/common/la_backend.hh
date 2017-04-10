@@ -10,7 +10,8 @@ namespace Dune {
 namespace Multiscale {
 
 template <class DiscreteFunctionSpaceType>
-struct BackendChooser {
+struct BackendChooser
+{
 
 #if DUNE_MULTISCALE_USE_ISTL
   static constexpr auto backend_type = Stuff::LA::ChooseBackend::istl_sparse;

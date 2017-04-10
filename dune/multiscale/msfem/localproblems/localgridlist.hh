@@ -28,7 +28,8 @@ struct ProblemContainer;
 }
 
 //! container for cell problem subgrids
-class LocalGridList : public boost::noncopyable {
+class LocalGridList : public boost::noncopyable
+{
   typedef typename CommonTraits::GridType::Traits::LeafIndexSet LeafIndexSet;
   typedef typename LeafIndexSet::IndexType IndexType;
 
@@ -72,7 +73,8 @@ private:
 template <class GridImp, template <int, int, class> class GeometryImp>
 bool LocalGridList::covers_strict(
     const MsFEMTraits::CoarseEntityType& coarse_entity,
-    const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry) {
+    const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry)
+{
   const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (const auto i : Dune::XT::Common::value_range(local_geometry.corners())) {
