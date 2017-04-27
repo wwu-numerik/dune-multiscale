@@ -54,8 +54,7 @@ public:
 
   size_t numTmpObjectsRequired() const;
 
-  void apply(Multiscale::LocalproblemSolutionManager& localSolutionManager,
-             const MsFEMTraits::LocalEntityType& localGridEntity,
+  void apply(const MsFEMTraits::LocalEntityType& localGridEntity,
              const TestLocalfunctionSetInterfaceType& testBase,
              const AnsatzLocalfunctionSetInterfaceType& ansatzBase,
              Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
@@ -72,7 +71,7 @@ public:
   typedef MsFemCodim0MatrixTraits Traits;
   typedef typename Traits::LocalOperatorType LocalOperatorType;
 
-  MsFemCodim0Matrix(const LocalOperatorType& op, LocalGridList& localGridList);
+  MsFemCodim0Matrix(const LocalOperatorType& op, LocalGridList* localGridList = nullptr);
 
   const LocalOperatorType& localOperator() const;
 
@@ -92,7 +91,7 @@ public:
 
 private:
   const LocalOperatorType& localOperator_;
-  LocalGridList& localGridList_;
+  LocalGridList* localGridList_;
 }; // class LocalAssemblerCodim0Matrix
 
 } // namespace Multiscale {
