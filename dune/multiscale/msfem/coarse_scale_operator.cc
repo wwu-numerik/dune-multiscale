@@ -108,7 +108,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DXTC_TIMINGS.start("msfem.coarse.linearSolver");
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
-  const Inverse inverse(global_matrix_);
+  const Inverse inverse(global_matrix_, coarse_space().communicator());
 
   const auto type = problem_.config().get("msfem.coarse_solver", "bicgstab.ilut");
   auto options = Inverse::options(type);
