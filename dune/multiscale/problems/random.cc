@@ -59,8 +59,10 @@ void Diffusion::init(const DMP::ProblemContainer& problem,
                      MPIHelper::MPICommunicator local)
 {
   const auto cells_per_dim = problem.config().get<std::vector<std::size_t>>("grids.macro_cells_per_dim");
+  const auto mirco_cells_per_dim = problem.config().get<std::vector<std::size_t>>("grids.micro_cells_per_macrocell_dim");
+
   std::for_each(cells_per_dim.begin(), cells_per_dim.end(), [&](size_t t) { assert(t == cells_per_dim[0]); });
-  const int log2Seg = std::log2l(cells_per_dim[0]);
+  const int log2Seg = std::log2l(cells_per_dim[0] * mirco_cells_per_dim[0]);
   int seed = 0;
 #if HAVE_FFTW
   MPI_Comm_rank(global, &seed);
