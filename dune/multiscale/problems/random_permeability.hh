@@ -367,6 +367,77 @@ public:
     return std::max(k, _minimal);
   }
 
+  /// Evaluate permeability field. Random permeabilities
+  /// are interpreted as constant cell values.
+  /// Evaluated on a wall, the mean value of the adjacent
+  /// cells is returned. For upper right outer walls, only
+  /// the inner neighbour cell is present and its value
+  /// is returned.
+  /// \param x position
+  /// \return permeability at x
+  R cellwiseConstant(const X& x) const {
+    double tol = 1e-8;
+    int cell = 0;
+    int maxCell = 1;
+    double t[DIM];
+    double k;
+
+    for(int i=0; i<DIM; ++i) {
+      double p = x[i]*_N;
+      if(p<_iMin[i] || p>_iMax[i])
+        throw Error("outside");
+      p    -= _iMin[i];
+      int j = floor(p);
+      t[i]  = p-j;
+      cell  = _size[i]*cell + j;
+      maxCell *= _size[i];
+    }
+
+    k = _perm[cell][_part];
+    int offset = 0;
+    if(DIM==2) {
+      if(t[0]<tol) {
+        offset -= _size[1];
+      }
+      else if(t[0]>1-tol) {
+        offset += _size[1];
+      }
+      if(t[1]<tol) {
+        offset -= 1;
+      else if (t[1]>1-tol) {
+        offset += 1;
+      }
+    }
+    else if (DIM==3) {
+      if(t[0]<tol) {
+        offset -= _size[1]*_size[2];
+      }
+      else if(t[0]>1-tol) {
+        offset += _size[1]*_size[2];
+      }
+      if(t[1]<tol) {
+        offset -= _size[2];
+      }
+      else if(t[1]>1-tol) {
+        offset += _size[2];
+      }
+      if(t[2]<tol) {
+        offset -= 1;
+      }
+      else if(t[2]>1-tol) {
+        offset += 1;
+      }
+    }
+    else {
+      std::cerr << "Not implemented, yet.\n";
+      exit(1);
+    }
+    if(offset!=0 && cell+offset<maxCell) {
+      k = (k + _perm[cell+offset][_part])/2;
+    }
+    return std::max(k,_minimal);
+  }
+
   //--- Members ------------------------------------------------------------
 private:
   int _iProc; ///< index of processor
