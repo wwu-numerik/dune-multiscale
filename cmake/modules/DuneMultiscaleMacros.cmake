@@ -9,12 +9,12 @@ include(AddMETISFlags)
 include(AddParMETISFlags)
 include(CheckEmplace)
 
-find_package(UMFPack)
-find_package(SuiteSparse)
+find_package(UMFPack REQUIRED)
+find_package(SuiteSparse REQUIRED)
 include_directories( ${SUITESPARSE_INCLUDE_DIRS} )
 set(DUNE_UMFPACK_LIBRARIES ${UMFPACK_LIBRARY} ${CHOLMOD_LIBRARY} ${COLAMD_LIBRARY} ${AMD_LIBRARY} ${SUITESPARSE_CONFIG_LIBRARY} )
 
-find_package(FFTW)
+find_package(FFTW REQUIRED)
 set(HAVE_RANDOM_PROBLEM ${HAVE_FFTW})
 
 set( MULTISCALE_LIBS multiscale_common multiscale_cgfem multiscale_msfem multiscale_problem multiscale_common ${DUNE_DEFAULT_LIBS} ${COMMON_LIBS} ${DUNE_UMFPACK_LIBRARIES} )
