@@ -68,8 +68,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
       elements_per_dim[i] =
           micro_per_macro[i] + ((int(!exceeds_macro_grid_left) + int(!exceeds_macro_grid_right)) * oversampling_layer);
     }
-    MS_LOG_DEBUG << "rank " << MPIHelper::getCollectiveCommunication().rank() << " lower " << lowerLeft << " upper "
-                 << upperRight << std::endl;
+
     subGridList_[coarse_index] = FactoryType::createLocalGrid(lowerLeft, upperRight, elements_per_dim);
   }
 }
