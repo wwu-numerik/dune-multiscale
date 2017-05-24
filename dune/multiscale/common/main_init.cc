@@ -40,6 +40,7 @@ void Dune::Multiscale::init(int argc, char** argv)
   std::cout.sync_with_stdio(false);
 
   Dune::XT::Common::Config().read_command_line(argc, argv);
+  Dune::Stuff::Common::Config().read_command_line(argc, argv);
   Dune::XT::Common::test_create_directory(DXTC_CONFIG_GET("global.datadir", "data/"));
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
