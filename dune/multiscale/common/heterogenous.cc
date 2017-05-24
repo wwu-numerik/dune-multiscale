@@ -41,7 +41,7 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
         const auto& source_local_function = source.local_function(source_entity);
         source_value = source_local_function->evaluate(source_local_point);
         for (size_t i = 0; i < target_dimRange; ++i, ++k) {
-          target_local_function->vector().add(k, source_value[i]);
+          target_local_function->vector().set(k, source_value[i]);
         }
       } else {
         DUNE_THROW(InvalidStateException, "Did not find the local lagrange point in the source mesh!");
@@ -63,18 +63,6 @@ void Dune::Multiscale::MsFEMProjection::preprocess(Dune::Multiscale::CommonTrait
 
 void Dune::Multiscale::MsFEMProjection::postprocess(Dune::Multiscale::CommonTraits::DiscreteFunctionType& func)
 {
-  // compute node to entity relations
-  std::vector<int> nodeToEntity(func.space().grid_view().grid().size(CommonTraits::world_dim), 0);
-  identifySharedNodes(func.space().grid_view(), nodeToEntity);
-
-  auto factorsIt = nodeToEntity.begin();
-  for (auto& dit : func.vector()) {
-    assert(factorsIt != nodeToEntity.end());
-    assert(*factorsIt > 0);
-    dit /= *factorsIt;
-    ++factorsIt;
-  }
-  return;
 }
 
 void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
