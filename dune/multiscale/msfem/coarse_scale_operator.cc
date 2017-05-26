@@ -42,7 +42,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   , global_matrix_(
         coarse_space().mapper().size(), coarse_space().mapper().size(), EllipticOperatorType::pattern(coarse_space()))
   , local_operator_(problem.getDiffusion())
-  , local_assembler_(local_operator_, localGridList)
+  , local_assembler_(local_operator_, &localGridList)
   , msfem_rhs_(coarse_space(), "MsFEM right hand side")
   , dirichlet_projection_(coarse_space())
   , problem_(problem)
@@ -69,8 +69,6 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
       neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
-//  EllipticOperatorType elliptic_operator(problem_.getDiffusion(), global_matrix_, coarse_space());
-//  this->add(elliptic_operator);
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
 

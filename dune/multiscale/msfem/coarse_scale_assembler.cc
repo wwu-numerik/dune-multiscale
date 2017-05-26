@@ -32,9 +32,7 @@ size_t MsFEMCodim0Integral::numTmpObjectsRequired() const
   return numTmpObjectsRequired_;
 }
 
-void MsFEMCodim0Integral::apply(
-    LocalproblemSolutionManager& localSolutionManager,
-    const MsFEMTraits::LocalEntityType& localGridEntity,
+void MsFEMCodim0Integral::apply(const MsFEMTraits::LocalEntityType& localGridEntity,
     const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
     Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
@@ -57,19 +55,11 @@ void MsFEMCodim0Integral::apply(
   assert(ret.cols() >= cols);
 
   const auto numQuadraturePoints = volumeQuadrature.size();
-  const auto& localSolutions = localSolutionManager.getLocalSolutions();
   // number of local solutions without the boundary correctors. Those are only needed for the right hand side
-  const auto numLocalSolutions = localSolutions.size() - localSolutionManager.numBoundaryCorrectors();
   typedef CommonTraits::SpaceType::BaseFunctionSetType::RangeType RangeType;
   typedef CommonTraits::SpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
-  // evaluate the jacobians of all local solutions in all quadrature points
-  std::vector<std::vector<JacobianRangeType>> allLocalSolutionEvaluations(
-      numLocalSolutions, std::vector<JacobianRangeType>(numQuadraturePoints, RangeType(0.0)));
-  for (auto lsNum : Dune::XT::Common::value_range(numLocalSolutions)) {
-    const auto localFunction = localSolutions[lsNum]->local_function(localGridEntity);
-    //      assert(localSolutionManager.space().indexSet().contains(localGridEntity));
-    localFunction->jacobian(volumeQuadrature, allLocalSolutionEvaluations[lsNum]);
-  }
+
+  auto diffusion_localfunction = diffusion_operator.local_function(localGridEntity);
 
   // loop over all quadrature points
   const auto quadPointEndIt = volumeQuadrature.end();
@@ -81,34 +71,28 @@ void MsFEMCodim0Integral::apply(
     // integration factors
     const double integrationFactor = localGridEntity.geometry().integrationElement(x);
     const double quadratureWeight = quadPointIt->weight();
-    const auto global_point_in_U_T = localGridEntity.geometry().global(x);
     CommonTraits::DiffusionFunctionBaseType::RangeType diffusion_eval;
-    diffusion_operator.evaluate(global_point_in_U_T, diffusion_eval);
+    diffusion_localfunction->evaluate(x, diffusion_eval);
     // compute integral
     for (size_t ii = 0; ii < rows; ++ii) {
       for (size_t jj = 0; jj < cols; ++jj) {
         // Compute the gradients of the i'th and j'th local problem solutions
         assert(allLocalSolutionEvaluations.size() == rows /*numMacroBaseFunctions*/);
-        const auto& gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
-        const auto& gradLocProbSolj = allLocalSolutionEvaluations[jj][localQuadraturePoint];
 
         auto reconstructionGradPhii = coarseBaseJacs[ii];
-        reconstructionGradPhii += gradLocProbSoli;
         auto reconstructionGradPhij = coarseBaseJacs[jj];
-        reconstructionGradPhij += gradLocProbSolj;
 
-        const auto& arg = reconstructionGradPhii[0];
+        const auto& arg = reconstructionGradPhij[0];
         CommonTraits::DiffusionFunctionBaseType::RangeType::row_type diffusive_flux;
         diffusion_eval.mv(arg, diffusive_flux);
-        const RangeType local_integral = diffusive_flux * reconstructionGradPhij[0];
-        //! TODO check indexing. Correct wrt pre-gdt, but still
+        const RangeType local_integral = diffusive_flux * reconstructionGradPhii[0];
         ret[jj][ii] += local_integral * integrationFactor * quadratureWeight;
       }
     } // compute integral
   } // loop over all quadrature points
 }
 
-MsFemCodim0Matrix::MsFemCodim0Matrix(const MsFemCodim0Matrix::LocalOperatorType& op, LocalGridList& localGridList)
+MsFemCodim0Matrix::MsFemCodim0Matrix(const MsFemCodim0Matrix::LocalOperatorType& op, LocalGridList* localGridList)
   : localOperator_(op)
   , localGridList_(localGridList)
 {
@@ -137,24 +121,19 @@ void MsFemCodim0Matrix::assembleLocal(
   assert(tmpLocalMatricesContainer[0].size() >= numTmpObjectsRequired_);
   assert(tmpLocalMatricesContainer[1].size() >= localOperator_.numTmpObjectsRequired());
   assert(tmpIndicesContainer.size() >= 2);
-  // get and clear matrix
 
-  Multiscale::LocalproblemSolutionManager localSolutionManager(testSpace, coarse_grid_entity, localGridList_);
-  localSolutionManager.load();
-  const auto& localSolutions = localSolutionManager.getLocalSolutions();
   assert(localSolutions.size() > 0);
 
-  for (const auto& localGridEntity : Dune::elements(localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : Dune::elements(testSpace.grid_view())) {
     // ignore overlay elements
-    if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
+    if (localGridList_ && !localGridList_->covers(coarse_grid_entity, localGridEntity))
       continue;
 
     auto& localMatrix = tmpLocalMatricesContainer[0][0];
     localMatrix *= 0.0;
     auto& tmpOperatorMatrices = tmpLocalMatricesContainer[1];
     // apply local operator (result is in localMatrix)
-    localOperator_.apply(localSolutionManager,
-                         localGridEntity,
+    localOperator_.apply(localGridEntity,
                          testSpace.base_function_set(coarse_grid_entity),
                          ansatzSpace.base_function_set(coarse_grid_entity),
                          localMatrix,
