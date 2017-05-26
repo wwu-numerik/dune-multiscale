@@ -66,8 +66,6 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
       dirichlet_projection_operator(used_grid_view, boundary_info, dirichlet, dirichlet_projection_);
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<UsedViewType>());
 
-  const auto& neumann = problem_.getNeumannData();
-  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
       neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), used_grid_view);
   this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<UsedViewType>(boundary_info));
 

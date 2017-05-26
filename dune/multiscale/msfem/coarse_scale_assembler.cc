@@ -32,8 +32,7 @@ size_t MsFEMCodim0Integral::numTmpObjectsRequired() const
   return numTmpObjectsRequired_;
 }
 
-void MsFEMCodim0Integral::apply(
-    const MsFEMTraits::LocalEntityType& localGridEntity,
+void MsFEMCodim0Integral::apply(const MsFEMTraits::LocalEntityType& localGridEntity,
     const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
     Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
@@ -79,7 +78,7 @@ void MsFEMCodim0Integral::apply(
       for (size_t jj = 0; jj < cols; ++jj) {
         // Compute the gradients of the i'th and j'th local problem solutions
         //        TODO this could never have compiled
-        //        assert(allLocalSolutionEvaluations.size() == rows /*numMacroBaseFunctions*/);
+        const auto& gradLocProbSoli = allLocalSolutionEvaluations[ii][localQuadraturePoint];
 
         auto reconstructionGradPhii = coarseBaseJacs[ii];
         auto reconstructionGradPhij = coarseBaseJacs[jj];
@@ -123,7 +122,7 @@ void MsFemCodim0Matrix::assembleLocal(
   assert(tmpLocalMatricesContainer[0].size() >= numTmpObjectsRequired_);
   assert(tmpLocalMatricesContainer[1].size() >= localOperator_.numTmpObjectsRequired());
   assert(tmpIndicesContainer.size() >= 2);
-  //        TODO this could never have compiled
+  // get and clear matrix
   //  assert(localSolutions.size() > 0);
 
   for (const auto& localGridEntity : Dune::elements(testSpace.grid_view())) {
