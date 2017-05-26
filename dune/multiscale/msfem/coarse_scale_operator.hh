@@ -74,7 +74,7 @@ public:
 
   CoarseScaleOperator(const DMP::ProblemContainer& problem,
                       const SourceSpaceType& source_space_in,
-                      LocalGridList& localGridList);
+                      LocalGridList* localGridList);
 
   virtual ~CoarseScaleOperator()
   {
