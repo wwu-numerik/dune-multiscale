@@ -32,7 +32,8 @@ size_t MsFEMCodim0Integral::numTmpObjectsRequired() const
   return numTmpObjectsRequired_;
 }
 
-void MsFEMCodim0Integral::apply(const MsFEMTraits::LocalEntityType& localGridEntity,
+void MsFEMCodim0Integral::apply(
+    const MsFEMTraits::LocalEntityType& localGridEntity,
     const MsFEMCodim0Integral::TestLocalfunctionSetInterfaceType& testBase,
     const MsFEMCodim0Integral::AnsatzLocalfunctionSetInterfaceType& ansatzBase,
     Dune::DynamicMatrix<CommonTraits::RangeFieldType>& ret,
