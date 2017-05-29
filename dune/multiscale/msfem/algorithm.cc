@@ -68,6 +68,9 @@ std::map<std::string, double> msfem_algorithm()
 
   if (problem.config().get("global.vtk_output", false)) {
     Dune::XT::Common::ScopedTiming algo("msfem.vtk_output");
+    problem.getDiffusion().visualize(
+        grid->leafGridView(),
+        OutputParameters(problem.config().get("global.datadir", "data")).fullpath("msfem_diffusion"));
     CommonTraits::DiscreteFunctionType coarse_grid_visualization(coarseSpace, "Visualization_of_the_coarse_grid");
     coarse_grid_visualization.visualize(
         OutputParameters(problem.config().get("global.datadir", "data")).fullpath(coarse_grid_visualization.name()));
