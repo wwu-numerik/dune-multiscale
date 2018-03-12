@@ -107,3 +107,4 @@ xcode
 *.vtu
 *.pvtu
 /dune-multiscale.kdev4
+.idea
