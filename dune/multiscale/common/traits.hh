@@ -7,7 +7,7 @@
 
 #include <dune/common/tuples.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/operators/elliptic-cg.hh>
+#include <dune/gdt/operators/elliptic.hh>
 #include <dune/gdt/spaces/cg.hh>
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -44,29 +44,19 @@ class IModelProblemData;
 template <class G, class R, int r>
 struct SpaceChooser
 {
-  static constexpr auto backend_type =
-#if DUNE_MULTISCALE_WITH_DUNE_FEM
-      GDT::ChooseSpaceBackend::fem;
-#else
-      GDT::ChooseSpaceBackend::pdelab;
-#endif
-  static constexpr auto partview_chooser = GDT::ChooseGridPartView<backend_type>::type;
-  typedef DSG::LeafPartView<G, partview_chooser> PartViewType;
-  typedef typename Stuff::Grid::Layer<G, DSG::ChooseLayer::leaf, partview_chooser>::Type GridLayerType;
+  static constexpr auto backend_type = GDT::Backends::gdt;
+  typedef typename XT::Grid::Layer<G, Dune::XT::Grid::Layers::leaf, XT::Grid::Backends::view>::type GridLayerType;
+  static_assert(r == 1, "");
 
 private:
-  typedef GDT::Spaces::CG::PdelabBased<GridLayerType, st_lagrangespace_order, R, r> PdelabType;
-  typedef GDT::Spaces::CG::FemBased<GridLayerType, st_lagrangespace_order, R, r> FemType;
+  typedef GDT::ContinuousLagrangeSpace<GridLayerType, st_lagrangespace_order, R> PdelabType;
 
 public:
-  typedef typename std::conditional<(backend_type == GDT::ChooseSpaceBackend::fem), FemType, PdelabType>::type Type;
-  static Type make_space(G& g)
+  using type = PdelabType;
+
+  static PdelabType make_space(GridLayerType& p)
   {
-    return Type(PartViewType::create(g, 0));
-  }
-  static Type make_space(GridLayerType& p)
-  {
-    return Type(p);
+    return PdelabType(p);
   }
 };
 
@@ -85,15 +75,15 @@ struct CommonTraits
   typedef GridType::Codim<0>::Entity EntityType;
   typedef double FieldType;
 
-  typedef DSG::Providers::Default<GridType> GridProviderType;
+  typedef Dune::XT::Grid::GridProvider<GridType> GridProviderType;
 
   typedef SpaceChooser<GridType, FieldType, dimRange> SpaceChooserType;
-  typedef typename SpaceChooserType::Type SpaceType;
+  typedef typename SpaceChooserType::type SpaceType;
 
   static constexpr auto st_gdt_grid_level = 0;
 
-  typedef SpaceType::GridViewType GridViewType;
-  typedef typename GridType::Partition<InteriorBorder_Partition>::LeafGridView InteriorGridViewType;
+  typedef SpaceType::GridLayerType GridViewType;
+  typedef SpaceType::GridLayerType InteriorGridViewType;
   static constexpr auto InteriorBorderPartition = PartitionIteratorType::InteriorBorder_Partition;
 
   typedef BackendChooser<SpaceType>::LinearOperatorType LinearOperatorType;
@@ -116,9 +106,8 @@ struct CommonTraits
   typedef FieldType TimeType;
   typedef SpaceType::BaseFunctionSetType::JacobianRangeType JacobianRangeType;
 
-  typedef GridType::Codim<0>::EntityPointer EntityPointerType;
-  typedef GridType::Codim<0>::Geometry EntityGeometryType;
-  typedef GridType::Codim<1>::Geometry FaceGeometryType;
+  typedef GridType::template Codim<0>::Geometry EntityGeometryType;
+  typedef GridType::template Codim<1>::Geometry FaceGeometryType;
 
   typedef FieldType RangeFieldType;
   typedef FieldType DomainFieldType;

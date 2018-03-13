@@ -12,11 +12,11 @@
 
 #include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/operators/elliptic-cg.hh>
+#include <dune/gdt/operators/elliptic.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
-#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/projections/l2.hh>
 
 #include <limits>
 #include <sstream>
@@ -29,7 +29,7 @@ namespace Multiscale {
 
 Elliptic_FEM_Solver::Elliptic_FEM_Solver(const Problem::ProblemContainer& problem, GridPtrType grid)
   : grid_(grid)
-  , space_(CommonTraits::SpaceChooserType::PartViewType::create(*grid_, CommonTraits::st_gdt_grid_level))
+  , space_(grid_->leafGridView())
   , solution_(space_, "fem_solution")
   , problem_(problem)
 {
@@ -71,17 +71,17 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
       neumann_functional(neumann, rhs_vector, space_);
   // dirichlet boundary values
-  GDT::Operators::DirichletProjectionLocalizable<GridViewType,
-                                                 Problem::DirichletDataBase,
-                                                 CommonTraits::DiscreteFunctionType>
-      dirichlet_projection_operator(space_.grid_view(), boundary_info, dirichlet_data, projected_dirichlet_data);
+  GDT::Operators::
+      DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType>
+          dirichlet_projection_operator(space_.grid_view(), boundary_info, dirichlet_data, projected_dirichlet_data);
   DXTC_TIMINGS.start("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space_);
   system_assembler.add(elliptic_operator);
   system_assembler.add(force_functional);
-  system_assembler.add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
-  system_assembler.add(dirichlet_projection_operator, new Stuff::Grid::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.add(neumann_functional,
+                       new Dune::XT::Grid::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
+  system_assembler.add(dirichlet_projection_operator, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(true);
   DXTC_TIMINGS.stop("fem.assemble");
 
@@ -93,7 +93,7 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::DirichletConstraints<typename GridViewType::Intersection> dirichlet_constraints(
       boundary_info, space_.mapper().size(), true);
-  system_assembler.add(dirichlet_constraints, new Stuff::Grid::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.add(dirichlet_constraints, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(problem_.config().get("threading.smp_constraints", false));
   dirichlet_constraints.apply(system_matrix, rhs_vector);
   DXTC_TIMINGS.stop("fem.constraints");
