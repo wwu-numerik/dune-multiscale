@@ -64,7 +64,7 @@ struct PointsAndStuff : public GridAndSpaces
       for (auto lg : lg_points) {
         bool found = false;
         for (const auto& coarse_ent : Dune::elements(grids_.first->leafGridView())) {
-          found = found || DSG::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
+          found = found || Dune::XT::Grid::reference_element(coarse_ent).checkInside(ent.geometry().local(lg));
         }
         EXPECT_TRUE(found);
       }
@@ -95,8 +95,8 @@ struct GridMatch : public GridTestBase
 
   void check_dimensions()
   {
-    const auto dimensions =
-        make_pair(DSG::dimensions(grids_.first->leafGridView()), DSG::dimensions(grids_.second->leafGridView()));
+    const auto dimensions = make_pair(Dune::XT::Grid::dimensions(grids_.first->leafGridView()),
+                                      Dune::XT::Grid::dimensions(grids_.second->leafGridView()));
     const auto limits = make_pair(dimensions.first.coord_limits, dimensions.second.coord_limits);
     for (auto d : Dune::XT::Common::value_range(CommonTraits::dimDomain)) {
       EXPECT_DOUBLE_EQ(limits.first[d].min(), limits.second[d].min());
@@ -155,7 +155,8 @@ struct GridMatch : public GridTestBase
       for (auto corner : corners(ent.geometry())) {
         bool found = false;
         for (const auto& coarse_ent : Dune::elements(grids_.first->leafGridView())) {
-          found = found || DSG::reference_element(coarse_ent).checkInside(coarse_ent.geometry().local(corner));
+          found =
+              found || Dune::XT::Grid::reference_element(coarse_ent).checkInside(coarse_ent.geometry().local(corner));
         }
         EXPECT_TRUE(found);
       }

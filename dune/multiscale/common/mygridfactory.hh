@@ -8,7 +8,7 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/spgrid.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/xt/grid/structuredgridfactory.hh>
 
 namespace Dune {
 namespace Multiscale {

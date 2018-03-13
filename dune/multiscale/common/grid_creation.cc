@@ -6,8 +6,8 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dune/multiscale/common/mygridfactory.hh>
 #include <dune/multiscale/problems/selector.hh>
-#include <dune/stuff/grid/information.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/xt/grid/information.hh>
+#include <dune/xt/grid/structuredgridfactory.hh>
 #include <dune/xt/common/float_cmp.hh>
 #include <dune/xt/common/ranges.hh>
 
@@ -108,12 +108,13 @@ Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,
     MS_LOG_DEBUG << boost::format("Rank %d has %d coarse codim-0 elements and %d fine ones\n")
                         % coarse_gridptr->comm().rank() % coarse_gridptr->size(0) % fine_gridptr->size(0)
                  << std::endl;
-    const auto fine_view = fine_gridptr->leafGridView<CommonTraits::InteriorBorderPartition>();
-    const auto coarse_view = coarse_gridptr->leafGridView<CommonTraits::InteriorBorderPartition>();
-    // if(coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
-    // DUNE_THROW(InvalidStateException, "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim)
-    //<< " | " << coarse_view.size(0) << '\n');
-    //}
+    const auto fine_view = fine_gridptr->leafGridView();
+    const auto coarse_view = coarse_gridptr->leafGridView();
+    if (coarse_view.size(0) != std::pow(coarse_cells[0], CommonTraits::world_dim)) {
+      DUNE_THROW(InvalidStateException,
+                 "snafu " << std::pow(coarse_cells[0], CommonTraits::world_dim) << " | " << coarse_view.size(0)
+                          << '\n');
+    }
   }
   return fine_gridptr;
 }

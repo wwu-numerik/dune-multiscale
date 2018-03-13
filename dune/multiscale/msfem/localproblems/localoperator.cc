@@ -68,7 +68,7 @@ public:
         coarse_dirichlet_projection_operator(
             coarse_space.grid_view(), problem_.getModelData().boundaryInfo(), dirichlet_data, dirichletExtensionCoarse);
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
-                                new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
+                                new Dune::XT::Grid::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
     coarse_system_assembler.assemble();
     GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
     projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
@@ -115,7 +115,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 {
   BOOST_ASSERT_MSG(allLocalRHS.size() > 0, "You need to preallocate the necessary space outside this function!");
 
-  const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space_);
+  const bool is_simplex_grid = Dune::XT::Grid::is_simplex_grid(coarse_space_);
   if (is_simplex_grid)
     DUNE_THROW(NotImplemented, "special treatment for simplicial grids missing");
 
@@ -154,7 +154,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   system_assembler_.assemble();
 
   // dirichlet-0 for all rhs
-  typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
+  typedef Dune::XT::Grid::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
   system_assembler_.add(dirichletConstraints_, new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();

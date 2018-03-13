@@ -21,9 +21,9 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
   , subBoundaryInfo_()
 {
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
-      DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
+      Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
   subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
-      DSG::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
+      Dune::XT::Grid::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const

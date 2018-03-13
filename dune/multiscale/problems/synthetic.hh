@@ -6,7 +6,7 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_SYNTHETIC
 
 #include <dune/multiscale/problems/base.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/xt/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>
 
@@ -52,8 +52,8 @@ struct ModelProblemData : public IModelProblemData
 
 private:
   Dune::ParameterTree boundary_settings() const;
-  std::unique_ptr<DSG::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
-  DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  std::unique_ptr<Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
+  Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType

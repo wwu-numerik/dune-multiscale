@@ -50,7 +50,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   const int rank = Dune::MPIHelper::getCollectiveCommunication().rank();
 
   auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
-  const bool is_simplex_grid = DSG::is_simplex_grid(coarse_space);
+  const bool is_simplex_grid = Dune::XT::Grid::is_simplex_grid(coarse_space);
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
   const auto interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
@@ -81,7 +81,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     // ie set all dofs not "covered" by the coarse cell to 0
     // also adds lg-prolongation of coarse_solution to local_correction
     const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
-    const auto& reference_element = DSG::reference_element(coarse_entity);
+    const auto& reference_element = Dune::XT::Grid::reference_element(coarse_entity);
     const auto& coarse_geometry = coarse_entity.geometry();
     for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
       const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);

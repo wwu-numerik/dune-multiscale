@@ -5,7 +5,7 @@
 #include <dune/xt/common/exceptions.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/timings.hh>
-#include <dune/stuff/grid/walker.hh>
+#include <dune/xt/grid/walker.hh>
 #include <dune/gdt/operators/projections.hh>
 #include <dune/gdt/operators/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
@@ -61,18 +61,17 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
       force_functional(problem_.getSource(), msfem_rhs_.vector(), coarse_space());
 
-  GDT::Operators::DirichletProjectionLocalizable<UsedViewType,
-                                                 Problem::DirichletDataBase,
-                                                 CommonTraits::DiscreteFunctionType>
-      dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
+  GDT::Operators::
+      DirichletProjectionLocalizable<UsedViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType>
+          dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
       neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
 
   this->add_codim0_assembler(local_assembler_, this->matrix());
   this->add(force_functional);
 
-  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<UsedViewType>(boundary_info));
-  this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<UsedViewType>());
+  this->add(neumann_functional, new Dune::XT::Grid::ApplyOn::NeumannIntersections<UsedViewType>(boundary_info));
+  this->add(dirichlet_projection_operator, new Dune::XT::Grid::ApplyOn::BoundaryEntities<UsedViewType>());
   AssemblerBaseType::assemble(true);
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0
@@ -82,7 +81,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   // apply the dirichlet zero constraints to restrict the system to H^1_0
   GDT::Spaces::DirichletConstraints<typename UsedViewType::Intersection> dirichlet_constraints(
       boundary_info, coarse_space().mapper().size(), true);
-  this->add(dirichlet_constraints, new DSG::ApplyOn::BoundaryEntities<UsedViewType>());
+  this->add(dirichlet_constraints, new Dune::XT::Grid::ApplyOn::BoundaryEntities<UsedViewType>());
   //  if (problem.config().get("threading.smp_constraints", false))
   //    AssemblerBaseType::assemble(partitioning);
   //  else

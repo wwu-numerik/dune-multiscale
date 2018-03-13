@@ -9,7 +9,7 @@ namespace Multiscale {
 
 class LocalGridList;
 
-struct ProxyGridviewTraits : public DefaultLeafGridViewTraits<MsFEMTraits::LocalGridType, All_Partition>
+struct ProxyGridviewTraits : public DefaultLeafGridViewTraits<MsFEMTraits::LocalGridType>
 {
 };
 

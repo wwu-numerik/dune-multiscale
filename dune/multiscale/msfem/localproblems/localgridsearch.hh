@@ -2,7 +2,7 @@
 #define DUNE_MULTISCALE_MSFEM_LOCALGRIDSEARCH_HH
 
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/grid/search.hh>
+#include <dune/xt/grid/search.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -10,12 +10,12 @@ namespace Multiscale {
 class LocalGridList;
 
 //! given a Localgridlist, facilitate searching for evaluation points in a pseudo-hierachical manner
-class LocalGridSearch : public DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType>
+class LocalGridSearch : public Dune::XT::Grid::EntitySearchBase<MsFEMTraits::LocalGridViewType>
 {
-  typedef DSG::EntitySearchBase<MsFEMTraits::LocalGridViewType> BaseType;
-  typedef DSG::EntityInlevelSearch<MsFEMTraits::LocalGridViewType> PerGridSearchType;
+  typedef Dune::XT::Grid::EntitySearchBase<MsFEMTraits::LocalGridViewType> BaseType;
+  typedef Dune::XT::Grid::EntityInlevelSearch<MsFEMTraits::LocalGridViewType> PerGridSearchType;
   typedef typename CommonTraits::SpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
-  typedef typename CommonTraits::SpaceType::EntityType::EntityPointer CoarseEntityPointerType;
+  typedef typename CommonTraits::SpaceType::EntityType CoarseEntityType;
   typedef std::vector<CommonTraits::DomainType> PointContainerType;
   typedef PointContainerType::const_iterator PointIterator;
 
@@ -39,7 +39,8 @@ private:
   std::map<IndexType, std::unique_ptr<PerGridSearchType>> coarse_searches_;
   std::unique_ptr<MsFEMTraits::CoarseEntityType> current_coarse_entity_;
   CommonTraits::InteriorGridViewType static_view_;
-  typedef typename CommonTraits::InteriorGridViewType::template Codim<0>::Iterator InteriorIteratorType;
+  typedef typename CommonTraits::InteriorGridViewType::template Codim<0>::
+      Partition<CommonTraits::InteriorBorderPartition>::Iterator InteriorIteratorType;
   std::unique_ptr<InteriorIteratorType> static_iterator_;
 };
 

@@ -11,7 +11,7 @@
 
 #include <dune/xt/common/ranges.hh>
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/grid/search.hh>
+#include <dune/xt/grid/search.hh>
 
 #include <dune/gdt/spaces/cg/interface.hh>
 #include <dune/multiscale/common/traits.hh>

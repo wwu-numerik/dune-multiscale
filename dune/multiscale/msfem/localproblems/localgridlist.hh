@@ -13,7 +13,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/stuff/grid/entity.hh>
+#include <dune/xt/grid/entity.hh>
 
 #include <cstddef>
 #include <map>
@@ -75,7 +75,7 @@ bool LocalGridList::covers_strict(
     const MsFEMTraits::CoarseEntityType& coarse_entity,
     const Dune::Geometry<CommonTraits::world_dim, CommonTraits::world_dim, GridImp, GeometryImp>& local_geometry)
 {
-  const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
+  const auto& reference_element = XT::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (const auto i : Dune::XT::Common::value_range(local_geometry.corners())) {
     if (!reference_element.checkInside(coarse_geometry.local(local_geometry.corner(i))))

@@ -19,8 +19,8 @@
 #include <dune/xt/common/parallel/partitioner.hh>
 #include <dune/grid/utility/partitioning/seedlist.hh>
 #include <dune/gdt/products/l2.hh>
-#include <dune/stuff/grid/walker.hh>
-#include <dune/stuff/grid/walker/functors.hh>
+#include <dune/xt/grid/walker.hh>
+#include <dune/xt/grid/walker/functors.hh>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -65,7 +65,7 @@ void LocalProblemSolver::solve_all_on_single_cell(
   assert(all_localproblem_solutions.size() > 0);
 
   const bool hasBoundary = coarseCell.hasBoundaryIntersections();
-  const auto numBoundaryCorrectors = DSG::is_simplex_grid(*coarse_space_) ? 1u : 2u;
+  const auto numBoundaryCorrectors = Dune::XT::Grid::is_simplex_grid(*coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = all_localproblem_solutions.size() - numBoundaryCorrectors;
 
   // clear return argument

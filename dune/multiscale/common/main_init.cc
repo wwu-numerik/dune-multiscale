@@ -32,10 +32,10 @@ void Dune::Multiscale::init(int argc, char** argv)
 #if DUNE_MULTISCALE_WITH_DUNE_FEM
   Dune::Fem::MPIManager::initialize(argc, argv);
 #endif
-  auto& helper = Dune::MPIHelper::instance(argc, argv);
-  if (helper.size() > 1 && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
-    DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
-  }
+  auto&& helper = Dune::MPIHelper::instance(argc, argv);
+//  if (helper.size() > 1 && !(Dune::Capabilities::isParallel<Dune::Multiscale::CommonTraits::GridType>::v)) {
+//    DUNE_THROW(Dune::InvalidStateException, "mpi enabled + serial grid = bad idea");
+//  }
   // makes inserting '\n' not flush
   std::cout.sync_with_stdio(false);
 

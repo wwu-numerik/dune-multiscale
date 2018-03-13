@@ -4,7 +4,7 @@
 #include <dune/common/parallel/collectivecommunication.hh>
 #include <dune/xt/common/validation.hh>
 #include <dune/xt/common/float_cmp.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/xt/grid/boundaryinfo.hh>
 #include <dune/xt/common/timings.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/problems/selector.hh>
@@ -30,7 +30,7 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
                                    MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , boundaryInfo_(DSG::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
+  , boundaryInfo_(Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_()
 {
 }
