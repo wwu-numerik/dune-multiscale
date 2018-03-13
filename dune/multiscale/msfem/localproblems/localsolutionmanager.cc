@@ -17,9 +17,9 @@ LocalproblemSolutionManager::LocalproblemSolutionManager(const CommonTraits::Spa
   : subgridList_(subgridList)
   , subgrid_(subgridList_.getSubGrid(coarseEntity))
   , grid_view_(subgrid_.leafGridView())
-  , numBoundaryCorrectors_(DSG::is_simplex_grid(coarse_space) ? 1 : 2)
-  , numLocalProblems_(DSG::is_simplex_grid(coarse_space) ? CommonTraits::world_dim + 1
-                                                         : coarse_space.mapper().maxNumDofs() + 2)
+  , numBoundaryCorrectors_(Dune::XT::Grid::is_simplex_grid(coarse_space) ? 1 : 2)
+  , numLocalProblems_(Dune::XT::Grid::is_simplex_grid(coarse_space) ? CommonTraits::world_dim + 1
+                                                                    : coarse_space.mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d")
                             % coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity))

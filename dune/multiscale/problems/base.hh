@@ -10,7 +10,7 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/xt/grid/boundaryinfo.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/memory.hh>
 #include <memory>
@@ -202,9 +202,9 @@ class IModelProblemData
 {
 protected:
   typedef CommonTraits::GridViewType View;
-  typedef DSG::BoundaryInfoInterface<typename View::Intersection> BoundaryInfoType;
+  typedef Dune::XT::Grid::BoundaryInfo<typename View::Intersection> BoundaryInfoType;
   typedef MsFEMTraits::LocalGridType::LeafGridView SubView;
-  typedef DSG::BoundaryInfoInterface<typename SubView::Intersection> SubBoundaryInfoType;
+  typedef Dune::XT::Grid::BoundaryInfo<typename SubView::Intersection> SubBoundaryInfoType;
 
 public:
   //! Constructor for ModelProblemData

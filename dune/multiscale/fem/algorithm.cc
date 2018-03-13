@@ -16,7 +16,7 @@
 
 #include <dune/xt/common/logging.hh>
 #include <dune/xt/common/configuration.hh>
-#include <dune/stuff/grid/provider.hh>
+#include <dune/xt/grid/provider.hh>
 
 namespace Dune {
 namespace Multiscale {

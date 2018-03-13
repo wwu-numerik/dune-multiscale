@@ -37,7 +37,7 @@ struct MsFEMTraits
   typedef typename LocalGridChooser<CommonTraits::GridType>::type LocalGridType;
 
   typedef SpaceChooser<LocalGridType, CommonTraits::FieldType, CommonTraits::dimRange> SpaceChooserType;
-  typedef typename SpaceChooserType::Type LocalSpaceType;
+  typedef typename SpaceChooserType::type LocalSpaceType;
   typedef typename LocalSpaceType::EntityType LocalEntityType;
 
   typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
@@ -48,7 +48,7 @@ struct MsFEMTraits
                                      CommonTraits::FieldType,
                                      CommonTraits::dimRange>
       LocalConstantFunctionType;
-  typedef typename LocalSpaceType::GridViewType LocalGridViewType;
+  typedef typename LocalSpaceType::GridLayerType LocalGridViewType;
 
   typedef typename CommonTraits::GridType::Codim<0>::Entity CoarseEntityType;
   typedef typename CommonTraits::SpaceType::BaseFunctionSetType CoarseBaseFunctionSetType;

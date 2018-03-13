@@ -13,7 +13,7 @@
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
 #include <dune/stuff/aliases.hh>
-#include <dune/stuff/grid/output/entity_visualization.hh>
+#include <dune/xt/grid/output/entity_visualization.hh>
 #include <dune/xt/common/parallel/threadmanager.hh>
 #include <dune/xt/common/ranges.hh>
 
@@ -200,8 +200,8 @@ int main(int argc, char** argv)
     //    }
     //    partition_vis(problem, *grids.first, *grids.second);
     subgrid_vis(problem, *grids.first, *grids.second);
-    //    DSG::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
-    //    DSG::ElementVisualization::all(coarse_grid, datadir + "/coarse_element_visualization");
+    //    Dune::XT::Grid::ElementVisualization::all(*grids.second, datadir + "/fine_element_visualization");
+    //    Dune::XT::Grid::ElementVisualization::all(coarse_grid, datadir + "/coarse_element_visualization");
   } catch (Dune::Exception& e) {
     return handle_exception(e);
   } catch (std::exception& s) {

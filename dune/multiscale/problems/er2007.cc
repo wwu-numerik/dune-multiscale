@@ -1,6 +1,6 @@
 #include <config.h>
 #include <dune/common/exceptions.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/xt/grid/boundaryinfo.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/validation.hh>
 #include <math.h>
@@ -18,7 +18,7 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
                                    MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , boundaryInfo_(DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>::create())
+  , boundaryInfo_(Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename View::Intersection>::create())
   , subBoundaryInfo_()
 {
 }

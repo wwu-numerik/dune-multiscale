@@ -26,8 +26,8 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
-#include <dune/grid/utility/partitioning/seedlist.hh>
-#include <dune/stuff/grid/information.hh>
+
+#include <dune/xt/grid/information.hh>
 #include <dune/xt/common/filesystem.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
@@ -115,10 +115,10 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
 
 void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::GridType& fine_grid)
 {
-  const auto fine_view = fine_grid.leafGridView<CommonTraits::InteriorBorderPartition>();
-  const auto coarse_view = coarse_grid.leafGridView<CommonTraits::InteriorBorderPartition>();
-  const auto coarse_dimensions = DSG::dimensions(coarse_view);
-  const auto fine_dimensions = DSG::dimensions(fine_view);
+  const auto fine_view = fine_grid.leafGridView();
+  const auto coarse_view = coarse_grid.leafGridView();
+  const auto coarse_dimensions = Dune::XT::Grid::dimensions(coarse_view);
+  const auto fine_dimensions = Dune::XT::Grid::dimensions(fine_view);
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim)) {
     const bool match =
         Dune::XT::Common::FloatCmp::eq(coarse_dimensions.coord_limits[i].min(), fine_dimensions.coord_limits[i].min())

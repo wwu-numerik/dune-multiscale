@@ -5,7 +5,7 @@
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
-#include <dune/grid/utility/partitioning/seedlist.hh>
+#include <dune/xt/grid/parallel/partitioning/ranged.hh>
 
 void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionProxy& source,
                                                 Dune::Multiscale::CommonTraits::DiscreteFunctionType& target)
@@ -16,11 +16,13 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
   const auto& space = target.space();
 
   preprocess(target);
-  const auto interior = space.grid_view().grid().template leafGridView<Interior_Partition>();
+  const auto interior = space.grid_view().grid().leafGridView();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
-  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(space, interior);
-  Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
-  SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
+  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType, CommonTraits::InteriorBorderPartition> walker(space,
+                                                                                                            interior);
+
+  RangedPartitioning<typename InteriorType::Grid, 0, CommonTraits::InteriorBorderPartition> partitioning(
+      interior, XT::Common::threadManager().max_threads());
 
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& target_entity) {
     auto target_local_function = target.local_discrete_function(target_entity);

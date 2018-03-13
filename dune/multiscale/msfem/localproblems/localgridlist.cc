@@ -8,8 +8,8 @@
 #include <dune/multiscale/common/mygridfactory.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc.hh>
-#include <dune/stuff/grid/information.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
+#include <dune/xt/grid/information.hh>
+#include <dune/xt/grid/structuredgridfactory.hh>
 #include <dune/xt/common/float_cmp.hh>
 #include <dune/xt/common/logging.hh>
 #include <dune/xt/common/ranges.hh>
@@ -51,7 +51,7 @@ LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const Com
     // make sure we did not create a subgrid for the current coarse entity so far
     assert(subGridList_.find(coarse_index) == subGridList_.end());
 
-    const auto dimensions = DSG::dimensions<CommonTraits::GridType::LeafGridView>(coarse_entity);
+    const auto dimensions = Dune::XT::Grid::dimensions<CommonTraits::GridType::LeafGridView>(coarse_entity);
     typedef FieldVector<typename MsFEMTraits::LocalGridType::ctype, dim_world> CoordType;
     CoordType lowerLeft(0);
     CoordType upperRight(0);
@@ -119,7 +119,7 @@ bool LocalGridList::covers(const MsFEMTraits::CoarseEntityType& coarse_entity,
                            const MsFEMTraits::LocalEntityType& local_entity)
 {
   const auto& center = local_entity.geometry().center();
-  const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
+  const auto& reference_element = XT::Grid::reference_element(coarse_entity);
   return reference_element.checkInside(coarse_entity.geometry().local(center));
 }
 

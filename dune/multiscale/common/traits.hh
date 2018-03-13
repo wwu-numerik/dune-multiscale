@@ -16,7 +16,7 @@
 #include <dune/stuff/functions/constant.hh>
 #include <dune/stuff/functions/expression.hh>
 #include <dune/stuff/functions/interfaces.hh>
-#include <dune/stuff/grid/provider.hh>
+#include <dune/xt/grid/gridprovider.hh>
 #include <dune/stuff/la/container.hh>
 
 namespace Dune {

@@ -6,7 +6,7 @@
 #define DUNE_ELLIPTIC_MODEL_PROBLEM_SPECIFICATION_HH_ER2007
 
 #include <dune/multiscale/problems/base.hh>
-#include <dune/stuff/grid/boundaryinfo.hh>
+#include <dune/xt/grid/boundaryinfo.hh>
 #include <memory>
 #include <string>
 
@@ -64,8 +64,8 @@ struct ModelProblemData : public IModelProblemData
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
-  std::unique_ptr<DSG::BoundaryInfos::AllDirichlet<typename View::Intersection>> boundaryInfo_;
-  DSG::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  std::unique_ptr<Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename View::Intersection>> boundaryInfo_;
+  Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 static const std::vector<std::string> exact_deriv{"-8.0*pi*sin(8.0*pi*x[0])", "-8.0*pi*sin(8.0*pi*x[1])"};

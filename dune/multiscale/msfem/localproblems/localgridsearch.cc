@@ -18,9 +18,10 @@ operator()(const PointContainerType& points)
   const auto& view = static_view_;
 
   if (!static_iterator_)
-    static_iterator_ = Dune::XT::Common::make_unique<InteriorIteratorType>(view.begin<0>());
+    static_iterator_ =
+        Dune::XT::Common::make_unique<InteriorIteratorType>(view.begin<0, CommonTraits::InteriorBorderPartition>());
   auto& it = *static_iterator_;
-  const auto end = view.end<0>();
+  const auto end = view.end<0, CommonTraits::InteriorBorderPartition>();
 
   EntityVectorType ret_entities(points.size());
   int steps = 0;
@@ -45,7 +46,7 @@ operator()(const PointContainerType& points)
     }
     if (++it == end) {
       if (++steps < view.size(0))
-        it = view.begin<0>();
+        it = view.begin<0, CommonTraits::InteriorBorderPartition>();
       else {
         DUNE_THROW(InvalidStateException, "local grid search failed ");
       }
@@ -58,7 +59,7 @@ bool Dune::Multiscale::LocalGridSearch::covers_strict(const CommonTraits::SpaceT
                                                       const Dune::Multiscale::LocalGridSearch::PointIterator first,
                                                       const Dune::Multiscale::LocalGridSearch::PointIterator last)
 {
-  const auto& reference_element = Stuff::Grid::reference_element(coarse_entity);
+  const auto& reference_element = XT::Grid::reference_element(coarse_entity);
   const auto& coarse_geometry = coarse_entity.geometry();
   for (auto it = first; it != last; ++it) {
     if (!reference_element.checkInside(coarse_geometry.local(*it)))
@@ -71,7 +72,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
                                                    const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
-  , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>())
+  , static_view_(coarse_space_.grid_view().grid().leafGridView())
   , static_iterator_(nullptr)
 {
 }
@@ -79,7 +80,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
 Dune::Multiscale::LocalGridSearch::LocalGridSearch(const Dune::Multiscale::LocalGridSearch& other)
   : coarse_space_(other.coarse_space_)
   , gridlist_(other.gridlist_)
-  , static_view_(coarse_space_.grid_view().grid().leafGridView<CommonTraits::InteriorBorderPartition>())
+  , static_view_(coarse_space_.grid_view().grid().leafGridView())
   , static_iterator_(nullptr)
 {
 }

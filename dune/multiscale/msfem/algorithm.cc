@@ -19,10 +19,10 @@
 #include <dune/xt/common/logging.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/ranges.hh>
-#include <dune/stuff/grid/output/entity_visualization.hh>
-#include <dune/stuff/grid/information.hh>
-#include <dune/stuff/grid/structuredgridfactory.hh>
-#include <dune/stuff/grid/provider.hh>
+#include <dune/xt/grid/output/entity_visualization.hh>
+#include <dune/xt/grid/information.hh>
+#include <dune/xt/grid/structuredgridfactory.hh>
+#include <dune/xt/grid/provider.hh>
 #include <dune/xt/common/timings.hh>
 #include <dune/gdt/discretefunction/default.hh>
 

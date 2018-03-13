@@ -22,7 +22,8 @@ class LocalProblemOperator
       EllipticOperatorType;
   typedef GDT::Spaces::DirichletConstraints<typename MsFEMTraits::LocalGridViewType::Intersection>
       DirichletConstraintsType;
-  typedef DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> BoundaryInfoType;
+  typedef Dune::XT::Grid::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection>
+      BoundaryInfoType;
 #if HAVE_UMFPACK
   typedef UMFPack<typename LocalLinearOperatorType::BackendType> LocalDirectInverseType;
 #else
@@ -57,7 +58,8 @@ private:
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   DirichletConstraintsType dirichletConstraints_;
-  DSG::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection> allLocalDirichletInfo_;
+  Dune::XT::Grid::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection>
+      allLocalDirichletInfo_;
   const bool use_umfpack_;
 #if HAVE_UMFPACK
   std::unique_ptr<LocalDirectInverseType> local_direct_inverse_;
