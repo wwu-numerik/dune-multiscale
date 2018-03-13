@@ -1,5 +1,4 @@
-message(AUTHOR_WARNING "TODO: Implement module test.")
-
+set(DUNE_GRID_GRIDTYPE_SELECTOR ON)
 include(DuneUtils)
 include(DuneMPI)
 
