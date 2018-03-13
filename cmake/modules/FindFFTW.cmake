@@ -3,7 +3,7 @@
 # Usage:
 #   find_package(FFTW [REQUIRED] [QUIET] )
 #   NOTE: this only fnids and uses the DOUBLE precision variant
-#     
+#
 # It sets the following variables:
 #   FFTW_FOUND               ... true if fftw is found on the system
 #   FFTW_LIBRARIES           ... full path to fftw library
@@ -43,7 +43,7 @@ if( FFTW_ROOT )
     PATH_SUFFIXES "lib" "lib64"
     NO_DEFAULT_PATH
   )
-  
+
   find_library(
     FFTW_MPI_LIB
     NAMES "fftw3_mpi"
@@ -66,38 +66,41 @@ else()
   find_library(
     FFTW_LIB
     NAMES "fftw3"
-    PATHS ${PKG_FFTW_LIBRARY_DIRS} ${LIB_INSTALL_DIR}
+    PATHS ${PKG_FFTW_LIBRARY_DIRS} ${LIB_INSTALL_DIR}  /usr/lib /usr/lib/x86_64-linux-gnu/
   )
-  
+
   find_library(
     FFTW_MPI_LIB
     NAMES "fftw3_mpi"
-    PATHS ${PKG_FFTW_LIBRARY_DIRS} ${LIB_INSTALL_DIR}
+    PATHS ${PKG_FFTW_LIBRARY_DIRS} ${LIB_INSTALL_DIR}  /usr/lib /usr/lib/x86_64-linux-gnu/
   )
 
   find_path(
     FFTW_INCLUDES
-    NAMES "fftw3.h"
-    PATHS ${PKG_FFTW_INCLUDE_DIRS} ${INCLUDE_INSTALL_DIR}
+    NAMES "fftw3.h" "fftw3-mpi.h"
+    PATHS ${PKG_FFTW_INCLUDE_DIRS} ${INCLUDE_INSTALL_DIR} /usr/include
   )
 
 endif( FFTW_ROOT )
 
-set(FFTW_LIBRARIES ${FFTW_MPI_LIB} ${FFTW_LIB} )
+if(FFTW_MPI_LIB)
+    set(FFTW_LIBRARIES ${FFTW_MPI_LIB} )
+else()
+    set(FFTW_LIBRARIES ${FFTW_LIB} )
+endif()
+
+message(STATUS "PRE ${FFTW_INCLUDES} ${FFTW_LIB} ${FFTW_MPI_LIB}")
 
 set(FFTW_FOUND FALSE)
 set(HAVE_FFTW 0)
-if(FFTW_LIB AND FFTW_MPI_LIB)
-  set(FFTW_LIBRARIES ${FFTW_LIBRARIES})
-  if(FFTW_INCLUDES)
+if((FFTW_LIB OR FFTW_MPI_LIB) AND FFTW_INCLUDES)
     set(FFTW_FOUND TRUE)
     set(HAVE_FFTW 1)
     dune_register_package_flags(COMPILE_DEFINITIONS ""
-      INCLUDE_DIRS "${FFTW_INCLUDES}"
-      LIBRARIES "${FFTW_LIBRARIES}"
-      )
-
-  endif()
+        INCLUDE_DIRS "${FFTW_INCLUDES}"
+        LIBRARIES "${FFTW_LIBRARIES}"
+    )
+    message(STATUS "POST ${FFTW_INCLUDES} ${FFTW_LIB} ${FFTW_MPI_LIB}")
 endif()
 
 set( CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_SAV} )
