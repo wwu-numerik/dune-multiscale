@@ -12,6 +12,8 @@
 
 #include "dune/multiscale/common/traits.hh"
 
+#include <dune/xt/common/configuration.hh>
+
 namespace Dune {
 namespace Multiscale {
 namespace Problem {
@@ -41,7 +43,7 @@ struct ModelProblemData : public IModelProblemData
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
-  Dune::ParameterTree boundary_settings() const;
+  XT::Common::Configuration boundary_settings() const;
   std::unique_ptr<BoundaryInfoType> boundaryInfo_;
   std::unique_ptr<SubBoundaryInfoType> subBoundaryInfo_;
 };
@@ -53,8 +55,8 @@ public:
          MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration /*config_in*/);
 
-  void evaluate(const DomainType& x, RangeType& y) const final override;
-  virtual size_t order() const final override
+  void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const final override
   {
     return 3;
   }
@@ -69,7 +71,7 @@ public:
   ~Diffusion();
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType&, RangeType&) const final override;
+  virtual void evaluate(const DomainType&, RangeType&, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 
   void diffusiveFlux(const DomainType& x,
                      const Problem::JacobianRangeType& direction,
@@ -89,7 +91,9 @@ public:
   {
   }
 
-  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
+  void evaluate(const typename CommonTraits::DomainType& x,
+                typename CommonTraits::RangeType& y,
+                const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 class NeumannData : public NeumannDataBase
@@ -101,7 +105,9 @@ public:
   {
   }
 
-  void evaluate(const typename CommonTraits::DomainType& x, typename CommonTraits::RangeType& y) const final override;
+  void evaluate(const typename CommonTraits::DomainType& x,
+                typename CommonTraits::RangeType& y,
+                const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 MSNULLFUNCTION(ExactSolution)

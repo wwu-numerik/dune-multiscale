@@ -30,7 +30,7 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
                                    MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , boundaryInfo_(Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
+  , boundaryInfo_(Dune::XT::Grid::NormalBasedBoundaryInfo<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_()
 {
 }
@@ -101,13 +101,13 @@ const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo()
   return subBoundaryInfo_;
 }
 
-ParameterTree ModelProblemData::boundary_settings() const
+XT::Common::Configuration ModelProblemData::boundary_settings() const
 {
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     return DXTC_CONFIG.sub("problem.boundaryInfo");
   }
 
-  Dune::ParameterTree boundarySettings;
+  XT::Common::Configuration boundarySettings;
   boundarySettings["default"] = "dirichlet";
   boundarySettings["compare_tolerance"] = "1e-10";
   switch (CommonTraits::world_dim) {
@@ -133,7 +133,7 @@ Diffusion::Diffusion(MPIHelper::MPICommunicator /*global*/,
 {
 }
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret, const XT::Common::Parameter& /*mu*/) const
 {
 #if HAVE_FFTW
   assert(field_);
@@ -156,12 +156,12 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x,
 
 } // diffusiveFlux
 
-size_t Diffusion::order() const
+size_t Diffusion::order(const XT::Common::Parameter& /*mu*/) const
 {
   return 2;
 }
 
-PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   if (FloatCmp::eq(x[0], 0.0))
     y = 1.0;
@@ -169,7 +169,7 @@ PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
     y = 0.0;
 } // evaluate
 
-PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const
+PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   y = 0.;
 } // evaluate

@@ -21,9 +21,9 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
   , subBoundaryInfo_()
 {
   boundaryInfo_ = std::unique_ptr<ModelProblemData::BoundaryInfoType>(
-      Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()));
+      Dune::XT::Grid::NormalBasedBoundaryInfo<typename View::Intersection>::create(boundary_settings()));
   subBoundaryInfo_ = std::unique_ptr<ModelProblemData::SubBoundaryInfoType>(
-      Dune::XT::Grid::BoundaryInfos::NormalBased<typename SubView::Intersection>::create(boundary_settings()));
+      Dune::XT::Grid::NormalBasedBoundaryInfo<typename SubView::Intersection>::create(boundary_settings()));
 }
 
 std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::gridCorners() const
@@ -56,9 +56,9 @@ const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo()
   return *subBoundaryInfo_;
 }
 
-ParameterTree ModelProblemData::boundary_settings() const
+XT::Common::Configuration ModelProblemData::boundary_settings() const
 {
-  Dune::ParameterTree boundarySettings;
+  XT::Common::Configuration boundarySettings;
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
   } else {
@@ -79,12 +79,12 @@ ParameterTree ModelProblemData::boundary_settings() const
   return boundarySettings;
 }
 
-void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y) const
+void DirichletData::evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   y = 0.0;
 } // evaluate
 
-void NeumannData::evaluate(const DomainType& x, RangeType& y) const
+void NeumannData::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   if (std::abs(x[1]) < 1e-6)
     y = -1.0;
@@ -98,7 +98,8 @@ Source::Source(MPIHelper::MPICommunicator /*global*/,
 {
 }
 
-void __attribute__((hot)) Source::evaluate(const DomainType& /*x*/, RangeType& y) const
+void __attribute__((hot))
+Source::evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   y = typename CommonTraits::RangeType(0.0);
 } // evaluate
@@ -119,7 +120,7 @@ Diffusion::~Diffusion()
   permeability_ = nullptr;
 }
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   BOOST_ASSERT_MSG(x.size() <= 3, "SPE 10 model is only defined for up to three dimensions!");
   // TODO this class does not seem to work in 2D, when changing 'spe10.dgf' to a 2D grid?

@@ -8,8 +8,8 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
-#include <dune/stuff/functions/constant.hh>
-#include <dune/stuff/functions/interfaces.hh>
+#include <dune/xt/functions/constant.hh>
+#include <dune/xt/functions/interfaces.hh>
 #include <dune/xt/grid/boundaryinfo.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/memory.hh>
@@ -38,7 +38,9 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType
 {
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType& x, CommonTraits::DiffusionFunctionBaseType::RangeType& y) const = 0;
+  virtual void evaluate(const DomainType& x,
+                        CommonTraits::DiffusionFunctionBaseType::RangeType& y,
+                        const XT::Common::Parameter& /*mu*/ = {}) const = 0;
 
   virtual ~DiffusionBase()
   {
@@ -52,7 +54,7 @@ struct DiffusionBase : public CommonTraits::DiffusionFunctionBaseType
                              const Problem::JacobianRangeType& direction,
                              Problem::JacobianRangeType& flux) const = 0;
 
-  virtual size_t order() const
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const
   {
     return 2;
   }
@@ -73,8 +75,8 @@ typedef DiffusionBase::Transfer<MsFEMTraits::LocalEntityType>::Type LocalDiffusi
 class DirichletDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
-  virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual size_t order() const
+  virtual void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const = 0;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const
   {
     return 3;
   }
@@ -88,11 +90,11 @@ public:
                     Dune::XT::Common::Configuration /*config_in*/)
   {
   }
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final
   {
     y = RangeType(0.0);
   }
-  virtual size_t order() const
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const
   {
     return 0;
   }
@@ -101,8 +103,8 @@ public:
 class NeumannDataBase : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
-  virtual void evaluate(const DomainType& x, RangeType& y) const = 0;
-  virtual size_t order() const
+  virtual void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const = 0;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const
   {
     return 3;
   }
@@ -116,11 +118,11 @@ public:
                   Dune::XT::Common::Configuration /*config_in*/)
   {
   }
-  virtual void evaluate(const DomainType& /*x*/, RangeType& y) const final
+  virtual void evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final
   {
     y = RangeType(0.0);
   }
-  virtual size_t order() const
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const
   {
     return 0;
   }

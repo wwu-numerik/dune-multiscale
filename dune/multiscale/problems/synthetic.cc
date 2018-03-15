@@ -20,7 +20,7 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
                                    MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , boundaryInfo_(Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>::create(boundary_settings()))
+  , boundaryInfo_(Dune::XT::Grid::NormalBasedBoundaryInfo<typename View::Intersection>::create(boundary_settings()))
   , subBoundaryInfo_()
 {
 }
@@ -42,9 +42,9 @@ const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo()
   return subBoundaryInfo_;
 }
 
-ParameterTree ModelProblemData::boundary_settings() const
+XT::Common::Configuration ModelProblemData::boundary_settings() const
 {
-  Dune::ParameterTree boundarySettings;
+  XT::Common::Configuration boundarySettings;
   if (DXTC_CONFIG.has_sub("problem.boundaryInfo")) {
     boundarySettings = DXTC_CONFIG.sub("problem.boundaryInfo");
   } else {
@@ -90,7 +90,7 @@ ExactSolution::ExactSolution(MPIHelper::MPICommunicator /*global*/,
 {
 }
 
-PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const
+PURE HOT void Source::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   constexpr double pi_square = M_PI * M_PI;
   const double x0_eps = (x[0] / epsilon_);
@@ -120,7 +120,7 @@ PURE HOT void Source::evaluate(const DomainType& x, RangeType& y) const
   y = -(d_x0_coefficient_0 * grad_u) - (coefficient_0 * d_x0_x0_u) - (coefficient_1 * d_x1_x1_u);
 }
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret, const XT::Common::Parameter& /*mu*/) const
 {
   const double x0_eps = (x[0] / epsilon_);
   constexpr double inv_pi8pi = 1. / (8.0 * M_PI * M_PI);
@@ -139,15 +139,15 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x,
   flux[0][1] = eval[1][1] * direction[0][1];
 } // diffusiveFlux
 
-size_t Diffusion::order() const
+size_t Diffusion::order(const XT::Common::Parameter& /*mu*/) const
 {
   return 2;
 }
-size_t Source::order() const
+size_t Source::order(const XT::Common::Parameter& /*mu*/) const
 {
   return 1;
 } // evaluate
-size_t ExactSolution::order() const
+size_t ExactSolution::order(const XT::Common::Parameter& /*mu*/) const
 {
   return 1;
 }
@@ -157,7 +157,7 @@ std::string ExactSolution::name() const
   return "synthetic.exact";
 }
 
-PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const
+PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   // approximation obtained by homogenized solution + first corrector
 
@@ -172,7 +172,8 @@ PURE HOT void ExactSolution::evaluate(const DomainType& x, RangeType& y) const
   y = sin_2_pi_x0 * sin_2_pi_x1 + (0.5 * epsilon_ * cos_2_pi_x0 * sin_2_pi_x1 * sin_2_pi_x0_eps);
 } // evaluate
 
-PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u) const
+PURE HOT void
+ExactSolution::jacobian(const DomainType& x, JacobianRangeType& grad_u, const XT::Common::Parameter& /*mu*/) const
 {
   const double x0_eps = (x[0] / epsilon_);
   const double cos_2_pi_x0_eps = cos(M_TWOPI * x0_eps);
@@ -191,7 +192,7 @@ PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& gr
                  + (M_PI * cos_2_pi_x0 * sin_2_pi_x1 * cos_2_pi_x0_eps);
 }
 
-PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
 
   const bool x0_bound = FloatCmp::eq(x[0], 0.0) || FloatCmp::eq(x[0], 1.0);
@@ -200,12 +201,12 @@ PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
     solution_.evaluate(x, y);
 } // evaluate
 
-PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const
+PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   solution_.jacobian(x, y);
 } // jacobian
 
-PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const
+PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   y = 0.0;
 } // evaluate

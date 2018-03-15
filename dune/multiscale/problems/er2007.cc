@@ -18,7 +18,7 @@ ModelProblemData::ModelProblemData(MPIHelper::MPICommunicator global,
                                    MPIHelper::MPICommunicator local,
                                    Dune::XT::Common::Configuration config_in)
   : IModelProblemData(global, local, config_in)
-  , boundaryInfo_(Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename View::Intersection>::create())
+  , boundaryInfo_(XT::Grid::make_alldirichlet_boundaryinfo<typename View::Intersection>())
   , subBoundaryInfo_()
 {
 }
@@ -40,17 +40,17 @@ const ModelProblemData::SubBoundaryInfoType& ModelProblemData::subBoundaryInfo()
   return subBoundaryInfo_;
 }
 
-PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
+PURE void DirichletData::evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   solution_.evaluate(x, y);
 } // evaluate
 
-PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const
+PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y, const XT::Common::Parameter& /*mu*/) const
 {
   solution_.jacobian(x, y);
 }
 
-void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const
+void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret, const XT::Common::Parameter& /*mu*/) const
 {
   ret[0][0] = 1;
   ret[1][1] = 1;
