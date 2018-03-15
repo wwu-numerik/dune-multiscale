@@ -32,7 +32,7 @@ public:
          MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration /*config_in*/);
 
-  void evaluate(const DomainType& x, RangeType& y) const final override;
+  void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 class Diffusion : public DiffusionBase
@@ -50,7 +50,7 @@ public:
 class NeumannBoundaryCondition : public Dune::Multiscale::CommonTraits::FunctionBaseType
 {
 public:
-  void evaluate(const DomainType& x, RangeType& y) const final override;
+  void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 class DirichletData : public ZeroDirichletData

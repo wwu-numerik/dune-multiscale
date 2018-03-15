@@ -64,8 +64,8 @@ struct ModelProblemData : public IModelProblemData
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
-  std::unique_ptr<Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename View::Intersection>> boundaryInfo_;
-  Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  std::unique_ptr<Dune::XT::Grid::AllDirichletBoundaryInfo<typename View::Intersection>> boundaryInfo_;
+  Dune::XT::Grid::AllDirichletBoundaryInfo<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 static const std::vector<std::string> exact_deriv{"-8.0*pi*sin(8.0*pi*x[0])", "-8.0*pi*sin(8.0*pi*x[1])"};
@@ -82,7 +82,7 @@ public:
   void diffusiveFlux(const DomainType& x,
                      const Problem::JacobianRangeType& direction,
                      Problem::JacobianRangeType& flux) const final override;
-  void evaluate(const DomainType& x, RangeType& y) const final override;
+  void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 MSEXPRESSIONFUNCTION(Source, "64*pi*pi*(cos(8.0*pi*x[0])+cos(8.0*pi*x[1]))", 3, exact_deriv)
@@ -101,8 +101,9 @@ public:
   {
   }
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
+  PURE void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  PURE void
+  jacobian(const DomainType& x, JacobianRangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 
 private:
   ExactSolution solution_;

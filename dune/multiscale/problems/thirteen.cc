@@ -217,7 +217,9 @@ void Diffusion::jacobianDiffusiveFlux(const DomainType& x,
 } // jacobianDiffusiveFlux
 
 
-void NeumannBoundaryCondition::evaluate(const DomainType& x, RangeType& y) const
+void NeumannBoundaryCondition::evaluate(const DomainType& x,
+                                        RangeType& y,
+                                        const XT::Common::Parameter& /*mu*/ = {}) const
 {
 
   double conductor_thickness = 0.05;

@@ -51,9 +51,9 @@ struct ModelProblemData : public IModelProblemData
   std::pair<CommonTraits::DomainType, CommonTraits::DomainType> gridCorners() const final override;
 
 private:
-  Dune::ParameterTree boundary_settings() const;
-  std::unique_ptr<Dune::XT::Grid::BoundaryInfos::NormalBased<typename View::Intersection>> boundaryInfo_;
-  Dune::XT::Grid::BoundaryInfos::AllDirichlet<typename SubView::Intersection> subBoundaryInfo_;
+  XT::Common::Configuration boundary_settings() const;
+  std::unique_ptr<Dune::XT::Grid::NormalBasedBoundaryInfo<typename View::Intersection>> boundaryInfo_;
+  Dune::XT::Grid::AllDirichletBoundaryInfo<typename SubView::Intersection> subBoundaryInfo_;
 };
 
 class Source : public Dune::Multiscale::CommonTraits::FunctionBaseType
@@ -63,8 +63,9 @@ public:
          MPIHelper::MPICommunicator /*local*/,
          Dune::XT::Common::Configuration config_in);
 
-  PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
-  virtual size_t order() const final override;
+  PURE HOT void
+  evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const final override;
 
 private:
   const double epsilon_;
@@ -78,12 +79,14 @@ public:
             Dune::XT::Common::Configuration config_in);
 
   //! currently used in gdt assembler
-  virtual void evaluate(const DomainType& x, DiffusionBase::RangeType& y) const final override;
+  virtual void evaluate(const DomainType& x,
+                        DiffusionBase::RangeType& y,
+                        const XT::Common::Parameter& /*mu*/ = {}) const final override;
   PURE HOT void diffusiveFlux(const DomainType& x,
                               const Problem::JacobianRangeType& direction,
                               Problem::JacobianRangeType& flux) const final override;
 
-  virtual size_t order() const final override;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const final override;
 
 private:
   const double epsilon_;
@@ -96,9 +99,12 @@ public:
                 MPIHelper::MPICommunicator /*local*/,
                 Dune::XT::Common::Configuration config_in);
 
-  PURE HOT void evaluate(const DomainType& x, RangeType& y) const final override;
-  PURE HOT void jacobian(const DomainType& x, JacobianRangeType& grad_u) const final override;
-  virtual size_t order() const final override;
+  PURE HOT void
+  evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  PURE HOT void jacobian(const DomainType& x,
+                         JacobianRangeType& grad_u,
+                         const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  virtual size_t order(const XT::Common::Parameter& /*mu*/ = {}) const final override;
   virtual std::string name() const final override;
 
 private:
@@ -115,8 +121,9 @@ public:
   {
   }
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
-  PURE void jacobian(const DomainType& x, JacobianRangeType& y) const final override;
+  PURE void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
+  PURE void
+  jacobian(const DomainType& x, JacobianRangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 
 private:
   ExactSolution solution_;
@@ -131,7 +138,7 @@ public:
   {
   }
 
-  PURE void evaluate(const DomainType& x, RangeType& y) const final override;
+  PURE void evaluate(const DomainType& x, RangeType& y, const XT::Common::Parameter& /*mu*/ = {}) const final override;
 };
 
 } //! @} namespace Synthetic {
