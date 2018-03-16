@@ -6,8 +6,7 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
-#include <dune/multiscale/problems/selector.hh>
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/prolongations/lagrange.hh>
 
 Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& corrections,
                                                          const CommonTraits::SpaceType& coarseSpace,
@@ -46,9 +45,9 @@ void Dune::Multiscale::LocalsolutionProxy::add(const Dune::Multiscale::CommonTra
   for (auto& range_pr : targets) {
     const auto id = range_pr.first;
     auto& range = *range_pr.second;
-    const Dune::GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> prolongation_operator(
-        range.space().grid_view());
-    prolongation_operator.apply(coarse_func, range);
+    const auto prolongation_operator =
+        GDT::make_lagrange_prolongation_localizable_operator(range.space().grid_layer(), coarse_func, range);
+    prolongation_operator->apply();
     auto& correction = *corrections_[id];
     correction.vector() += range.vector();
   }

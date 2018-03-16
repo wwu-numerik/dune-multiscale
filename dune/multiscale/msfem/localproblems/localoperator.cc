@@ -72,7 +72,7 @@ public:
     coarse_system_assembler.add(coarse_dirichlet_projection_operator,
                                 new Dune::XT::Grid::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
     coarse_system_assembler.assemble();
-    GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
+    GDT::LagrangeProlongationOperator<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_layer());
     projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal_);
   }
 
