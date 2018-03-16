@@ -18,10 +18,9 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
   preprocess(target);
   const auto interior = space.grid_layer().grid().leafGridView();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
-  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType, CommonTraits::InteriorBorderPartition> walker(space,
-                                                                                                            interior);
+  GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(space, interior);
 
-  RangedPartitioning<typename InteriorType::Grid, 0, CommonTraits::InteriorBorderPartition> partitioning(
+  Dune::XT::Grid::RangedPartitioning<InteriorType, 0, CommonTraits::InteriorBorderPartition> partitioning(
       interior, XT::Common::threadManager().max_threads());
 
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& target_entity) {
@@ -73,7 +72,7 @@ void Dune::Multiscale::MsFEMProjection::identifySharedNodes(
   const auto& indexSet = gridPart.indexSet();
 
   for (const auto& entity : Dune::elements(gridPart.grid().leafGridView())) {
-    const auto number_of_nodes_in_entity = entity.template count<CommonTraits::world_dim>();
+    const auto number_of_nodes_in_entity = entity.subEntities(CommonTraits::world_dim);
     for (auto i : Dune::XT::Common::value_range(number_of_nodes_in_entity)) {
       const auto node = entity.template subEntity<CommonTraits::world_dim>(i);
       const auto global_index_node = indexSet.index(node);
