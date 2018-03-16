@@ -125,14 +125,15 @@ void LocalProblemSolver::solve_for_all_cells()
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   Dune::XT::Common::MinMaxAvg<double> solveTime;
 
-  const auto interior = coarse_space_->grid_view().grid().template leafGridView<InteriorBorder_Partition>();
+  const auto interior = coarse_space_->grid_layer().grid().leafGridView();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType> walker(*coarse_space_, interior);
-  Dune::XT::Common::IndexSetPartitioner<InteriorType> ip(interior.indexSet());
-  SeedListPartitioning<typename InteriorType::Grid, 0> partitioning(interior, ip);
+
+  const auto threads = Dune::XT::Common::threadManager().max_threads();
+  XT::Grid::RangedPartitioning<InteriorType, 0, CommonTraits::InteriorBorderPartition> partitioning(interior, threads);
 
   const std::function<void(const CommonTraits::EntityType&)> func = [&](const CommonTraits::EntityType& coarseEntity) {
-    const int coarse_index = walker.ansatz_space().grid_view().indexSet().index(coarseEntity);
+    const int coarse_index = walker.ansatz_space().grid_layer().indexSet().index(coarseEntity);
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time

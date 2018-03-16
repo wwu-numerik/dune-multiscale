@@ -150,8 +150,12 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if (!fem_solution_)
     assert(fine_grid);
   const auto fine_space =
-  Dune::XT::Common::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
-  SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
+      fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(fine_grid->leafGridView());
+  const auto fine_interior_view = fine_space.grid_layer().grid().leafGridView();
+
+  const auto threads = XT::Common::threadManager().max_threads();
+  Dune::XT::Grid::RangedPartitioning<CommonTraits::InteriorGridViewType, 0, CommonTraits::InteriorBorderPartition>
+      partitioning(fine_interior_view, threads);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(
       fine_space, fine_interior_view);
   const auto& grid_view = fine_space.grid_layer();
