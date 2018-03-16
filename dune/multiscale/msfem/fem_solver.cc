@@ -17,6 +17,7 @@
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
 #include <dune/gdt/projections/l2.hh>
+#include <dune/gdt/projections/dirichlet.hh>
 
 #include <limits>
 #include <sstream>
@@ -77,11 +78,11 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   DXTC_TIMINGS.start("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space_);
-  system_assembler.add(elliptic_operator);
-  system_assembler.add(force_functional);
-  system_assembler.add(neumann_functional,
-                       new Dune::XT::Grid::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
   system_assembler.add(dirichlet_projection_operator, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.append(elliptic_operator);
+  system_assembler.append(force_functional);
+  system_assembler.append(neumann_functional,
+                          new Dune::XT::Grid::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
   system_assembler.assemble(true);
   DXTC_TIMINGS.stop("fem.assemble");
 
@@ -100,8 +101,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
 
   // solve the system
   DXTC_TIMINGS.start("fem.solve");
-  const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::CommunicatorType>
-      linear_solver(system_matrix, space_.communicator());
+  const XT::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::DofCommunicatorType>
+      linear_solver(system_matrix, space_.dof_communicator());
   auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
   linear_solver_options.set("max_iter", "5000", true);
   linear_solver_options.set("precision", "1e-8", true);

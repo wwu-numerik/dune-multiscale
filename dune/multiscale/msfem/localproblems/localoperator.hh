@@ -58,7 +58,7 @@ private:
   EllipticOperatorType elliptic_operator_;
   BoundaryInfoType boundaryInfo_;
   DirichletConstraintsType dirichletConstraints_;
-  Dune::XT::Grid::BoundaryInfos::AllDirichlet<MsFEMTraits::LocalGridType::LeafGridView::Intersection>
+  Dune::XT::Grid::AllDirichletBoundaryInfo<MsFEMTraits::LocalGridType::LeafGridView::Intersection>
       allLocalDirichletInfo_;
   const bool use_umfpack_;
 #if HAVE_UMFPACK

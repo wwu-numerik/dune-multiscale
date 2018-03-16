@@ -27,13 +27,13 @@
 #include <dune/xt/common/timings.hh>
 #include <dune/xt/common/ranges.hh>
 
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/prolongations/lagrange.hh>
 #include <dune/gdt/spaces/cg.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/assembler/system.hh>
-#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/projections/lagrange.hh>
 
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 
@@ -49,12 +49,12 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   Dune::XT::Common::ScopedTiming st("msfem.idFine");
   const int rank = Dune::MPIHelper::getCollectiveCommunication().rank();
 
-  auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
+  auto& coarse_indexset = coarse_space.grid_layer().grid().leafIndexSet();
   const bool is_simplex_grid = Dune::XT::Grid::is_simplex_grid(coarse_space);
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
-  const auto interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
-  for (const auto& coarse_entity : Dune::elements(interior)) {
+  const auto interior = coarse_space.grid_layer().grid().leafGridView();
+  for (const auto& coarse_entity : Dune::elements(interior, Partitions::interiorBorder)) {
     LocalproblemSolutionManager localSolutionManager(coarse_space, coarse_entity, localgrid_list);
     localSolutionManager.load();
     auto& localproblem_solutions = localSolutionManager.getLocalSolutions();
@@ -83,7 +83,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
     const auto& reference_element = Dune::XT::Grid::reference_element(coarse_entity);
     const auto& coarse_geometry = coarse_entity.geometry();
-    for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
+    for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_layer())) {
       const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
       auto entity_local_correction = local_correction.local_discrete_function(local_entity);
 

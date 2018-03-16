@@ -4,8 +4,8 @@
 
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/timings.hh>
-#include <dune/gdt/operators/projections.hh>
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/projections.hh>
+#include <dune/gdt/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
@@ -125,7 +125,7 @@ void MsFemCodim0Matrix::assembleLocal(
 
   assert(localSolutions.size() > 0);
 
-  for (const auto& localGridEntity : Dune::elements(testSpace.grid_view())) {
+  for (const auto& localGridEntity : Dune::elements(testSpace.grid_layer())) {
     // ignore overlay elements
     if (localGridList_ && !localGridList_->covers(coarse_grid_entity, localGridEntity))
       continue;

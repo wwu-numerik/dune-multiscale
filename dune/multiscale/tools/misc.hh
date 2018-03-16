@@ -9,13 +9,13 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 
 namespace Dune {
-namespace Stuff {
+namespace XT {
 namespace Grid {
 
 inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space)
 {
-  return space.grid_view().grid().leafIndexSet().geomTypes(0).size() == 1
-         && space.grid_view().grid().leafIndexSet().geomTypes(0)[0].isSimplex();
+  return space.grid_layer().grid().leafIndexSet().types(0).size() == 1
+         && space.grid_layer().grid().leafIndexSet().types(0)[0].isSimplex();
 }
 
 } // namespace Grid
@@ -24,9 +24,10 @@ inline bool is_simplex_grid(const Multiscale::CommonTraits::SpaceType& space)
 namespace Multiscale {
 
 static inline auto interior_border_view(const CommonTraits::SpaceType& space)
-    -> decltype(space.grid_view().grid().leafGridView<InteriorBorder_Partition>())
+    -> decltype(space.grid_layer().grid().leafGridView())
 {
-  return space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+  DXTC_LOG_INFO_0 << "returning non-specififc interior view\n";
+  return space.grid_layer().grid().leafGridView();
 }
 
 } // namespace Multiscale

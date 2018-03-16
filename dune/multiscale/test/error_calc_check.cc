@@ -23,8 +23,8 @@ struct ErrorCheck : public GridAndSpaces
     auto& coarse_space = this->coarseSpace;
     LocalGridList localgrid_list(*problem_, coarse_space);
     const CommonTraits::InteriorGridViewType interior =
-        coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
-    const auto& coarse_indexset = coarse_space.grid_view().grid().leafIndexSet();
+        coarse_space.grid_layer().grid().leafGridView<InteriorBorder_Partition>();
+    const auto& coarse_indexset = coarse_space.grid_layer().grid().leafIndexSet();
     for (const auto& coarse_entity : Dune::elements(interior)) {
       LocalproblemSolutionManager localSolManager(coarse_space, coarse_entity, localgrid_list);
 

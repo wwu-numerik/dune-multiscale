@@ -72,7 +72,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
                                                    const Dune::Multiscale::LocalGridList& gridlist)
   : coarse_space_(coarse_space)
   , gridlist_(gridlist)
-  , static_view_(coarse_space_.grid_view().grid().leafGridView())
+  , static_view_(coarse_space_.grid_layer().grid().leafGridView())
   , static_iterator_(nullptr)
 {
 }
@@ -80,7 +80,7 @@ Dune::Multiscale::LocalGridSearch::LocalGridSearch(const CommonTraits::SpaceType
 Dune::Multiscale::LocalGridSearch::LocalGridSearch(const Dune::Multiscale::LocalGridSearch& other)
   : coarse_space_(other.coarse_space_)
   , gridlist_(other.gridlist_)
-  , static_view_(coarse_space_.grid_view().grid().leafGridView())
+  , static_view_(coarse_space_.grid_layer().grid().leafGridView())
   , static_iterator_(nullptr)
 {
 }

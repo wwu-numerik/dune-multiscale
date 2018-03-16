@@ -12,7 +12,7 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 
-#include <dune/stuff/aliases.hh>
+
 #include <dune/xt/grid/output/entity_visualization.hh>
 #include <dune/xt/common/parallel/threadmanager.hh>
 #include <dune/xt/common/ranges.hh>

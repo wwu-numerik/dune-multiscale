@@ -16,6 +16,7 @@
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/coarse_scale_assembler.hh>
+#include <dune/multiscale/problems/base.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -69,7 +70,7 @@ public:
 
   using OperatorBaseType::pattern;
 
-  static Stuff::LA::SparsityPatternDefault
+  static XT::LA::SparsityPatternDefault
   pattern(const RangeSpaceType& range_space, const SourceSpaceType& source_space, const GridViewType& grid_view);
 
   CoarseScaleOperator(const DMP::ProblemContainer& problem,

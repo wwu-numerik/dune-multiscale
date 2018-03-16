@@ -19,10 +19,11 @@
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
-#include <dune/gdt/operators/projections.hh>
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/projections/lagrange.hh>
+#include <dune/gdt/prolongations.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
+#include <dune/gdt/projections/dirichlet.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -155,7 +156,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
 
   // dirichlet-0 for all rhs
   typedef Dune::XT::Grid::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
-  system_assembler_.add(dirichletConstraints_, new OnLocalBoundaryEntities());
+  system_assembler_.append(dirichletConstraints_, new OnLocalBoundaryEntities());
 
   system_assembler_.assemble();
   dirichletConstraints_.apply(system_matrix_);
@@ -175,7 +176,7 @@ void LocalProblemOperator::apply_inverse(const MsFEMTraits::LocalGridDiscreteFun
     DUNE_THROW(Dune::InvalidStateException, "Local MsFEM Problem RHS invalid.");
 
   typedef BackendChooser<MsFEMTraits::LocalSpaceType>::InverseOperatorType LocalInverseOperatorType;
-  const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().communicator());
+  const LocalInverseOperatorType local_inverse(system_matrix_, current_rhs.space().dof_communicator());
 
   auto options = local_inverse.options(problem_.config().get("msfem.local_solver", "umfpack"));
   options["precision"] = problem_.config().get("msfem.localproblemsolver_precision", 1e-5);

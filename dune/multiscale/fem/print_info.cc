@@ -33,7 +33,7 @@ void write_discrete_function(const DMP::ProblemContainer& problem,
   if (problem.getModelData().hasExactSolution()) {
     const auto& u = problem.getExactSolution();
     outputparam.set_prefix("exact_solution");
-    u.visualize(discrete_solution->space().grid_view(), outputparam.fullpath(u.name()));
+    u.visualize(discrete_solution->space().grid_layer(), outputparam.fullpath(u.name()));
   }
 }
 

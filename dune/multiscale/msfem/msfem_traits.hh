@@ -10,7 +10,7 @@
 
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/yaspgrid.hh>
-#include <dune/stuff/functions/constant.hh>
+#include <dune/xt/functions/constant.hh>
 #include <vector>
 
 namespace Dune {
@@ -42,11 +42,11 @@ struct MsFEMTraits
 
   typedef typename BackendChooser<LocalSpaceType>::DiscreteFunctionType LocalGridDiscreteFunctionType;
   typedef typename BackendChooser<LocalSpaceType>::ConstDiscreteFunctionType LocalGridConstDiscreteFunctionType;
-  typedef Stuff::Functions::Constant<LocalEntityType,
-                                     CommonTraits::FieldType,
-                                     CommonTraits::dimDomain,
-                                     CommonTraits::FieldType,
-                                     CommonTraits::dimRange>
+  typedef XT::Functions::ConstantFunction<LocalEntityType,
+                                          CommonTraits::FieldType,
+                                          CommonTraits::dimDomain,
+                                          CommonTraits::FieldType,
+                                          CommonTraits::dimRange>
       LocalConstantFunctionType;
   typedef typename LocalSpaceType::GridLayerType LocalGridViewType;
 

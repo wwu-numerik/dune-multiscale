@@ -20,6 +20,8 @@
 
 #include <dune/multiscale/common/traits.hh>
 
+#include <tbb/tbb_exception.h>
+
 static void handle_sigterm(int)
 {
   DXTC_TIMINGS.stop();
@@ -40,7 +42,7 @@ void Dune::Multiscale::init(int argc, char** argv)
   std::cout.sync_with_stdio(false);
 
   Dune::XT::Common::Config().read_command_line(argc, argv);
-  Dune::Stuff::Common::Config().read_command_line(argc, argv);
+  Dune::XT::Common::Config().read_command_line(argc, argv);
   Dune::XT::Common::test_create_directory(DXTC_CONFIG_GET("global.datadir", "data/"));
 
   // LOG_NONE = 1, LOG_ERROR = 2, LOG_INFO = 4,LOG_DEBUG = 8,LOG_CONSOLE = 16,LOG_FILE = 32
@@ -69,7 +71,7 @@ int Dune::Multiscale::handle_exception(const Dune::Exception& exp)
   std::cerr << "Failed with Dune::Exception: " << exp.what();
   DXTC_TIMINGS.output_per_rank("profiler");
   mem_usage();
-  return Dune::Stuff::abort_all_mpi_processes();
+  return Dune::XT::abort_all_mpi_processes();
 }
 
 int Dune::Multiscale::handle_exception(const std::exception& exp)
@@ -77,7 +79,7 @@ int Dune::Multiscale::handle_exception(const std::exception& exp)
   std::cerr << "Failed with std::exception: " << exp.what();
   DXTC_TIMINGS.output_per_rank("profiler");
   mem_usage();
-  return Dune::Stuff::abort_all_mpi_processes();
+  return Dune::XT::abort_all_mpi_processes();
 }
 
 int Dune::Multiscale::handle_exception(const tbb::tbb_exception& exp)
@@ -85,7 +87,7 @@ int Dune::Multiscale::handle_exception(const tbb::tbb_exception& exp)
   std::cerr << "Failed with tbb::exception" << exp.name() << ": " << exp.what();
   DXTC_TIMINGS.output_per_rank("profiler");
   mem_usage();
-  return Dune::Stuff::abort_all_mpi_processes();
+  return Dune::XT::abort_all_mpi_processes();
 }
 
 void Dune::Multiscale::mem_usage()
