@@ -36,15 +36,18 @@
 #include <dune/multiscale/msfem/fem_solver.hh>
 
 using namespace Dune::Multiscale;
-namespace DGP = Dune::GDT::Products;
-typedef DSFu::Difference<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType> DifferenceType;
-typedef DSFu::Difference<CommonTraits::ConstDiscreteFunctionType, CommonTraits::ConstDiscreteFunctionType>
+namespace DXF = Dune::XT::Functions;
+namespace DGP = Dune::GDT;
+typedef DXF::DifferenceFunction<Problem::ExactSolutionType, CommonTraits::ConstDiscreteFunctionType> DifferenceType;
+typedef DXF::DifferenceFunction<CommonTraits::ConstDiscreteFunctionType, CommonTraits::ConstDiscreteFunctionType>
     DiscreteDifferenceType;
-typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DifferenceType> L2ErrorAnalytical;
-typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
-typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DifferenceType> H1sErrorAnalytical;
-typedef DGP::H1SemiLocalizable<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
-typedef DGP::L2Localizable<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType> DiscreteL2;
+typedef DGP::L2LocalizableProduct<CommonTraits::InteriorGridViewType, DifferenceType> L2ErrorAnalytical;
+typedef DGP::L2LocalizableProduct<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> L2ErrorDiscrete;
+// TODO this might not be the correct contribution
+typedef DGP::LaplaceLocalizableProduct<CommonTraits::InteriorGridViewType, DifferenceType> H1sErrorAnalytical;
+typedef DGP::LaplaceLocalizableProduct<CommonTraits::InteriorGridViewType, DiscreteDifferenceType> H1sErrorDiscrete;
+typedef DGP::L2LocalizableProduct<CommonTraits::InteriorGridViewType, CommonTraits::ConstDiscreteFunctionType>
+    DiscreteL2;
 
 
 double surface_flow_gdt(const CommonTraits::GridType& grid,
@@ -208,47 +211,49 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
       const auto name = forward_as_tuple(msfem_exact);
       const auto& difference =
           map_emplace(differences, pcw, name, forward_as_tuple(u, fine_msfem_solution)).first->second;
-      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
-      system_assembler.add(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, difference, over_integrate);
+      system_assembler.append(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+      system_assembler.append(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
     }
 
     if (fem_solution_) {
       const auto name = forward_as_tuple(fem_exact);
       const auto& difference = map_emplace(differences, pcw, name, forward_as_tuple(u, *fem_solution_)).first->second;
-      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
-      system_assembler.add(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, difference, over_integrate);
+      system_assembler.append(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+      system_assembler.append(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
     }
     const auto name = forward_as_tuple(coarse_fem_exact);
     const auto& difference =
         map_emplace(differences, pcw, name, forward_as_tuple(u, projected_coarse_fem_solution)).first->second;
-    const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-    system_assembler.add(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
-    system_assembler.add(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
+    const auto product_args = forward_as_tuple(fine_interior_view, difference, difference, over_integrate);
+    system_assembler.append(map_emplace(l2_analytical_errors, pcw, name, product_args).first->second);
+    system_assembler.append(map_emplace(h1s_analytical_errors, pcw, name, product_args).first->second);
   }
 
   if (msfem_solution_) {
-    l2_msfem = Dune::XT::Common::make_unique<DiscreteL2>(fine_interior_view, fine_msfem_solution, over_integrate);
-    system_assembler.add(*l2_msfem);
+    // TODO FIXME
+    l2_msfem = Dune::XT::Common::make_unique<DiscreteL2>(
+        fine_interior_view, fine_msfem_solution, fine_msfem_solution, over_integrate);
+    system_assembler.append(*l2_msfem);
     {
       const auto name = forward_as_tuple(msfem_coarse_fem);
       const auto& difference =
           map_emplace(
               discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, projected_coarse_fem_solution))
               .first->second;
-      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
-      system_assembler.add(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, difference, over_integrate);
+      system_assembler.append(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
+      system_assembler.append(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
     }
     if (fem_solution_) {
       const auto name = forward_as_tuple(msfem_fem);
       const auto& difference =
           map_emplace(discrete_differences, pcw, name, forward_as_tuple(fine_msfem_solution, *fem_solution_))
               .first->second;
-      const auto product_args = forward_as_tuple(fine_interior_view, difference, over_integrate);
-      system_assembler.add(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
-      system_assembler.add(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
+      const auto product_args = forward_as_tuple(fine_interior_view, difference, difference, over_integrate);
+      system_assembler.append(map_emplace(l2_discrete_errors, pcw, name, product_args).first->second);
+      system_assembler.append(map_emplace(h1s_discrete_errors, pcw, name, product_args).first->second);
     }
   }
 
