@@ -72,17 +72,16 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
       neumann_functional(neumann, rhs_vector, space_);
   // dirichlet boundary values
-  GDT::Operators::
-      DirichletProjectionLocalizable<GridViewType, Problem::DirichletDataBase, CommonTraits::DiscreteFunctionType>
-          dirichlet_projection_operator(space_.grid_view(), boundary_info, dirichlet_data, projected_dirichlet_data);
+  auto dirichlet_projection_operator = make_localizable_dirichlet_projection_operator(
+      space_.grid_layer(), boundary_info, dirichlet_data, projected_dirichlet_data);
   DXTC_TIMINGS.start("fem.assemble");
   // now assemble everything in one grid walk
   GDT::SystemAssembler<CommonTraits::SpaceType> system_assembler(space_);
-  system_assembler.add(dirichlet_projection_operator, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.append(elliptic_operator);
   system_assembler.append(force_functional);
   system_assembler.append(neumann_functional,
                           new Dune::XT::Grid::ApplyOn::NeumannIntersections<GridViewType>(boundary_info));
+  system_assembler.append(*dirichlet_projection_operator, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(true);
   DXTC_TIMINGS.stop("fem.assemble");
 
@@ -92,9 +91,9 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   system_matrix.mv(projected_dirichlet_data.vector(), tmp);
   rhs_vector -= tmp;
   // apply the dirichlet zero constraints to restrict the system to H^1_0
-  GDT::Spaces::DirichletConstraints<typename GridViewType::Intersection> dirichlet_constraints(
+  GDT::DirichletConstraints<typename GridViewType::Intersection> dirichlet_constraints(
       boundary_info, space_.mapper().size(), true);
-  system_assembler.add(dirichlet_constraints, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
+  system_assembler.append(dirichlet_constraints, new XT::Grid::ApplyOn::BoundaryEntities<GridViewType>());
   system_assembler.assemble(problem_.config().get("threading.smp_constraints", false));
   dirichlet_constraints.apply(system_matrix, rhs_vector);
   DXTC_TIMINGS.stop("fem.constraints");

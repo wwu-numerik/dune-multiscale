@@ -164,9 +164,9 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   Elliptic_FEM_Solver coarse_fem_solver(problem_, coarse_grid);
   try {
     auto& coarse_fem_solution = coarse_fem_solver.solve();
-    const Dune::GDT::Operators::LagrangeProlongation<CommonTraits::GridViewType> prolongation_operator(
-        fine_space.grid_view());
-    prolongation_operator.apply(coarse_fem_solution, projected_coarse_fem_solution);
+    auto prolongation_operator = GDT::make_lagrange_projection_localizable_operator(
+        fine_space.grid_layer(), coarse_fem_solution, projected_coarse_fem_solution);
+    prolongation_operator->apply();
     if (problem_.config().get("global.vtk_output", false))
       solution_output(problem_, coarse_fem_solution, "coarse-cg-fem_solution_");
   } catch (Dune::Exception& e) {
