@@ -33,19 +33,19 @@ public:
 };
 
 class MsFEMCodim0Integral // LocalOperatorType
-    : public GDT::LocalOperator::Codim0Interface<MsFEMCodim0IntegralTraits>
+    : public GDT::LocalOperatorInterface<MsFEMCodim0IntegralTraits>
 {
 public:
   typedef MsFEMCodim0IntegralTraits Traits;
 
 private:
   static constexpr size_t numTmpObjectsRequired_ = 1;
-  typedef Stuff::LocalfunctionSetInterface<CommonTraits::EntityType,
-                                           CommonTraits::DomainFieldType,
-                                           CommonTraits::dimDomain,
-                                           CommonTraits::RangeFieldType,
-                                           CommonTraits::dimRange,
-                                           1>
+  typedef XT::Functions::LocalfunctionSetInterface<CommonTraits::EntityType,
+                                                   CommonTraits::DomainFieldType,
+                                                   CommonTraits::dimDomain,
+                                                   CommonTraits::RangeFieldType,
+                                                   CommonTraits::dimRange,
+                                                   1>
       AnsatzLocalfunctionSetInterfaceType;
   typedef AnsatzLocalfunctionSetInterfaceType TestLocalfunctionSetInterfaceType;
 

@@ -16,7 +16,7 @@ void Dune::Multiscale::MsFEMProjection::project(Dune::Multiscale::LocalsolutionP
   const auto& space = target.space();
 
   preprocess(target);
-  const auto interior = space.grid_view().grid().leafGridView();
+  const auto interior = space.grid_layer().grid().leafGridView();
   typedef std::remove_const<decltype(interior)>::type InteriorType;
   GDT::SystemAssembler<CommonTraits::SpaceType, InteriorType, CommonTraits::InteriorBorderPartition> walker(space,
                                                                                                             interior);

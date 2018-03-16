@@ -73,12 +73,6 @@ pair<shared_ptr<CommonTraits::GridType>, shared_ptr<CommonTraits::GridType>> Dun
   return {coarse_grid, make_fine_grid(problem, coarse_grid, check_partitioning)};
 }
 
-template <class T>
-inline std::ostream& operator<<(std::ostream& s, const Dune::Stuff::Common::MinMaxAvg<T>& d)
-{
-  d.output(s);
-  return s;
-}
 
 std::shared_ptr<Dune::Multiscale::CommonTraits::GridType>
 Dune::Multiscale::make_fine_grid(const DMP::ProblemContainer& problem,

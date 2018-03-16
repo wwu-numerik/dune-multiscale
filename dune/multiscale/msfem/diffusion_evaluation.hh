@@ -25,8 +25,8 @@ public:
   static constexpr auto dimDomain = CommonTraits::dimDomain;
   static constexpr auto dimRange = CommonTraits::dimRange;
   typedef CommonTraits::DomainFieldType DomainFieldType;
-  static_assert(std::is_base_of<Dune::Stuff::IsLocalizableFunction, LocalizableFunctionType>::value,
-                "LocalizableFunctionImp has to be derived from Stuff::IsLocalizableFunction.");
+  static_assert(XT::Functions::is_localizable_function<LocalizableFunctionType>::value,
+                "LocalizableFunctionImp has to be a LocalizableFunction");
 };
 
 struct CoarseBasisProductTraits : public ProductTraitsBase
@@ -66,7 +66,7 @@ public:
    */
   template <class E, size_t d, class R, size_t rT, size_t rCT>
   size_t order(const typename Traits::LocalfunctionTupleType& localFuncs,
-               const Stuff::LocalfunctionSetInterface<E, DomainFieldType, d, R, rT, rCT>& testBase) const
+               const XT::Functions::LocalfunctionSetInterface<E, DomainFieldType, d, R, rT, rCT>& testBase) const
   {
     const auto localFunction = std::get<0>(localFuncs);
     return order(*localFunction, testBase);
@@ -77,8 +77,8 @@ public:
    *  \return localFunction.order() + testBase.order()
    */
   template <class E, size_t d, class R, size_t rL, size_t rCL, size_t rT, size_t rCT>
-  size_t order(const Stuff::LocalfunctionInterface<E, DomainFieldType, d, R, rL, rCL>& localFunction,
-               const Stuff::LocalfunctionSetInterface<E, DomainFieldType, d, R, rT, rCT>& testBase) const
+  size_t order(const XT::Functions::LocalfunctionInterface<E, DomainFieldType, d, R, rL, rCL>& localFunction,
+               const XT::Functions::LocalfunctionSetInterface<E, DomainFieldType, d, R, rT, rCT>& testBase) const
   {
     return localFunction.order() + testBase.order();
   } // int order(...)
@@ -88,7 +88,7 @@ public:
    */
   template <size_t d, class R, size_t rT, size_t rCT>
   void evaluate(const typename Traits::LocalfunctionTupleType& localFuncs,
-                const Stuff::LocalfunctionSetInterface<EntityType, DomainFieldType, d, R, rT, rCT>& testBase,
+                const XT::Functions::LocalfunctionSetInterface<EntityType, DomainFieldType, d, R, rT, rCT>& testBase,
                 const Dune::FieldVector<DomainFieldType, d>& localPoint,
                 Dune::DynamicVector<R>& ret) const
   {
@@ -97,10 +97,11 @@ public:
   }
 
   template <class R, size_t r, size_t rC>
-  void evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
-                const Stuff::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
-                const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint,
-                Dune::DynamicVector<R>& ret) const
+  void
+  evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
+           const XT::Functions::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
+           const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint,
+           Dune::DynamicVector<R>& ret) const
   {
     // evaluate local function
     const auto& entity = testBase.entity();
@@ -181,7 +182,7 @@ public:
    */
   template <class E, class D, size_t d, class R, size_t rT, size_t rCT>
   size_t order(const typename LocalfunctionTuple<E>::Type& localFuncs,
-               const Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase) const
+               const XT::Functions::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase) const
   {
     const auto localFunction = std::get<0>(localFuncs);
     return order(*localFunction, testBase);
@@ -192,8 +193,8 @@ public:
    *  \return localFunction.order() + testBase.order()
    */
   template <class E, class D, size_t d, class R, size_t rL, size_t rCL, size_t rT, size_t rCT>
-  size_t order(const Stuff::LocalfunctionInterface<E, D, d, R, rL, rCL>& localFunction,
-               const Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase) const
+  size_t order(const XT::Functions::LocalfunctionInterface<E, D, d, R, rL, rCL>& localFunction,
+               const XT::Functions::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase) const
   {
     return localFunction.order() + testBase.order();
   } // int order(...)
@@ -203,7 +204,7 @@ public:
    */
   template <class E, class D, size_t d, class R, size_t rT, size_t rCT>
   void evaluate(const typename LocalfunctionTuple<E>::Type& localFuncs,
-                const Stuff::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase,
+                const XT::Functions::LocalfunctionSetInterface<E, D, d, R, rT, rCT>& testBase,
                 const Dune::FieldVector<D, d>& localPoint,
                 Dune::DynamicVector<R>& ret) const
   {
@@ -212,10 +213,11 @@ public:
   }
 
   template <class R, size_t r, size_t rC>
-  void evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
-                const Stuff::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
-                const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint,
-                Dune::DynamicVector<R>& ret) const
+  void
+  evaluate(const typename Traits::LocalfunctionTupleType& /*localFunctions_in*/,
+           const XT::Functions::LocalfunctionSetInterface<EntityType, DomainFieldType, dimDomain, R, r, rC>& testBase,
+           const Dune::FieldVector<DomainFieldType, dimDomain>& localPoint,
+           Dune::DynamicVector<R>& ret) const
   {
     // evaluate local function
     const auto& entity = testBase.entity();

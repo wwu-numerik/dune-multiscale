@@ -14,7 +14,7 @@ class LocalGridSearch : public Dune::XT::Grid::EntitySearchBase<MsFEMTraits::Loc
 {
   typedef Dune::XT::Grid::EntitySearchBase<MsFEMTraits::LocalGridViewType> BaseType;
   typedef Dune::XT::Grid::EntityInlevelSearch<MsFEMTraits::LocalGridViewType> PerGridSearchType;
-  typedef typename CommonTraits::SpaceType::GridViewType::Grid::Traits::LeafIndexSet::IndexType IndexType;
+  typedef typename CommonTraits::SpaceType::GridLayerType::Grid::Traits::LeafIndexSet::IndexType IndexType;
   typedef typename CommonTraits::SpaceType::EntityType CoarseEntityType;
   typedef std::vector<CommonTraits::DomainType> PointContainerType;
   typedef PointContainerType::const_iterator PointIterator;

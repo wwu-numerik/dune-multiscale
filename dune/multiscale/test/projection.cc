@@ -1,8 +1,8 @@
 #include <dune/multiscale/test/test_common.hxx>
 
-#include <dune/stuff/functions/global.hh>
+#include <dune/xt/functions/global.hh>
 #include <dune/xt/common/float_cmp.hh>
-#include <dune/gdt/operators/projections.hh>
+#include <dune/gdt/projections.hh>
 #include <dune/gdt/products/l2.hh>
 #include <functional>
 #include <dune/multiscale/msfem/localproblems/localsolutionmanager.hh>
@@ -20,9 +20,9 @@ struct Projection : public GridAndSpaces
                                                                 const LocalGridList& localgrid_list)
   {
     LocalsolutionProxy::CorrectionsMapType local_corrections;
-    for (const auto& coarse_entity : Dune::elements(coarseSpace.grid_view())) {
+    for (const auto& coarse_entity : Dune::elements(coarsespace.grid_layer())) {
       LocalproblemSolutionManager localSolManager(coarseSpace, coarse_entity, localgrid_list);
-      auto& coarse_indexset = coarseSpace.grid_view().grid().leafIndexSet();
+      auto& coarse_indexset = coarsespace.grid_layer().grid().leafIndexSet();
       const auto coarse_index = coarse_indexset.index(coarse_entity);
       local_corrections[coarse_index] =
           Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(localSolManager.space(), " ");
@@ -45,7 +45,7 @@ struct Projection : public GridAndSpaces
     MsFEMProjection::project(proxy, fine_scale_part);
 
     const auto norm = std::sqrt(
-        Dune::GDT::Products::L2<CommonTraits::GridViewType>(fineSpace.grid_view()).induced_norm(fine_scale_part));
+        Dune::GDT::Products::L2<CommonTraits::GridViewType>(finespace.grid_layer()).induced_norm(fine_scale_part));
     EXPECT_DOUBLE_EQ(norm, constant);
   }
 };
@@ -60,7 +60,7 @@ struct Search : public GridAndSpaces
     LocalGridList localgrid_list(*problem_, coarseSpace);
     LocalGridSearch lgs(coarseSpace, localgrid_list);
 
-    for (auto&& i : Dune::XT::Common::value_range(coarseSpace.grid_view().size(0))) {
+    for (auto&& i : Dune::XT::Common::value_range(coarsespace.grid_layer().size(0))) {
       auto&& lg = localgrid_list.getSubGrid(i);
       const auto lg_view = lg.leafGridView();
       for (auto&& lg_ent : Dune::elements(lg_view)) {

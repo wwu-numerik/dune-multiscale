@@ -1,9 +1,9 @@
 #ifndef DUNE_MULTISCALE_LA_BACKEND_HH
 #define DUNE_MULTISCALE_LA_BACKEND_HH
 
-#include <dune/stuff/la/container.hh>
-#include <dune/stuff/la/solver.hh>
-#include <dune/stuff/la/solver/istl.hh>
+#include <dune/xt/la/container.hh>
+#include <dune/xt/la/solver.hh>
+#include <dune/xt/la/solver/istl.hh>
 #include <dune/gdt/discretefunction/default.hh>
 #include <dune/gdt/spaces/cg.hh>
 
@@ -15,19 +15,19 @@ struct BackendChooser
 {
 
 #if DUNE_MULTISCALE_USE_ISTL
-  static constexpr auto backend_type = Stuff::LA::ChooseBackend::istl_sparse;
+  static constexpr auto backend_type = XT::LA::Backends::istl_sparse;
 #else
-  static constexpr auto backend_type = Stuff::LA::ChooseBackend::eigen_sparse;
+  static constexpr auto backend_type = XT::LA::Backends::eigen_sparse;
 #endif
 
-  typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::VectorType
+  typedef typename XT::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::VectorType
       DiscreteFunctionDataType;
   typedef DiscreteFunctionDataType GdtVectorType;
-  typedef typename Stuff::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::MatrixType
+  typedef typename XT::LA::Container<typename DiscreteFunctionSpaceType::RangeFieldType, backend_type>::MatrixType
       LinearOperatorType;
   typedef GDT::DiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> DiscreteFunctionType;
   typedef GDT::ConstDiscreteFunction<DiscreteFunctionSpaceType, DiscreteFunctionDataType> ConstDiscreteFunctionType;
-  typedef Stuff::LA::Solver<LinearOperatorType, typename DiscreteFunctionSpaceType::CommunicatorType>
+  typedef XT::LA::Solver<LinearOperatorType, typename DiscreteFunctionSpaceType::DofCommunicatorType>
       InverseOperatorType;
 };
 

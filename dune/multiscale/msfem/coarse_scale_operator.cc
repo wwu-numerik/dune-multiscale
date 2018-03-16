@@ -6,8 +6,8 @@
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/timings.hh>
 #include <dune/xt/grid/walker.hh>
-#include <dune/gdt/operators/projections.hh>
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/projections/lagrange.hh>
+#include <dune/gdt/prolongations/lagrange.hh>
 #include <dune/gdt/spaces/constraints.hh>
 #include <dune/gdt/functionals/l2.hh>
 #include <dune/multiscale/msfem/localproblems/localproblemsolver.hh>
@@ -20,15 +20,16 @@
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/coarse_rhs_functional.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
-#include <dune/grid/utility/partitioning/seedlist.hh>
+#include <dune/xt/grid/parallel/partitioning/ranged.hh>
 #include <sstream>
+#include <dune/gdt/projections/dirichlet.hh>
 
 namespace Dune {
 namespace Multiscale {
 
-Stuff::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScaleOperator::RangeSpaceType& range_space,
-                                                               const CoarseScaleOperator::SourceSpaceType& source_space,
-                                                               const CoarseScaleOperator::GridViewType& grid_view)
+XT::LA::SparsityPatternDefault CoarseScaleOperator::pattern(const CoarseScaleOperator::RangeSpaceType& range_space,
+                                                            const CoarseScaleOperator::SourceSpaceType& source_space,
+                                                            const CoarseScaleOperator::GridViewType& grid_view)
 {
   return range_space.compute_volume_pattern(grid_view, source_space);
 }
@@ -52,7 +53,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   this->add_codim0_assembler(local_assembler_, this->matrix());
 
   msfem_rhs_.vector() *= 0;
-  const auto used_grid_view = coarse_space().grid_view().grid().leafGridView<used_partition>();
+  const auto interior = coarse_space().grid_layer().grid().leafGridView();
 
   GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
       force_functional(problem_.getSource(), msfem_rhs_.vector(), coarse_space(), used_grid_view);
@@ -99,7 +100,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   BOOST_ASSERT_MSG(msfem_rhs_.dofs_valid(), "Coarse scale RHS DOFs need to be valid!");
   DXTC_TIMINGS.start("msfem.coarse.linearSolver");
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
-  const Inverse inverse(global_matrix_, coarse_space().communicator());
+  const Inverse inverse(global_matrix_, coarse_space().dof_communicator());
 
   const std::string type = problem_.config().get("msfem.coarse_solver", "bicgstab.ilut");
   if (type == "umfpack" && coarse_space().grid_view().grid().comm().size() > 1) {
@@ -117,7 +118,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("post_check_solves_system", problem_.config().get("msfem.coarse_solver.check", false), overwrite);
   try {
     inverse.apply(msfem_rhs_.vector(), solution.vector(), options);
-  } catch (Dune::Stuff::Exceptions::linear_solver_failed& f) {
+  } catch (Dune::XT::LA::Exceptions::linear_solver_failed& f) {
     // prevents all ranks from outputting the same detailed error message
     MS_LOG_ERROR_0 << f.what();
     DUNE_THROW(InvalidStateException, "Coarse solve failed.");

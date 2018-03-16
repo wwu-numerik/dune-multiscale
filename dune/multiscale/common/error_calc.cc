@@ -13,9 +13,9 @@
 
 #include <dune/gdt/assembler/system.hh>
 #include <dune/gdt/discretefunction/default.hh>
-#include <dune/gdt/products/l2.hh>
-#include <dune/gdt/products/h1.hh>
-#include <dune/gdt/operators/prolongations.hh>
+#include <dune/gdt/operators/l2.hh>
+#include <dune/gdt/operators/laplace.hh>
+#include <dune/gdt/prolongations.hh>
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/common/grid_creation.hh>
@@ -26,8 +26,10 @@
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/multiscale/tools/misc/outputparameter.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
-
+#include <dune/xt/common/parallel/threadmanager.hh>
+#include <dune/xt/functions.hh>
 #include <dune/xt/grid/information.hh>
+#include <dune/xt/grid/parallel/partitioning/ranged.hh>
 #include <dune/xt/common/filesystem.hh>
 #include <dune/xt/common/configuration.hh>
 #include <dune/multiscale/common/heterogenous.hh>
@@ -61,7 +63,7 @@ void solution_output(const DMP::ProblemContainer& problem,
 }
 template <typename L, typename R>
 void solution_output(const DMP::ProblemContainer& problem,
-                     const DSFu::Difference<L, R>& solution,
+                     const DXF::DifferenceFunction<L, R>& solution,
                      const CommonTraits::GridViewType& view,
                      std::string name)
 {
@@ -138,7 +140,6 @@ void match_check(const CommonTraits::GridType& coarse_grid, const CommonTraits::
 std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostream& out)
 {
   using namespace std;
-  using namespace DSC;
   out << std::endl << "The L2 errors:" << std::endl << std::endl;
 
   const size_t over_integrate = problem_.config().get("global.error.over_integrate", 0u);
@@ -149,14 +150,11 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
   if (!fem_solution_)
     assert(fine_grid);
   const auto fine_space =
-      fem_solution_ ? fem_solution_->space() : CommonTraits::SpaceChooserType::make_space(*fine_grid);
-  const auto fine_interior_view =
-      fine_space.grid_view().grid().template leafGridView<CommonTraits::InteriorBorderPartition>();
   Dune::XT::Common::IndexSetPartitioner<CommonTraits::InteriorGridViewType> ip(fine_interior_view.indexSet());
   SeedListPartitioning<typename CommonTraits::InteriorGridViewType::Grid, 0> partitioning(fine_interior_view, ip);
   GDT::SystemAssembler<CommonTraits::SpaceType, CommonTraits::InteriorGridViewType> system_assembler(
       fine_space, fine_interior_view);
-  const auto& grid_view = fine_space.grid_view();
+  const auto& grid_view = fine_space.grid_layer();
 
   CommonTraits::DiscreteFunctionType projected_coarse_fem_solution(fine_space);
   Elliptic_FEM_Solver coarse_fem_solver(problem_, coarse_grid);
@@ -178,10 +176,10 @@ std::map<std::string, double> Dune::Multiscale::ErrorCalculator::print(std::ostr
     MsFEMProjection::project(*msfem_solution_, fine_msfem_solution);
     if (problem_.config().get("global.vtk_output", false)) {
       MS_LOG_INFO_0 << "Solution output for MsFEM Solution." << std::endl;
-      data_output(problem_, fine_space.grid_view());
+      data_output(problem_, fine_space.grid_layer());
       solution_output(problem_, fine_msfem_solution);
     }
-    const auto space = CommonTraits::SpaceChooserType::make_space(*coarse_grid);
+    const auto space = CommonTraits::SpaceChooserType::make_space(coarse_grid->leafGridView());
     CommonTraits::DiscreteFunctionType coarse_fun(space, "MsFEM_Solution_coarse");
     const auto flow = surface_flow_gdt(*coarse_grid, coarse_fun, problem_);
     MS_LOG_ERROR_0 << "FLOW " << flow << std::endl;

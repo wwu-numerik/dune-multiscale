@@ -22,7 +22,7 @@ LocalproblemSolutionManager::LocalproblemSolutionManager(const CommonTraits::Spa
                                                                     : coarse_space.mapper().maxNumDofs() + 2)
   , localSolutions_(numLocalProblems_)
   , localSolutionLocation_((boost::format("local_problems/_localProblemSolutions_%d")
-                            % coarse_space.grid_view().grid().leafIndexSet().index(coarseEntity))
+                            % coarse_space.grid_layer().grid().leafIndexSet().index(coarseEntity))
                                .str())
   , memory_backend_(DiscreteFunctionIO::memory(localSolutionLocation_, grid_view_))
 {

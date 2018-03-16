@@ -1,7 +1,7 @@
 #ifndef DUNE_MULTISCALE_MSFEM_LOCALSOLUTION_PROXY_HH
 #define DUNE_MULTISCALE_MSFEM_LOCALSOLUTION_PROXY_HH
 
-#include <dune/stuff/functions.hh>
+#include <dune/xt/functions.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>

@@ -22,7 +22,7 @@
 #include <dune/xt/grid/output/entity_visualization.hh>
 #include <dune/xt/grid/information.hh>
 #include <dune/xt/grid/structuredgridfactory.hh>
-#include <dune/xt/grid/provider.hh>
+#include <dune/xt/grid/gridprovider.hh>
 #include <dune/xt/common/timings.hh>
 #include <dune/gdt/discretefunction/default.hh>
 
@@ -58,8 +58,7 @@ std::map<std::string, double> msfem_algorithm()
   problem.getMutableModelData().prepare_new_evaluation(problem);
   DXTC_TIMINGS.stop("msfem.setup.problem");
 
-  const CommonTraits::SpaceType coarseSpace(
-      CommonTraits::SpaceChooserType::PartViewType::create(*grid, CommonTraits::st_gdt_grid_level));
+  const CommonTraits::SpaceType coarseSpace(grid->leafGridView());
   std::unique_ptr<LocalsolutionProxy> msfem_solution(nullptr);
 
   LocalGridList localgrid_list(problem, coarseSpace);

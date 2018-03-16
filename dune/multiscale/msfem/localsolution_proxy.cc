@@ -15,7 +15,7 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
                                                          const DMP::ProblemContainer& problem)
   : BaseType(*corrections.begin()->second)
   , corrections_(std::move(corrections))
-  , view_(coarseSpace.grid_view())
+  , view_(coarseSpace.grid_layer())
   , index_set_(view_.grid().leafIndexSet())
   , search_(coarseSpace, gridlist)
 {

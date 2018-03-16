@@ -26,7 +26,7 @@ namespace Multiscale {
 
 LocalGridList::LocalGridList(const Problem::ProblemContainer& problem, const CommonTraits::SpaceType& coarseSpace)
   : coarseSpace_(coarseSpace)
-  , coarseGridLeafIndexSet_(coarseSpace_.grid_view().grid().leafIndexSet())
+  , coarseGridLeafIndexSet_(coarseSpace_.grid_layer().grid().leafIndexSet())
 {
   Dune::XT::Common::ScopedTiming algo("msfem.local_grids");
   BOOST_ASSERT_MSG(DXTC_CONFIG.has_sub("grids"), "Parameter tree needs to have 'grids' subtree!");

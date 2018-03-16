@@ -17,8 +17,8 @@
 #include <dune/xt/common/timings.hh>
 #include <dune/xt/common/ranges.hh>
 #include <dune/xt/common/parallel/partitioner.hh>
-#include <dune/grid/utility/partitioning/seedlist.hh>
-#include <dune/gdt/products/l2.hh>
+#include <dune/xt/grid/parallel/partitioning/ranged.hh>
+#include <dune/gdt/operators/l2.hh>
 #include <dune/xt/grid/walker.hh>
 #include <dune/xt/grid/walker/functors.hh>
 #include <iterator>
@@ -109,9 +109,9 @@ void LocalProblemSolver::solve_all_on_single_cell(
 
 void LocalProblemSolver::solve_for_all_cells()
 {
+  const auto& grid = coarse_space_->grid_layer().grid();
   DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
-  const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n") % grid.comm().rank()
@@ -153,7 +153,7 @@ void LocalProblemSolver::solve_for_all_cells()
                             // << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
                             // << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
               << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
-              << coarse_space_->grid_view().grid().comm().rank() << std::endl;
+              << coarse_space_->grid_layer().grid().comm().rank() << std::endl;
 } // assemble_all
 
 } // namespace Multiscale {

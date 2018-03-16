@@ -6,11 +6,9 @@
 #include <dune/common/exceptions.hh>
 #include <dune/multiscale/problems/selector.hh>
 #include <dune/xt/common/ranges.hh>
-#include <dune/stuff/functions/femadapter.hh>
 #include <dune/xt/common/timings.hh>
 #include <memory>
 
-#include <dune/stuff/functions/femadapter.hh>
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/tools/misc.hh>
 #include <dune/multiscale/msfem/localproblems/localgridlist.hh>
@@ -137,7 +135,7 @@ void RhsCodim0Vector::assembleLocal(
   MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtension(localSolutionManager.space(), "Dirichlet Extension");
   //! \todo fill with actual values
 
-  for (const auto& localGridEntity : Dune::elements(localSolutionManager.space().grid_view())) {
+  for (const auto& localGridEntity : Dune::elements(localSolutionManager.space().grid_layer())) {
     // ignore overlay elements
     if (!localGridList_.covers(coarse_grid_entity, localGridEntity))
       continue;

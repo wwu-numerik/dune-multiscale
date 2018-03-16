@@ -12,12 +12,12 @@
 #include <dune/grid/spgrid.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/multiscale/common/la_backend.hh>
-#include <dune/stuff/aliases.hh>
-#include <dune/stuff/functions/constant.hh>
-#include <dune/stuff/functions/expression.hh>
-#include <dune/stuff/functions/interfaces.hh>
+
+#include <dune/xt/functions/constant.hh>
+#include <dune/xt/functions/expression.hh>
+#include <dune/xt/functions/interfaces.hh>
 #include <dune/xt/grid/gridprovider.hh>
-#include <dune/stuff/la/container.hh>
+#include <dune/xt/la/container.hh>
 
 namespace Dune {
 
@@ -48,15 +48,11 @@ struct SpaceChooser
   typedef typename XT::Grid::Layer<G, Dune::XT::Grid::Layers::leaf, XT::Grid::Backends::view>::type GridLayerType;
   static_assert(r == 1, "");
 
-private:
-  typedef GDT::ContinuousLagrangeSpace<GridLayerType, st_lagrangespace_order, R> PdelabType;
+  typedef GDT::ContinuousLagrangeSpace<GridLayerType, st_lagrangespace_order, R> type;
 
-public:
-  using type = PdelabType;
-
-  static PdelabType make_space(GridLayerType& p)
+  static type make_space(const GridLayerType& p)
   {
-    return PdelabType(p);
+    return type(p);
   }
 };
 
@@ -92,11 +88,13 @@ struct CommonTraits
   typedef BackendChooser<SpaceType>::DiscreteFunctionType DiscreteFunctionType;
   typedef BackendChooser<SpaceType>::ConstDiscreteFunctionType ConstDiscreteFunctionType;
 
-  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange> FunctionBaseType;
-  typedef Stuff::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
+  typedef XT::Functions::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimRange>
+      FunctionBaseType;
+  typedef XT::Functions::GlobalFunctionInterface<EntityType, FieldType, dimDomain, FieldType, dimDomain, dimDomain>
       DiffusionFunctionBaseType;
-  typedef Stuff::Functions::Constant<EntityType, FieldType, dimDomain, FieldType, dimRange> ConstantFunctionBaseType;
-  typedef Stuff::Functions::Expression<EntityType, FieldType, dimDomain, FieldType, dimRange>
+  typedef XT::Functions::ConstantFunction<EntityType, FieldType, dimDomain, FieldType, dimRange>
+      ConstantFunctionBaseType;
+  typedef XT::Functions::ExpressionFunction<EntityType, FieldType, dimDomain, FieldType, dimRange>
       ExpressionFunctionBaseType;
   typedef ConstantFunctionBaseType GdtConstantFunctionType;
 

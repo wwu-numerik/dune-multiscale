@@ -23,7 +23,7 @@
 #include <dune/xt/common/configuration.hh>
 #include <dune/xt/common/filesystem.hh>
 #include <dune/xt/common/ranges.hh>
-#include <dune/stuff/aliases.hh>
+
 #include <dune/xt/common/memory.hh>
 #include <dune/xt/common/type_traits.hh>
 
@@ -38,7 +38,7 @@ struct IOTraits
   typedef std::shared_ptr<DiscreteFunctionType> DiscreteFunction_ptr;
   typedef typename DiscreteFunctionType::SpaceType DiscreteFunctionSpaceType;
   typedef std::vector<DiscreteFunction_ptr> Vector;
-  typedef typename DiscreteFunctionSpaceType::GridViewType GridViewType;
+  typedef typename DiscreteFunctionSpaceType::GridLayerType GridViewType;
 };
 
 class DiskBackend : public boost::noncopyable

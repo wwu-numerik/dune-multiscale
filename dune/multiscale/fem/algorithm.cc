@@ -16,7 +16,7 @@
 
 #include <dune/xt/common/logging.hh>
 #include <dune/xt/common/configuration.hh>
-#include <dune/xt/grid/provider.hh>
+#include <dune/xt/grid/gridprovider.hh>
 
 namespace Dune {
 namespace Multiscale {
@@ -36,7 +36,7 @@ std::map<std::string, double> cgfem_algorithm()
     MS_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
     Dune::Multiscale::OutputParameters outputparam(problem.config());
     problem.getDiffusion().visualize(solution.space().grid_view(),
-                                     OutputParameters(problem.config()).fullpath("msfem_diffusion"));
+        solution.space().grid_layer(),
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }
