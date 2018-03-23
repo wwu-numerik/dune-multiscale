@@ -18,8 +18,8 @@
 #define COMMIT "@COMMIT@"
 
 #define ALBERTA_DIM WORLDDIM
-#cmakedefine @ENABLE_ALUGRID@ 
-#cmakedefine @ENABLE_PETSC@ 
+#cmakedefine @ENABLE_ALUGRID@
+#cmakedefine @ENABLE_PETSC@
 #cmakedefine @ENABLE_ABERTA@
 #define PROBLEM_NINE_ONLY @PROBLEM_NINE_ONLY@
 
@@ -32,6 +32,10 @@
 #ifndef HAVE_SIONLIB
     #define HAVE_SIONLIB 0
 #endif
+
+// TODO disabling finding it did not work via cmake
+#undef HAVE_SUPERLU
+#define HAVE_SUPERLU 0
 
 #if defined(NDEBUG) && not defined(DNDEBUG)
   #define DNDEBUG 1
