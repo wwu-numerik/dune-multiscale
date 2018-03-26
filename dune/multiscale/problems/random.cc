@@ -164,7 +164,7 @@ size_t Diffusion::order() const
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
 {
-  y = 1.0 - x[0];
+  y = FloatCmp::eq(x[0], 0.0) ? 1 : 0;
 } // evaluate
 
 PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const
