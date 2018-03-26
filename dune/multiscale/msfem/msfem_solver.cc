@@ -54,6 +54,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
 
   LocalsolutionProxy::CorrectionsMapType local_corrections;
   const auto interior = coarse_space.grid_view().grid().leafGridView<InteriorBorder_Partition>();
+
   for (const auto& coarse_entity : Dune::elements(interior)) {
     LocalproblemSolutionManager localSolutionManager(coarse_space, coarse_entity, localgrid_list);
     localSolutionManager.load();
@@ -110,7 +111,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       outputparam.set_prefix(name);
       local_correction.visualize(outputparam.fullpath(local_correction.name()));
     }
-    //    local_correction.vector() *= 0;
+    //        local_correction.vector() *= 0;
     localproblem_solutions.clear();
   }
 
