@@ -58,8 +58,8 @@ std::pair<CommonTraits::DomainType, CommonTraits::DomainType> ModelProblemData::
   CommonTraits::DomainType upperRight(0.0);
   if (View::dimension != 3)
     DUNE_THROW(Dune::InvalidStateException, "SPE data only available for world dim == 3");
-  const auto ll = default_config().get<CommonTraits::DomainType>("lower_left");
-  const auto ur = default_config().get<CommonTraits::DomainType>("upper_right");
+  const auto ll = default_config().template get<CommonTraits::DomainType>("lower_left");
+  const auto ur = default_config().template get<CommonTraits::DomainType>("upper_right");
   return {ll, ur};
 }
 
@@ -149,9 +149,9 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& y) const
   const auto center = x;
   std::vector<size_t> whichPartition(dimDomain, 0);
   const Dune::XT::Common::FieldVector<CommonTraits::DomainFieldType, CommonTraits::world_dim> ll =
-      default_config().get<CommonTraits::DomainType>("lower_left");
+      default_config().template get<CommonTraits::DomainType>("lower_left");
   const Dune::XT::Common::FieldVector<CommonTraits::DomainFieldType, CommonTraits::world_dim> ur =
-      default_config().get<CommonTraits::DomainType>("upper_right");
+      default_config().template get<CommonTraits::DomainType>("upper_right");
   // code need to compile, not run, for dim 2, therefore hardcode to 3 elements
   std::array<size_t, 3> ne{{model2_x_elements, model2_y_elements, model2_z_elements}};
 
@@ -186,8 +186,8 @@ void Diffusion::diffusiveFlux(const DomainType& x,
 
 void Diffusion::readPermeability()
 {
-  auto min = default_config().get<RangeFieldType>("min");
-  auto max = default_config().get<RangeFieldType>("max");
+  auto min = default_config().template get<RangeFieldType>("min");
+  auto max = default_config().template get<RangeFieldType>("max");
   std::ifstream datafile(model2_filename);
   if (!datafile.is_open())
     DUNE_THROW(spe10_model2_data_file_missing, "could not open '" << model2_filename << "'!");
