@@ -76,8 +76,9 @@ public:
 
   void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler)
   {
-    system_assembler.add(neumann_functional_);
-    system_assembler.add(dirichlet_corrector_);
+    typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
+    system_assembler.add(neumann_functional_, new OnLocalBoundaryEntities());
+    system_assembler.add(dirichlet_corrector_, new OnLocalBoundaryEntities());
   }
 
 private:
