@@ -47,12 +47,12 @@ public:
                       MsFEMTraits::LocalSolutionVectorType& allLocalRHS,
                       std::size_t coarseBaseFunc)
     : localSpace_(localSpace)
-    , dirichletExtensionLocal(localSpace_, "dirichletExtension")
-    , local_neumann(problem.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
-    , neumann_functional(local_neumann, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
-    , dl_corrector_functional(problem.getDiffusion(), dirichletExtensionLocal, local_diffusion_operator)
-    , dirichlet_corrector(
-          local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_, dl_corrector_functional)
+    , dirichletExtensionLocal_(localSpace_, "dirichletExtension")
+    , local_neumann_(problem.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())
+    , neumann_functional_(local_neumann_, allLocalRHS[coarseBaseFunc]->vector(), localSpace_)
+    , dl_corrector_functional_(problem.getDiffusion(), dirichletExtensionLocal_, local_diffusion_operator)
+    , dirichlet_corrector_(
+          local_diffusion_operator, allLocalRHS[++coarseBaseFunc]->vector(), localSpace_, dl_corrector_functional_)
     , problem_(problem)
   {
   }
@@ -71,22 +71,22 @@ public:
                                 new DSG::ApplyOn::BoundaryEntities<CommonTraits::GridViewType>());
     coarse_system_assembler.assemble();
     GDT::Operators::LagrangeProlongation<MsFEMTraits::LocalGridViewType> projection(localSpace_.grid_view());
-    projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal);
+    projection.apply(dirichletExtensionCoarse, dirichletExtensionLocal_);
   }
 
   void add_to(GDT::SystemAssembler<MsFEMTraits::LocalSpaceType>& system_assembler)
   {
-    system_assembler.add(neumann_functional);
-    system_assembler.add(dirichlet_corrector);
+    system_assembler.add(neumann_functional_);
+    system_assembler.add(dirichlet_corrector_);
   }
 
 private:
   const MsFEMTraits::LocalSpaceType& localSpace_;
-  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtensionLocal;
-  LocalNeumann local_neumann;
-  NeumannFunctional neumann_functional;
-  GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional;
-  DirichletCorrectorFunctionalType dirichlet_corrector;
+  MsFEMTraits::LocalGridDiscreteFunctionType dirichletExtensionLocal_;
+  LocalNeumann local_neumann_;
+  NeumannFunctional neumann_functional_;
+  GDT::LocalFunctional::Codim0Integral<DirichletProduct> dl_corrector_functional_;
+  DirichletCorrectorFunctionalType dirichlet_corrector_;
   const DMP::ProblemContainer& problem_;
 };
 
