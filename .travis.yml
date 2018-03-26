@@ -35,8 +35,8 @@ env:
 
 matrix:
   include:
-    - env: DOCKER_TAG=gcc-5
-    - env: DOCKER_TAG=clang-3.8
-    - env: DOCKER_TAG=clang-3.9
+  - env: DOCKER_TAG=debian_gcc_full
+  - env: DOCKER_TAG=debian_clang_full
+  - env: DOCKER_TAG=arch_gcc_full
 
 

@@ -15,6 +15,4 @@ else
 fi
 
 unset GH_TOKEN
-${SRC_DCTRL} ${BLD} --only=${MY_MODULE} make install | grep -v "Installing"
-${SRC_DCTRL} ${BLD} --only=${MY_MODULE} make package_source
 
