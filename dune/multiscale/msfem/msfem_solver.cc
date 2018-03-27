@@ -78,32 +78,36 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       local_correction.vector() += localproblem_solutions[dof]->vector();
     }
 
-    // oversampling : restrict the local correctors to the element T
-    // ie set all dofs not "covered" by the coarse cell to 0
-    // also adds lg-prolongation of coarse_solution to local_correction
-    const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
-    const auto& reference_element = DSG::reference_element(coarse_entity);
-    const auto& coarse_geometry = coarse_entity.geometry();
-    for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
-      const auto& lg_points = localSolutionManager.space().lagrange_points(local_entity);
-      auto entity_local_correction = local_correction.local_discrete_function(local_entity);
-
-      for (const auto lg_i : Dune::XT::Common::value_range(int(lg_points.size()))) {
-        const auto local_point = lg_points[lg_i];
-        const auto global_lg_point = local_entity.geometry().global(local_point);
-        const auto local_coarse_point = coarse_geometry.local(global_lg_point);
-        auto& vec = entity_local_correction->vector();
-        if (cut_overlay) {
-          const bool covered = reference_element.checkInside(local_coarse_point);
-          vec.set(lg_i, covered ? vec.get(lg_i) : 0);
-        }
-      }
-    }
-
     // add dirichlet corrector
     local_correction.vector() += localproblem_solutions[coarseSolutionLF->vector().size() + 1]->vector();
     // substract neumann corrector
     local_correction.vector() -= localproblem_solutions[coarseSolutionLF->vector().size()]->vector();
+
+    // oversampling : restrict the local correctors to the element T
+    // ie set all dofs not "covered" by the coarse cell to 0
+    // also adds lagrange-prolongation of coarse_solution to local_correction
+    const auto cut_overlay = problem.config().get("msfem.oversampling_layers", 0) > 0;
+    const auto& reference_element = DSG::reference_element(coarse_entity);
+    const auto& coarse_geometry = coarse_entity.geometry();
+    for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
+      const auto& lagrange_points = localSolutionManager.space().lagrange_points(local_entity);
+      auto entity_local_correction = local_correction.local_discrete_function(local_entity);
+      local_correction.vector() *= 1 / double(lagrange_points.size());
+      auto& vec = entity_local_correction->vector();
+
+      for (const auto lagrange_i : Dune::XT::Common::value_range(int(lagrange_points.size()))) {
+        const auto local_point = lagrange_points[lagrange_i];
+        const auto global_lagrange_point = local_entity.geometry().global(local_point);
+        const auto local_coarse_point = coarse_geometry.local(global_lagrange_point);
+
+        if (cut_overlay) {
+          const bool covered = reference_element.checkInside(local_coarse_point);
+          const auto val = vec.get(lagrange_i);
+          vec.set(lagrange_i, covered ? val : 0);
+        }
+      }
+    }
+
 
     if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
       const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
