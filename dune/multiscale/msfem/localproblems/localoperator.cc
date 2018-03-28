@@ -150,7 +150,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
     system_assembler_.add(*rhs_functionals[coarseBaseFunc]);
   }
 
-  if (coarseEntity.hasBoundaryIntersections())
+  if (bv_helper != nullptr)
     bv_helper->add_to(system_assembler_);
   system_assembler_.assemble();
 
