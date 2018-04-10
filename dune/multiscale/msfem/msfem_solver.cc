@@ -120,8 +120,8 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
   }
 
   MS_LOG_INFO_0 << "Dirichlet correctors are broken and disabled\n";
-  msfem_solution =
-      Dune::XT::Common::make_unique<LocalsolutionProxy>(std::move(local_corrections), coarse_space, localgrid_list);
+  msfem_solution = Dune::XT::Common::make_unique<LocalsolutionProxy>(
+      std::move(local_corrections), coarse_space, localgrid_list, problem);
 }
 
 void Elliptic_MsFEM_Solver::apply(DMP::ProblemContainer& problem,

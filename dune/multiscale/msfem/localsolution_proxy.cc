@@ -6,11 +6,13 @@
 #include <dune/multiscale/msfem/localproblems/localgridsearch.hh>
 #include <dune/multiscale/msfem/localsolution_proxy.hh>
 #include <dune/multiscale/msfem/proxygridview.hh>
+#include <dune/multiscale/problems/selector.hh>
 #include <dune/gdt/operators/prolongations.hh>
 
 Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& corrections,
                                                          const CommonTraits::SpaceType& coarseSpace,
-                                                         const LocalGridList& gridlist)
+                                                         const LocalGridList& gridlist,
+                                                         const DMP::ProblemContainer& problem)
   : BaseType(*corrections.begin()->second)
   , corrections_(std::move(corrections))
   , view_(coarseSpace.grid_view())
@@ -19,7 +21,8 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
 {
   const auto cs = corrections_.size();
   const auto is = index_set_.size(0);
-  assert(corrections_.size() + coarseSpace.grid_view().grid().overlapSize(0) == index_set_.size(0));
+  //  const auto oversample = problem.config().get("msfem.oversampling_layers", 0) * CommonTraits::dimDomain;
+  assert(corrections_.size() == index_set_.size(0));
 }
 
 std::unique_ptr<Dune::Multiscale::LocalsolutionProxy::LocalFunctionType>

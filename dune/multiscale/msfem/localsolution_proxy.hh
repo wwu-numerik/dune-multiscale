@@ -13,6 +13,9 @@
 namespace Dune {
 namespace Multiscale {
 
+namespace Problem {
+class ProblemContainer;
+}
 class ProxyGridview;
 
 class LocalGridSearch;
@@ -34,7 +37,8 @@ public:
 
   LocalsolutionProxy(CorrectionsMapType&& corrections,
                      const CommonTraits::SpaceType& coarseSpace,
-                     const LocalGridList& gridlist);
+                     const LocalGridList& gridlist,
+                     const DMP::ProblemContainer& problem);
 
   std::unique_ptr<LocalFunctionType> local_function(const typename BaseType::EntityType& entity) const;
 
