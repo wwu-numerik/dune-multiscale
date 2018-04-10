@@ -193,7 +193,11 @@ PURE HOT void ExactSolution::jacobian(const DomainType& x, JacobianRangeType& gr
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
 {
-  solution_.evaluate(x, y);
+
+  const bool x0_bound = FloatCmp::eq(x[0], 0.0) || FloatCmp::eq(x[0], 1.0);
+  const bool x1_bound = FloatCmp::eq(x[1], 0.0) || FloatCmp::eq(x[1], 1.0);
+  if (x0_bound || x1_bound)
+    solution_.evaluate(x, y);
 } // evaluate
 
 PURE void DirichletData::jacobian(const DomainType& x, JacobianRangeType& y) const
