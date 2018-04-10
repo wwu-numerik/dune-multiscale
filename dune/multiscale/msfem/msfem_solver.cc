@@ -108,7 +108,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
       }
     }
 
-
     if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
       const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
       Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
@@ -119,7 +118,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     localproblem_solutions.clear();
   }
 
-  MS_LOG_INFO_0 << "Dirichlet correctors are broken and disabled\n";
   msfem_solution = Dune::XT::Common::make_unique<LocalsolutionProxy>(
       std::move(local_corrections), coarse_space, localgrid_list, problem);
 }
