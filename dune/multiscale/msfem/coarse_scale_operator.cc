@@ -37,7 +37,7 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
                                          const CoarseScaleOperator::SourceSpaceType& source_space_in,
                                          LocalGridList& localGridList)
   : OperatorBaseType(global_matrix_, source_space_in)
-  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().leafGridView())
+  , AssemblerBaseType(source_space_in, source_space_in.grid_view().grid().leafGridView<used_partition>())
   , global_matrix_(
         coarse_space().mapper().size(), coarse_space().mapper().size(), EllipticOperatorType::pattern(coarse_space()))
   , local_operator_(problem.getDiffusion())
@@ -49,30 +49,28 @@ CoarseScaleOperator::CoarseScaleOperator(const DMP::ProblemContainer& problem,
   MS_LOG_INFO << "Assembling coarse system" << std::endl;
   Dune::XT::Common::ScopedTiming st("msfem.coarse.assemble");
 
-
-  const auto& boundary_info = problem_.getModelData().boundaryInfo();
-  const auto& neumann = problem_.getNeumannData();
-  const auto& dirichlet = problem_.getDirichletData();
+  this->add_codim0_assembler(local_assembler_, this->matrix());
 
   msfem_rhs_.vector() *= 0;
-  const auto interior = coarse_space().grid_view().grid().leafGridView();
+  const auto used_grid_view = coarse_space().grid_view().grid().leafGridView<used_partition>();
 
-  //  CoarseRhsFunctional force_functional(problem_, msfem_rhs_.vector(), coarse_space(), localGridList, interior);
-  GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType>
-      force_functional(problem_.getSource(), msfem_rhs_.vector(), coarse_space());
+  GDT::Functionals::L2Volume<Problem::SourceType, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
+      force_functional(problem_.getSource(), msfem_rhs_.vector(), coarse_space(), used_grid_view);
+  this->add(force_functional);
 
+  const auto& boundary_info = problem_.getModelData().boundaryInfo();
+  const auto& dirichlet = problem_.getDirichletData();
   GDT::Operators::DirichletProjectionLocalizable<UsedViewType,
                                                  Problem::DirichletDataBase,
                                                  CommonTraits::DiscreteFunctionType>
-      dirichlet_projection_operator(interior, boundary_info, dirichlet, dirichlet_projection_);
-  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
-      neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), interior);
-
-  this->add_codim0_assembler(local_assembler_, this->matrix());
-  this->add(force_functional);
-
-  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<UsedViewType>(boundary_info));
+      dirichlet_projection_operator(used_grid_view, boundary_info, dirichlet, dirichlet_projection_);
   this->add(dirichlet_projection_operator, new DSG::ApplyOn::BoundaryEntities<UsedViewType>());
+
+  const auto& neumann = problem_.getNeumannData();
+  GDT::Functionals::L2Face<Problem::NeumannDataBase, CommonTraits::GdtVectorType, CommonTraits::SpaceType, UsedViewType>
+      neumann_functional(neumann, msfem_rhs_.vector(), coarse_space(), used_grid_view);
+  this->add(neumann_functional, new DSG::ApplyOn::NeumannIntersections<UsedViewType>(boundary_info));
+
   AssemblerBaseType::assemble(true);
 
   // substract the operators action on the dirichlet values, since we assemble in H^1 but solve in H^1_0

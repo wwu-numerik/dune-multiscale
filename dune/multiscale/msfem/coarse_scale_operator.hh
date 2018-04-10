@@ -46,6 +46,7 @@ class CoarseScaleOperator : public GDT::Operators::MatrixBased<CoarseScaleOperat
                                                         CoarseScaleOperatorTraits::SourceSpaceType>
 {
   using UsedViewType = CommonTraits::GridViewType;
+  static constexpr auto used_partition = All_Partition;
   typedef GDT::Operators::EllipticCG<Problem::DiffusionBase, CommonTraits::LinearOperatorType, CommonTraits::SpaceType>
       EllipticOperatorType;
 
