@@ -106,7 +106,10 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   typedef typename BackendChooser<CoarseDiscreteFunctionSpace>::InverseOperatorType Inverse;
   const Inverse inverse(global_matrix_, coarse_space().communicator());
 
-  const auto type = problem_.config().get("msfem.coarse_solver", "bicgstab.ilut");
+  const std::string type = problem_.config().get("msfem.coarse_solver", "bicgstab.ilut");
+  if (type == "umfpack" && coarse_space().grid_view().grid().comm().size() > 1) {
+    DUNE_THROW(InvalidStateException, "umfpack is a serial solver, do not use it for the coarse scale in mpi runs");
+  }
   auto options = Inverse::options(type);
   constexpr bool overwrite = true;
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
