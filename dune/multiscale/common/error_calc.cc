@@ -55,7 +55,7 @@ void solution_output(const DMP::ProblemContainer& problem,
 {
   using namespace Dune;
 
-  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
+  Dune::Multiscale::OutputParameters outputparam(problem.config());
   outputparam.set_prefix(name);
   solution.visualize(outputparam.fullpath(solution.name()));
 }
@@ -67,14 +67,14 @@ void solution_output(const DMP::ProblemContainer& problem,
 {
   using namespace Dune;
 
-  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
+  Dune::Multiscale::OutputParameters outputparam(problem.config());
   outputparam.set_prefix(name);
   solution.visualize(view, outputparam.fullpath(solution.name()));
 }
 void data_output(const DMP::ProblemContainer& problem, const CommonTraits::GridViewType& gridPart)
 {
   using namespace Dune;
-  Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
+  Dune::Multiscale::OutputParameters outputparam(problem.config());
 
   if (problem.getModelData().hasExactSolution()) {
     const auto& u = problem.getExactSolution();

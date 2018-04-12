@@ -16,7 +16,7 @@ namespace Multiscale {
 struct OutputParameters
 {
 public:
-  explicit OutputParameters(const std::string _path);
+  explicit OutputParameters(const XT::Common::Configuration& config);
   virtual ~OutputParameters()
   {
   }

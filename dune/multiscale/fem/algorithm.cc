@@ -34,10 +34,9 @@ std::map<std::string, double> cgfem_algorithm()
 
   if (problem.config().get("global.vtk_output", false)) {
     MS_LOG_INFO_0 << "Solution output for FEM Solution." << std::endl;
-    Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
-    problem.getDiffusion().visualize(
-        solution.space().grid_view(),
-        OutputParameters(problem.config().get("global.datadir", "data")).fullpath("msfem_diffusion"));
+    Dune::Multiscale::OutputParameters outputparam(problem.config());
+    problem.getDiffusion().visualize(solution.space().grid_view(),
+                                     OutputParameters(problem.config()).fullpath("msfem_diffusion"));
     outputparam.set_prefix("fine-cg-fem_solution_");
     solution.visualize(outputparam.fullpath(solution.name()));
   }

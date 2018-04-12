@@ -109,7 +109,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
 
     if (problem.config().get("msfem.local_corrections_vtk_output", false)) {
       const std::string name = (boost::format("local_%04d_correction_%03d_") % rank % coarse_index).str();
-      Dune::Multiscale::OutputParameters outputparam(problem.config().get("global.datadir", "data"));
+      Dune::Multiscale::OutputParameters outputparam(problem.config());
       outputparam.set_prefix(name);
       local_correction.visualize(outputparam.fullpath(local_correction.name()));
     }
