@@ -92,7 +92,6 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
     for (const auto& local_entity : Dune::elements(localSolutionManager.space().grid_view())) {
       const auto& lagrange_points = localSolutionManager.space().lagrange_points(local_entity);
       auto entity_local_correction = local_correction.local_discrete_function(local_entity);
-      local_correction.vector() *= 1 / double(lagrange_points.size());
       auto& vec = entity_local_correction->vector();
 
       for (const auto lagrange_i : Dune::XT::Common::value_range(int(lagrange_points.size()))) {
@@ -102,7 +101,7 @@ void Elliptic_MsFEM_Solver::identify_fine_scale_part(const Problem::ProblemConta
 
         if (cut_overlay) {
           const bool covered = reference_element.checkInside(local_coarse_point);
-          const auto val = vec.get(lagrange_i);
+          const auto val = vec.get(lagrange_i) / double(lagrange_points.size());
           vec.set(lagrange_i, covered ? val : 0);
         }
       }
