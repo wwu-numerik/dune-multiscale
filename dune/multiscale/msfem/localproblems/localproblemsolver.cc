@@ -35,20 +35,6 @@
 namespace Dune {
 namespace Multiscale {
 
-/** \brief define output parameters for local problems
- *  appends "local_problems" for path
- **/
-struct LocalProblemDataOutputParameters : public OutputParameters
-{
-public:
-  explicit LocalProblemDataOutputParameters(const Problem::ProblemContainer& problem);
-};
-
-LocalProblemDataOutputParameters::LocalProblemDataOutputParameters(const DMP::ProblemContainer& problem)
-  : OutputParameters(problem.config().get("global.datadir", "data") + std::string("/local_problems/"))
-{
-}
-
 LocalProblemSolver::LocalProblemSolver(const Problem::ProblemContainer& problem,
                                        CommonTraits::SpaceType coarse_space,
                                        LocalGridList& localgrid_list)
