@@ -10,7 +10,6 @@
 
 #include <dune/multiscale/common/traits.hh>
 #include <dune/multiscale/msfem/fem_solver.hh>
-#include <dune/multiscale/fem/print_info.hh>
 
 #include <dune/multiscale/msfem/msfem_solver.hh>
 #include <dune/multiscale/msfem/msfem_traits.hh>

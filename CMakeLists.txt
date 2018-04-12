@@ -66,7 +66,6 @@ set( COMMON_SOURCES
         dune/multiscale/common/main_init.cc
         dune/multiscale/common/traits.cc
         dune/multiscale/common/df_io.cc
-        dune/multiscale/fem/print_info.cc
         # error_calc
         dune/multiscale/common/error_calc.cc
         dune/multiscale/common/heterogenous.cc
