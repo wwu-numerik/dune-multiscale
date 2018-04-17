@@ -19,10 +19,10 @@ Dune::Multiscale::LocalsolutionProxy::LocalsolutionProxy(CorrectionsMapType&& co
   , index_set_(view_.grid().leafIndexSet())
   , search_(coarseSpace, gridlist)
 {
-  const auto cs = corrections_.size();
-  const auto is = index_set_.size(0);
+  // const auto cs = corrections_.size();
+  // const auto is = index_set_.size(0);
   //  const auto oversample = problem.config().get("msfem.oversampling_layers", 0) * CommonTraits::dimDomain;
-  assert(corrections_.size() == index_set_.size(0));
+  // assert(corrections_.size() == index_set_.size(0));
 }
 
 std::unique_ptr<Dune::Multiscale::LocalsolutionProxy::LocalFunctionType>

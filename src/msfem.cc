@@ -17,7 +17,7 @@
 int main(int argc, char** argv)
 {
   using namespace Dune::Multiscale;
-  try {
+  // try {
     init(argc, argv);
     const size_t max_threads = DXTC_CONFIG_GET("threading.max_count", 1);
     tbb::task_scheduler_init sched_init(max_threads);
@@ -42,10 +42,10 @@ int main(int argc, char** argv)
     DXTC_TIMINGS.output_per_rank("profiler");
     mem_usage();
     dump_environment();
-  } catch (Dune::Exception& e) {
-    return handle_exception(e);
-  } catch (std::exception& s) {
-    return handle_exception(s);
-  }
+  // } catch (Dune::Exception& e) {
+  //   return handle_exception(e);
+  // } catch (std::exception& s) {
+  //   return handle_exception(s);
+  // }
   return 0;
 } // main

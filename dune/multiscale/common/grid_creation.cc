@@ -31,7 +31,7 @@ SetupReturnType setup(const DMP::ProblemContainer& problem)
   CoordType lowerLeft = gridCorners.first;
   CoordType upperRight = gridCorners.second;
 
-  const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
+  // const auto oversamplingLayers = problem.config().get("msfem.oversampling_layers", 0);
   const auto validator = Dune::XT::Common::ValidateLess<CommonTraits::DomainType>(CommonTraits::DomainType(1));
   const auto coarse_cells =
       problem.config().get<CommonTraits::DomainType>("grids.macro_cells_per_dim", world_dim, 0, validator);
@@ -42,8 +42,8 @@ SetupReturnType setup(const DMP::ProblemContainer& problem)
 
   for (const auto i : Dune::XT::Common::value_range(world_dim)) {
     elements[i] = coarse_cells[i];
-    coarse_overlap[i] = std::ceil(double(oversamplingLayers) / double(microPerMacro[i]));
     overFine[i] = problem.config().get("grids.overlap", 1);
+    coarse_overlap[i] = std::ceil(overFine[i] / double(microPerMacro[i]));
   }
   return std::make_tuple(lowerLeft, upperRight, elements, coarse_overlap, overFine);
 }
