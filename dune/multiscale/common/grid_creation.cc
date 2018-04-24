@@ -43,7 +43,7 @@ SetupReturnType setup(const DMP::ProblemContainer& problem)
   for (const auto i : Dune::XT::Common::value_range(world_dim)) {
     elements[i] = coarse_cells[i];
     overFine[i] = problem.config().get("grids.overlap", 1);
-    coarse_overlap[i] = std::ceil(overFine[i] / double(microPerMacro[i]));
+    coarse_overlap[i] = problem.config().get("grids.macro_overlap", 1);
   }
   return std::make_tuple(lowerLeft, upperRight, elements, coarse_overlap, overFine);
 }

@@ -68,12 +68,12 @@ void Diffusion::init(const DMP::ProblemContainer& problem,
 #if HAVE_FFTW
   MPI_Comm_rank(global, &seed);
   assert(seed >= 0);
-  const int overlap = problem.config().get("grids.overlap", 1u);
+  const int overlap = problem.config().get("grids.macro_overlap", 1u);
   const auto corrLen = problem.config().get("problem.correlation_length", 0.2f);
   const auto sigma = problem.config().get("problem.correlation_sigma", 1.0f);
   correlation_ = Dune::XT::Common::make_unique<Correlation>(corrLen, sigma);
   Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.init");
-  field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap);
+  field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap*mirco_cells_per_dim[0]);
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
 #endif
