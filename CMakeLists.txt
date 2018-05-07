@@ -78,6 +78,7 @@ set( COMMON_SOURCES
 
 set( PROBLEM_SOURCES
     dune/multiscale/problems/synthetic.cc
+    dune/multiscale/problems/synthetic2.cc
     dune/multiscale/problems/er2007.cc
     dune/multiscale/problems/spe10.cc
     dune/multiscale/problems/tarbert.cc

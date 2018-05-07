@@ -15,6 +15,7 @@
 #include "selector.hh"
 #include "spe10.hh"
 #include "synthetic.hh"
+#include "synthetic2.hh"
 #include "tarbert.hh"
 #include "thirteen.hh"
 
@@ -44,6 +45,13 @@ using namespace Dune::Multiscale;
                                        Dune::MPIHelper::MPICommunicator local,                                         \
                                        Dune::XT::Common::Configuration config_in) {                                    \
                                       return new DMP::Synthetic::FunctionName(global, local, config_in);               \
+                                    });                                                                                \
+      Dune::XT::Common::map_emplace(funcs,                                                                             \
+                                    "Synthetic2",                                                                       \
+                                    [](Dune::MPIHelper::MPICommunicator global,                                        \
+                                       Dune::MPIHelper::MPICommunicator local,                                         \
+                                       Dune::XT::Common::Configuration config_in) {                                    \
+                                      return new DMP::Synthetic2::FunctionName(global, local, config_in);               \
                                     });                                                                                \
       Dune::XT::Common::map_emplace(funcs,                                                                             \
                                     "Random",                                                                          \
