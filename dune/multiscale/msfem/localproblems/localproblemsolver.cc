@@ -54,9 +54,11 @@ void LocalProblemSolver::solve_all_on_single_cell(
   const auto numBoundaryCorrectors = DSG::is_simplex_grid(*coarse_space_) ? 1u : 2u;
   const auto numInnerCorrectors = all_localproblem_solutions.size() - numBoundaryCorrectors;
 
+  DXTC_TIMINGS.start("msfem.local.clear");
   // clear return argument
   for (auto& localSol : all_localproblem_solutions)
     localSol->vector() *= 0;
+  DXTC_TIMINGS.stop("msfem.local.clear");
 
   const auto& local_space = all_localproblem_solutions[0]->space();
 
@@ -64,13 +66,16 @@ void LocalProblemSolver::solve_all_on_single_cell(
   // ( effect of the discretized differential operator on a certain discrete function )
   LocalProblemOperator localProblemOperator(problem_, *coarse_space_, local_space);
 
-  // right hand side vector of the algebraic local MsFEM problem
+  DXTC_TIMINGS.start("msfem.local.rhs");
+    // right hand side vector of the algebraic local MsFEM problem
   MsFEMTraits::LocalSolutionVectorType allLocalRHS(all_localproblem_solutions.size());
   for (auto& it : allLocalRHS)
     it = Dune::XT::Common::make_unique<MsFEMTraits::LocalGridDiscreteFunctionType>(local_space,
-                                                                                   "rhs of local MsFEM problem");
-
+                                                                                 "rhs of local MsFEM problem");
   localProblemOperator.assemble_all_local_rhs(coarseCell, allLocalRHS);
+  DXTC_TIMINGS.stop("msfem.local.rhs");
+
+  const auto hasOversamplig = problem_.config().get("msfem.oversampling_layers", 0) > 0;
 
   for (auto i : Dune::XT::Common::value_range(all_localproblem_solutions.size())) {
     auto& current_rhs = *allLocalRHS[i];
@@ -90,23 +95,27 @@ void LocalProblemSolver::solve_all_on_single_cell(
     //    }
 
     // don't solve local problems for boundary correctors if coarse cell has no boundary intersections
-    if (i >= numInnerCorrectors && !hasBoundary) {
+    // or problem without oversamplig
+    if (i >= numInnerCorrectors && (!hasBoundary || !hasOversamplig)) {
       current_solution.vector() *= 0;
       MS_LOG_DEBUG << "Zero-Boundary corrector." << std::endl;
       continue;
     }
+    DXTC_TIMINGS.start("msfem.local.inverse");
     localProblemOperator.apply_inverse(current_rhs, current_solution);
+    DXTC_TIMINGS.stop("msfem.local.inverse");
   }
 }
 
 void LocalProblemSolver::solve_for_all_cells()
 {
+  DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
+
   const auto& grid = coarse_space_->grid_view().grid();
   const auto coarseGridSize = grid.size(0) - grid.overlapSize(0);
 
   MS_LOG_INFO << boost::format("Rank %d will solve local problems for %d coarse entities\n") % grid.comm().rank()
                      % coarseGridSize;
-  DXTC_TIMINGS.start("msfem.local.solve_for_all_cells");
 
   // we want to determine minimum, average and maxiumum time for solving a local msfem problem in the current method
   Dune::XT::Common::MinMaxAvg<double> solveTime;
@@ -122,11 +131,11 @@ void LocalProblemSolver::solve_for_all_cells()
     MS_LOG_DEBUG << "-------------------------" << std::endl << "Coarse index " << coarse_index << std::endl;
 
     // take time
-    //    DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
+      //  DXTC_TIMINGS.start("msfem.local.solve_all_on_single_cell");
     LocalproblemSolutionManager localSolutionManager(*coarse_space_, coarseEntity, localgrid_list_);
     // solve the problems
     solve_all_on_single_cell(coarseEntity, localSolutionManager.getLocalSolutions());
-    //    solveTime(DXTC_TIMINGS.stop("msfem.local.solve_all_on_single_cell") / 1000.f);
+      //  solveTime(DXTC_TIMINGS.stop("msfem.local.solve_all_on_single_cell") / 1000.f);
 
     // save the local solutions to disk/mem
     localSolutionManager.save();
@@ -140,9 +149,9 @@ void LocalProblemSolver::solve_for_all_cells()
   //! @todo The following debug-output is wrong (number of local problems may be different)
   const auto totalTime = DXTC_TIMINGS.stop("msfem.local.solve_for_all_cells") / 1000.f;
   MS_LOG_INFO << "Local problems solved for " << coarseGridSize << " coarse grid entities.\n"
-              //               << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
-              //               << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
-              //               << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
+                            // << "Minimum time for solving a local problem = " << solveTime.min() << "s.\n"
+                            // << "Maximum time for solving a local problem = " << solveTime.max() << "s.\n"
+                            // << "Average time for solving a local problem = " << solveTime.average() << "s.\n"
               << "Total time for computing and saving the localproblems = " << totalTime << "s on rank"
               << coarse_space_->grid_view().grid().comm().rank() << std::endl;
 } // assemble_all

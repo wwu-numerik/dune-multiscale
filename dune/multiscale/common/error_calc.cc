@@ -104,12 +104,12 @@ ErrorCalculator::ErrorCalculator(const DMP::ProblemContainer& problem,
   assert(msfem_solution_);
   if (problem.config().get("msfem.fem_comparison", false)) {
     fem_solver_ = Dune::XT::Common::make_unique<Elliptic_FEM_Solver>(problem);
-    try {
+    // try {
       fem_solution_ = &fem_solver_->solve();
-    } catch (Dune::Exception& e) {
-      MS_LOG_ERROR << "fine CGFEM solution failed: " << e.what();
-      fem_solution_ = nullptr;
-    }
+    // } catch (Dune::Exception& e) {
+    //   MS_LOG_ERROR << "fine CGFEM solution failed: " << e.what();
+    //   fem_solution_ = nullptr;
+    // }
   }
 }
 
