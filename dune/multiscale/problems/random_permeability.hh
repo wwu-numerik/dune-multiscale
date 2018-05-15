@@ -343,7 +343,10 @@ public:
       int c01 = c00 + 1;
       int c10 = c00 + _size[1];
       int c11 = c10 + 1;
-      k = ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0])
+      if (c11 >= _perm.size() - 1)
+        k = _perm[cell][_part];
+      else
+        k = ((1 - t[1]) * _perm[c00][_part] + t[1] * _perm[c01][_part]) * (1 - t[0])
           + ((1 - t[1]) * _perm[c10][_part] + t[1] * _perm[c11][_part]) * t[0];
     } else if (DIM == 3) {
       int c000 = cell;
