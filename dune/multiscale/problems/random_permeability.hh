@@ -83,11 +83,11 @@ public:
   /// \param log2Seg  log2 of number of segments on [0,1] per dimension
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
-  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8)
+  Permeability(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, bool isCellConst = false, double minimal = 1e-8)
   {
     _fft = NULL;
     _ifft = NULL;
-    init(comm, corr, log2Seg, seed, overlap, minimal);
+    init(comm, corr, log2Seg, seed, overlap, minimal, isCellConst);
   };
 
   /// Construct basis from parameters.
@@ -99,7 +99,7 @@ public:
   /// \param seed     seed
   /// \param overlap  overlap in domain decomposition (default: 1)
   /// \param minimal  minimal permeability
-  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, double minimal = 1e-8)
+  void init(MPI_Comm comm, const COR& corr, int log2Seg, int seed, int overlap = 1, bool isCellConst = false, double minimal = 1e-8)
   {
 
     // Initialize
@@ -110,6 +110,7 @@ public:
     _normal = std::normal_distribution<double>(0, 1);
     _overlap = overlap;
     _minimal = minimal;
+    _isCellConst = isCellConst;
     _part = 1;
     if (_fft != NULL) {
       fftw_destroy_plan(_fft);
@@ -338,7 +339,9 @@ public:
       t[i] = p - j;
       cell = _size[i] * cell + j;
     }
-    if (DIM == 2) {
+    if (_isCellConst)
+      k = _perm[cell][_part];
+    else if (DIM == 2) {
       int c00 = cell;
       int c01 = c00 + 1;
       int c10 = c00 + _size[1];
@@ -392,6 +395,7 @@ private:
   iarr _size; ///< number of nodes per dim in subgrid
   std::default_random_engine _rand; ///< random number generator
   std::normal_distribution<double> _normal; ///< normal distribution
+  bool _isCellConst;
 };
 
 #endif // DUNE_MULTISCALE_PROBLEMS_RANDOM_

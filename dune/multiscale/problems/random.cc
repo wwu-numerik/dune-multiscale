@@ -73,7 +73,8 @@ void Diffusion::init(const DMP::ProblemContainer& problem,
   const auto sigma = problem.config().get("problem.correlation_sigma", 1.0f);
   correlation_ = Dune::XT::Common::make_unique<Correlation>(corrLen, sigma);
   Dune::XT::Common::ScopedTiming field_tm("msfem.perm_field.init");
-  field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap*mirco_cells_per_dim[0]);
+  bool isCellConst = problem.config().get("problem.is_cell_const", 0) != 0;
+  field_ = Dune::XT::Common::make_unique<PermeabilityType>(local, *correlation_, log2Seg, seed + 1, overlap*mirco_cells_per_dim[0], isCellConst);
 #else
   DUNE_THROW(InvalidStateException, "random problem needs additional libs to be configured properly");
 #endif
