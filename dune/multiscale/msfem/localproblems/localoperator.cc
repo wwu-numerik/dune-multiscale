@@ -124,7 +124,6 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   const auto numBoundaryCorrectors = is_simplex_grid ? 1u : 2u;
   const auto numInnerCorrectors = allLocalRHS.size() - numBoundaryCorrectors;
 
-  DXTC_TIMINGS.start("msfem.local.rhs.bvhelper");
   const auto hasOversamplig = problem_.config().get("msfem.oversampling_layers", 0) > 0;
   typedef BoundaryValueHelper<decltype(problem_.getNeumannData().transfer<MsFEMTraits::LocalEntityType>())> BVHelper;
   std::unique_ptr<BVHelper> bv_helper(nullptr);
@@ -133,9 +132,7 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
         problem_, localSpace_, local_diffusion_operator_, allLocalRHS, numInnerCorrectors);
     bv_helper->dirichlet_projection(coarse_space_);
   }
-  DXTC_TIMINGS.stop("msfem.local.rhs.bvhelper");
 
-  DXTC_TIMINGS.start("msfem.local.rhs.add");
   typedef GDT::Functionals::L2Volume<Problem::LocalDiffusionType,
                                      CommonTraits::GdtVectorType,
                                      MsFEMTraits::LocalSpaceType,
@@ -157,23 +154,19 @@ void LocalProblemOperator::assemble_all_local_rhs(const MsFEMTraits::CoarseEntit
   
   if (bv_helper != nullptr)
     bv_helper->add_to(system_assembler_);
-  DXTC_TIMINGS.stop("msfem.local.rhs.add");
 
   // system_assembler_.assemble();
   // dirichlet-0 for all rhs
-  DXTC_TIMINGS.start("msfem.local.rhs.bc");
   typedef DSG::ApplyOn::BoundaryEntities<MsFEMTraits::LocalGridViewType> OnLocalBoundaryEntities;
   system_assembler_.add(dirichletConstraints_, new OnLocalBoundaryEntities());
-  DXTC_TIMINGS.stop("msfem.local.rhs.bc");
+
   DXTC_TIMINGS.start("msfem.local.rhs.assemble");
   system_assembler_.assemble();
   DXTC_TIMINGS.stop("msfem.local.rhs.assemble");
 
-  DXTC_TIMINGS.start("msfem.local.rhs.bc_apply");
   dirichletConstraints_.apply(system_matrix_);
   for (auto& rhs : allLocalRHS)
     dirichletConstraints_.apply(rhs->vector());
-  DXTC_TIMINGS.stop("msfem.local.rhs.bc_apply");
 #if HAVE_UMFPACK
   if (use_umfpack_)
     local_direct_inverse_ = Dune::XT::Common::make_unique<LocalDirectInverseType>(
