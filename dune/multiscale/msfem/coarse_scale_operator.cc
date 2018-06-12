@@ -115,6 +115,7 @@ void CoarseScaleOperator::apply_inverse(CoarseScaleOperator::CoarseDiscreteFunct
   options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, overwrite);
   options.set("verbose", problem_.config().get("msfem.coarse_solver.verbose", 2), overwrite);
+  options.set("precision", problem_.config().get("msfem.coarse_solver.precision", "1e-8"), overwrite);
   options.set("max_iter", problem_.config().get("msfem.coarse_solver.max_iter", 300u), overwrite);
   options.set("preconditioner.verbose", "2", overwrite);
   options.set("smoother.verbose", "2", overwrite);

@@ -102,9 +102,11 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   DXTC_TIMINGS.start("fem.solve");
   const Stuff::LA::Solver<CommonTraits::LinearOperatorType, typename CommonTraits::SpaceType::CommunicatorType>
       linear_solver(system_matrix, space_.communicator());
-  auto linear_solver_options = linear_solver.options("bicgstab.amg.ilu0");
-  linear_solver_options.set("max_iter", "5000", true);
-  linear_solver_options.set("precision", "1e-8", true);
+  const std::string type = problem_.config().get("msfem.fine_solver", "bicgstab.ilut");
+  auto linear_solver_options = linear_solver.options(type);
+  linear_solver_options.set("max_iter", problem_.config().get("msfem.fine_solver.max_iter", "300"), true);
+  linear_solver_options.set("precision", problem_.config().get("msfem.fine_solver.precision", "1e-8"), true);
+  linear_solver_options.set("verbose", problem_.config().get("msfem.fine_solver.verbose", "2"), true);
   linear_solver_options.set("post_check_solves_system", "0", true);
   linear_solver_options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, true);
   linear_solver_options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, true);
