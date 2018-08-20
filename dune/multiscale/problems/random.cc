@@ -113,15 +113,15 @@ ParameterTree ModelProblemData::boundary_settings() const
   switch (CommonTraits::world_dim) {
     case 1:
       DUNE_THROW(InvalidStateException, "no boundary settings for 1D random field problem");
+    case 2:
+      boundarySettings["neumann.0"] = "[0.0  1.0]";
+      boundarySettings["neumann.1"] = "[0.0 -1.0]";
+      break;
     case 3:
       boundarySettings["neumann.0"] = "[0.0  1.0  0.0]";
       boundarySettings["neumann.1"] = "[0.0 -1.0  0.0]";
       boundarySettings["neumann.2"] = "[0.0  0.0  1.0]";
       boundarySettings["neumann.3"] = "[0.0  0.0 -1.0]";
-      break;
-    case 2:
-      boundarySettings["neumann.0"] = "[0.0  1.0]";
-      boundarySettings["neumann.1"] = "[0.0 -1.0]";
       break;
   }
   return boundarySettings;
@@ -138,7 +138,6 @@ void Diffusion::evaluate(const DomainType& x, Diffusion::RangeType& ret) const
 #if HAVE_FFTW
   assert(field_);
   const double scalar = field_->operator()(x);
-  ret = 0;
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim))
     ret[i][i] = scalar;
 #else
@@ -152,7 +151,6 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x,
 {
   Diffusion::RangeType eval;
   evaluate(x, eval);
-  flux = 0;
   for (const auto i : Dune::XT::Common::value_range(CommonTraits::world_dim))
     flux[0][i] = eval[i][i] * direction[0][i];
 
@@ -160,12 +158,15 @@ PURE HOT void Diffusion::diffusiveFlux(const DomainType& x,
 
 size_t Diffusion::order() const
 {
-  return 1;
+  return 2;
 }
 
 PURE void DirichletData::evaluate(const DomainType& x, RangeType& y) const
 {
-  y = FloatCmp::eq(x[0], 0.0) ? 1 : 0;
+  if (FloatCmp::eq(x[0], 0.0))
+    y = 1.0;
+  if (FloatCmp::eq(x[0], 1.0))
+    y = 0.0;
 } // evaluate
 
 PURE void NeumannData::evaluate(const DomainType& /*x*/, RangeType& y) const

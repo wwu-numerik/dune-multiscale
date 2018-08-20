@@ -104,9 +104,10 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
       linear_solver(system_matrix, space_.communicator());
   const std::string type = problem_.config().get("msfem.fine_solver", "bicgstab.ilut");
   auto linear_solver_options = linear_solver.options(type);
+  auto verbose = problem_.config().get("msfem.fine_solver.verbose", "2");
   linear_solver_options.set("max_iter", problem_.config().get("msfem.fine_solver.max_iter", "300"), true);
   linear_solver_options.set("precision", problem_.config().get("msfem.fine_solver.precision", "1e-8"), true);
-  linear_solver_options.set("verbose", problem_.config().get("msfem.fine_solver.verbose", "2"), true);
+  linear_solver_options.set("verbose", verbose, true);
   linear_solver_options.set("post_check_solves_system", "0", true);
   linear_solver_options.set("preconditioner.anisotropy_dim", CommonTraits::world_dim, true);
   linear_solver_options.set("preconditioner.isotropy_dim", CommonTraits::world_dim, true);
@@ -117,8 +118,8 @@ void Elliptic_FEM_Solver::apply(CommonTraits::DiscreteFunctionType& solution) co
   linear_solver_options.set("criterion.min_coarse_rate", "1.2", true);
   linear_solver_options.set("criterion.prolong_damp", "1.6", true);
   linear_solver_options.set("criterion.anisotropy_dim", CommonTraits::world_dim, true);
-  linear_solver_options.set("criterion.verbose", "1", true);
-  linear_solver_options.set("smoother.verbose", "1", true);
+  linear_solver_options.set("criterion.verbose", verbose, true);
+  linear_solver_options.set("smoother.verbose", verbose, true);
 
   linear_solver.apply(rhs_vector, solution_vector, linear_solver_options);
   // add the dirichlet shift to obtain the solution in H^1
